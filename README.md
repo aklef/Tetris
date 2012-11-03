@@ -12,6 +12,6 @@ Uses the Object Client-Server Framework (OCSF) provided in SEG2105 at uOttawa fo
 License
 -------
 
-Copyright © 2012 Andréas Kaytar-LeFrançois & Dmitry Anglinov.
+Copyright © 2012 Andréas Kaytar-LeFrançois & Dmitry Anglinov.  
 You may use and modify this material freely for personal non-commercial use.  
 This material may NOT be used as course material without prior written agreement.
