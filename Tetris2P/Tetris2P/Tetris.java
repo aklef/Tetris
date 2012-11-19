@@ -83,7 +83,7 @@ public class Tetris extends JPanel{
         add(board, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
         
-        Dimension areaDim =  new Dimension(board.squareWidth()*5, board.squareHeight()*5);
+        Dimension areaDim =  new Dimension(board.squareWidth()*4, board.squareHeight()*4);
         toolBar.holdArea.setPreferredSize(areaDim );
         toolBar.previewNextPieceArea.setPreferredSize(areaDim);
         

@@ -56,7 +56,7 @@ public class Tetris2P extends JFrame implements Runnable{
     private final Tetris opponentGame;
     
     /**
-     * Static variable representing the backroung color of the board.
+     * Static variable representing the background color of the board.
      */
     private static Color backgroundColor;
     /**
@@ -65,7 +65,7 @@ public class Tetris2P extends JFrame implements Runnable{
     private final PlayerList userList;
     
     /**
-     * Boolean variable that determines if the gmae will make sounds..
+     * Boolean variable that determines if the game will make sounds..
      */
     public boolean isMusicOn = true;
   
@@ -81,6 +81,7 @@ public class Tetris2P extends JFrame implements Runnable{
         //setUndecorated(true);
         
         // Creating instances of Tetris panels
+        
         localGame	 = new Tetris();
         opponentGame = new Tetris();
         userList	 = new PlayerList();
@@ -246,7 +247,7 @@ public class Tetris2P extends JFrame implements Runnable{
 	        JList list = new JList(userList);
 	        
 	        // XXX Remove! Test addition to the list
-	        for(int i=0; i<10; i++){
+	        for(int i=0; i<50; i++){
 	        	addUserToList("Dingletronic" + i);
 	        }
 	        // Attach a ScrollPane to the list to make it scrollable
