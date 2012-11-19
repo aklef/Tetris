@@ -4,8 +4,6 @@ import java.io.*;
 import javax.sound.sampled.*;
 
 import java.awt.Color;
-//import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -14,6 +12,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +24,6 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-//import javax.swing.Timer;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.ToolBar;
@@ -47,17 +45,10 @@ public class Board extends JPanel implements ActionListener {
      */
     private static int SQUARES_IN_HEIGHT = 20;
     /**
-     * TODO
+     * The font used for labels.
      */
     private static Font labelFont;
-    
-//    private AudioClip tetrisTheme; 
-//    private AudioClip moveSound; 
-//    private AudioClip rotateSound; 
-//    private AudioClip hardDropSound; 
-//    private AudioClip countDownSound; 
-//    private AudioClip countOverSound; 
-    
+
     /**
      * Array containing all the colors that can be used in the game.
      */
@@ -154,22 +145,27 @@ public class Board extends JPanel implements ActionListener {
     private Clip dropSound;
     
     /**
+     * This variable will be true if audio can play
+     * 
+     */
+    private boolean boardAudio;
+    
+    /**
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
      */    
     protected Board(Tetris parent)
-    {
+    {    	
     	
-    	//Initialize Sound effects
-    	initRotateAndMoveSound();
-    	initDropSound();
-    	
-       // Setting the initial piece conditions.
+        // Setting the initial piece conditions.
        setFocusable(true);
        curPiece = new Shape();
        nextPiece = new Shape();
        holdPiece = new Shape();
        holdPiece.setShape(Tetromino.NoShape); //player has no shape held at start
+       
+       //checking if muted
+       boardAudio = parent.getAudioCanPlay();
        
        toolBar = parent.getToolBar();
        statusBar = parent.getStatusBar();
@@ -199,7 +195,23 @@ public class Board extends JPanel implements ActionListener {
        start();
     }
     
-    //*************************************GETTER*************************************//
+    //*************************************SETTER/GETTER*************************************//
+    
+    /**
+     * Setting board audio
+     * 
+     */
+    public boolean getBoardAudio(){
+    	return boardAudio;
+    }
+    
+    /**
+     * Setting board audio
+     * 
+     */
+    public void setBoardAudio(boolean audioState){
+    	boardAudio = audioState;
+    }
     
     /**
      * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
@@ -242,7 +254,7 @@ public class Board extends JPanel implements ActionListener {
     {
     	return board[(y * SQUARES_IN_WIDTH) + x];
     }
-
+    
     //*************************************CONTROL*************************************//
     
 
@@ -286,7 +298,6 @@ public class Board extends JPanel implements ActionListener {
         isPaused = !isPaused;
         timer.setPaused(isPaused);
         if (isPaused) { //pausing the game
-        	// XXX Timing glitch
             statusBar.setText(" Game [P]aused. ");
             statusBar.setForeground(Color.magenta);
         } else { // resuming the game
@@ -325,7 +336,6 @@ public class Board extends JPanel implements ActionListener {
         
         pause();
     }
-
     //*************************************LOGIC*************************************//
     
     /**
@@ -432,7 +442,7 @@ public class Board extends JPanel implements ActionListener {
     {
         try
 		{
-			myTimer.sleep(100);
+			Thread.sleep(100);
 		}
 		catch (InterruptedException e){}
     	
@@ -532,15 +542,15 @@ public class Board extends JPanel implements ActionListener {
      }
     
     /**
-     * This method initiates the data line to be able to play rotate and move
-     * sound effects
+     * This method initiates and plays a rotate sound effect
+     *  
      */
-    public void initRotateAndMoveSound(){
+    public void initRotateSound(){
         try {
-    		AudioInputStream rotateMoveAudio = AudioSystem.getAudioInputStream(new File("rotateSound.wav"));
+    		AudioInputStream rotateAudio = AudioSystem.getAudioInputStream(new File("Media/rotateSound.wav"));
     		rotateSound = AudioSystem.getClip();
-    		rotateSound.open(rotateMoveAudio);
-    		moveSound = rotateSound;
+    		rotateSound.open(rotateAudio);
+    		rotateSound.start();
         }
         catch(UnsupportedAudioFileException uae) {
             System.out.println(uae);
@@ -554,13 +564,35 @@ public class Board extends JPanel implements ActionListener {
     }
     
     /**
-     * This method initiates the data line for to be be able to play drop sound effects
+     * This method initiates and plays a move sound effect
+     */
+    public void initMoveSound(){
+        try {
+    		AudioInputStream moveAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
+    		moveSound = AudioSystem.getClip();
+    		moveSound.open(moveAudio);
+    		moveSound.start();
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+    }
+    
+    /**
+     * This method initiates and plays a drop sound effect
      */
     public void initDropSound(){
         try {
-    		AudioInputStream dropAudio = AudioSystem.getAudioInputStream(new File("hardDropSound.wav"));
+    		AudioInputStream dropAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
     		dropSound = AudioSystem.getClip();
     		dropSound.open(dropAudio);
+    		dropSound.start();
         }
         catch(UnsupportedAudioFileException uae) {
             System.out.println(uae);
@@ -572,46 +604,6 @@ public class Board extends JPanel implements ActionListener {
                 System.out.println(lua);
         }
     }
-    
-    /**
-     * Toggles mute for drop sound effects
-     *
-     */
-	public void toggleMuteDrop(){
-	    
-		//obtains mute control for audio clip
-		BooleanControl muteControlDrop = (BooleanControl) dropSound.getControl(BooleanControl.Type.MUTE);
-	    
-	    //toggle mute on rotate audio clip 
-	    if(muteControlDrop.getValue() == true){
-	    	muteControlDrop.setValue(false);
-	    }
-	    else{
-	    	muteControlDrop.setValue(true); 
-	    }
-	}
-	
-    /**
-     * Toggles mute rotate and move sounds
-     *
-     */
-	public void toggleMuteMoveRotate(){
-	    
-		//obtains mute control for audio clip
-		BooleanControl muteControlRotate = (BooleanControl) rotateSound.getControl(BooleanControl.Type.MUTE);
-		BooleanControl muteControlMove = (BooleanControl) moveSound.getControl(BooleanControl.Type.MUTE);
-	    
-	    //toggle mute on rotate audio clip 
-	    if(muteControlRotate.getValue() == true){
-	    	muteControlRotate.setValue(false);
-	    	muteControlMove.setValue(false);
-	    }
-	    else{
-	    	muteControlRotate.setValue(true); 
-	    	muteControlMove.setValue(true);
-	    }
-	}
-	
 	
     
 	/**
@@ -775,7 +767,7 @@ public class Board extends JPanel implements ActionListener {
          {
              int keycode = e.getKeyCode();
              
-             // Pcommand statement switch
+             // Command statement switch
              switch (keycode) {
                  case 'Q': case 'q':
                      System.exit(0);
@@ -799,19 +791,17 @@ public class Board extends JPanel implements ActionListener {
             		 tryMove(curPiece.rotate(), curX, curY);
             		 
             		 //generates sound effect
-            		 rotateSound.stop();
-            		 rotateSound.flush();
-             		 rotateSound.start(); 
+                	 if(boardAudio)
+                		 initRotateSound();
             	 }
                  break;
              case KeyEvent.VK_LEFT: case 'A': case 'a': // move left
             	 synchronized(timer) {
             		 tryMove(curPiece, curX - 1, curY);
             		 
-            		 //moveSound sound effect
-            		 moveSound.stop();
-            		 moveSound.flush();
-            		 moveSound.start();
+            		 //moveSound sound effect       
+            		 if(boardAudio)
+            			 initMoveSound();
             	 }
                  break;
              case KeyEvent.VK_RIGHT: case 'D': case 'd': // move right
@@ -819,28 +809,25 @@ public class Board extends JPanel implements ActionListener {
             		 tryMove(curPiece, curX + 1, curY);
             		 
             		 //generates sound effect
-            		 moveSound.stop();
-            		 moveSound.flush();
-            		 moveSound.start();
+                	 if(boardAudio)
+                		 initMoveSound();
             	 }
                  break;
              case KeyEvent.VK_DOWN: case 'S': case 's': // nudge down
             	 oneLineDown();
             	 
         		 //generates sound effect
-            	 moveSound.stop();
-        		 moveSound.flush();
-            	 moveSound.start();
-                 break;
+            	 if(boardAudio)
+            		 initMoveSound();
+            	 break;
              case KeyEvent.VK_SHIFT: case 'H': case 'h': // hold
                  hold();
                  break;
              case KeyEvent.VK_SPACE: // drops piece to bottom
             	 
         		 //generates sound effect
-        		 dropSound.stop();
-        		 dropSound.flush();
-            	 dropSound.start();
+            	 if(boardAudio)
+            		 initDropSound();
                  dropDown();
                  break;
              }

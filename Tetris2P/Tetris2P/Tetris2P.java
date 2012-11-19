@@ -88,7 +88,8 @@ public class Tetris2P extends JFrame implements Runnable{
         //setUndecorated(true);
         
         // Creating instances of Tetris panels
-        localGame	 = new Tetris();        
+        
+        localGame	 = new Tetris();
         opponentGame = new Tetris();
         userList	 = new PlayerList();
         
@@ -119,13 +120,12 @@ public class Tetris2P extends JFrame implements Runnable{
         //revalidate();
         
         opponentGame.setFocusable(false);
-        
+                
         //Starts playing the soundtrack
         playTetrisTheme();
         
-        //muting opponent actions
-        opponentGame.getBoard().toggleMuteDrop();
-        opponentGame.getBoard().toggleMuteMoveRotate();
+        //muting opponents game
+        opponentGame.setAudioCanPlay(false);
         
         setTitle("Tetris");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -146,6 +146,7 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     public static void main(String[] args) {
         new Tetris2P();
+
     }
 
 	public void run() {
@@ -166,7 +167,7 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     public void playTetrisTheme(){
         try {
-    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("tetris-theme.aiff"));
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_8bit.mp3"));
     		tetrisTheme = AudioSystem.getClip();
             tetrisTheme.open(music);
             tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
@@ -184,31 +185,15 @@ public class Tetris2P extends JFrame implements Runnable{
 
     
     /**
-     * Toggles mute on the tetris theme when called
-     *
-     */
-	public void toggleMuteTheme(){
-	    
-		//obtains mute control for audio clip
-		BooleanControl muteControl = (BooleanControl) tetrisTheme.getControl(BooleanControl.Type.MUTE);
-	    
-	    //toggle mute on audio clip 
-	    if(muteControl.getValue() == true){
-	    	muteControl.setValue(false);
-	    }
-	    else{
-	    	muteControl.setValue(true); 
-	    }
-	}
-	
-    /**
      * Toggles mute on the entire game when called
      *
      */
 	public void toggleMuteGame(){
-		toggleMuteTheme();
-		localGame.getBoard().toggleMuteDrop();
-		localGame.getBoard().toggleMuteMoveRotate();
+		if(localGame.getAudioCanPlay()){
+			localGame.setAudioCanPlay(false);
+		}
+		else
+			localGame.setAudioCanPlay(true);
 	}
 
 
