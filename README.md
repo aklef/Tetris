@@ -7,14 +7,17 @@ Uses the Object Client-Server Framework (OCSF) provided in SEG2105 at uOttawa fo
 
 Has a chatrrom created by adapting our SimpleChat program.
 
-
+Media
+-------
 
 Soundtrack Source:
 
 * A great beat from http://soundcloud.com/neogrit/a-nes-gb
 * "A (NES/GB)" by neogrit is licensed under a Creative Commons License (http://creativecommons.org/licenses/by/3.0/)
 
-![Tetris singleplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/singlePlayer.png?raw=true)
+	![Tetris singleplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/singlePlayer.png?raw=true)
+
+	A singleplayer game of Tetris.	
 
 BSD License
 -------
