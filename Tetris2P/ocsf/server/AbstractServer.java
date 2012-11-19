@@ -5,7 +5,7 @@
 package ocsf.server;
 
 import java.net.*;
-import java.util.*;
+//import java.util.*;
 import java.io.*;
 
 /**
@@ -303,7 +303,8 @@ public abstract class AbstractServer implements Runnable
    * Runs the listening thread that allows clients to connect.
    * Not to be called.
    */
-  final public void run()
+  @SuppressWarnings("unused")
+final public void run()
   {
     // call the hook method to notify that the server is starting
     serverStarted();

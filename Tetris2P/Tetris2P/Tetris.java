@@ -6,13 +6,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -35,7 +31,6 @@ public class Tetris extends JPanel{
      * The height of the game.
      */
     private static int BOARD_HEIGHT = 400;
-
     /**
      * The status bar object.
      */
@@ -48,11 +43,14 @@ public class Tetris extends JPanel{
      * The board object.
      */
     private final Board board;
-
     /**
      * Static variable representing the backroung color of the board.
      */
     private static Color backgroundColor;
+    /**
+     * Master on/off for all game audio.
+     */
+    private boolean isAudioPlaybackAllowed;
 
     
     /**
@@ -61,6 +59,8 @@ public class Tetris extends JPanel{
     public Tetris()
     {
     	backgroundColor = new Color (13,13,13);
+    	
+    	isAudioPlaybackAllowed = true;
     	
     	toolBar = new ToolBar();
     	toolBar.setBackground(backgroundColor);
@@ -118,6 +118,22 @@ public class Tetris extends JPanel{
     @Override
     public Color getBackground() {
        return backgroundColor;
+   }
+
+    /**
+     * Returns the curretn status of audio playback.
+     */
+    protected boolean audioCanPlay() {
+       return isAudioPlaybackAllowed;
+   }
+
+    /**
+     * Sets the master audio control to the given boolean value.
+     * 
+     * @param audioState True if ausio playback is allowed, false otherwise.
+     */
+    protected void setAudioCanPlay(boolean audioState) {
+    	isAudioPlaybackAllowed = audioState;
    }
 
 	//*************************************TOOLBAR*************************************//

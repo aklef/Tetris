@@ -2,9 +2,8 @@ package Tetris2P;
 
 import java.applet.Applet;
 import java.applet.AudioClip;
+
 import java.awt.Color;
-//import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -13,11 +12,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-//import javax.swing.Timer;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.ToolBar;
@@ -39,17 +38,37 @@ public class Board extends JPanel implements ActionListener {
      */
     private static int SQUARES_IN_HEIGHT = 20;
     /**
-     * TODO
+     * The font used for labels.
      */
     private static Font labelFont;
-    
-    private AudioClip tetrisTheme; 
-    private AudioClip moveSound; 
-    private AudioClip rotateSound; 
-    private AudioClip hardDropSound; 
-    private AudioClip countDownSound; 
-    private AudioClip countOverSound; 
-    
+    /**
+     * Master on/off for all game audio.
+     */
+    private boolean isSoundAllowed;
+    /**
+     * The main audio used as the ambience music.
+     */
+    private final AudioClip soundTrack;
+    /**
+     * The sound played when a piece is moved.
+     */
+    private final AudioClip moveSound;
+    /**
+     * The sound played when a piece is rotated.
+     */
+    private final AudioClip rotateSound;
+    /**
+     * The  sound played when a piece is dropped.
+     */
+    private final AudioClip dropSound;
+    /**
+     * XXX The sound played during the countdown.
+     */
+    private final AudioClip countDownSound;
+    /**
+     * XXX The sound played at the end of the countdown.
+     */
+    private final AudioClip countOverSound;
     /**
      * Array containing all the colors that can be used in the game.
      */
@@ -143,14 +162,14 @@ public class Board extends JPanel implements ActionListener {
      */
     protected Board(Tetris parent)
     {
-    	/* TODO Sounds
-    	tetrisTheme   = Applet.newAudioClip(getClass().getResource("tetris-theme.aiff"));
-        rotateSound   = Applet.newAudioClip(getClass().getResource("rotateSound.wav"));
-        moveSound     = rotateSound; 
-        dropSound     = Applet.newAudioClip(getClass().getResource("hardDropSound.wav"));
-        countDownSound= Applet.newAudioClip(getClass().getResource("countDownSound.wav"));
-        countOverSound= Applet.newAudioClip(getClass().getResource("countDownSound.wav"));
-        */
+        // Setting up the audio.
+    	soundTrack		= Applet.newAudioClip(getClass().getResource("Media/tetris-theme.aiff"));
+        rotateSound		= Applet.newAudioClip(getClass().getResource("Media/rotateSound.wav"));; 
+        moveSound		= Applet.newAudioClip(getClass().getResource("Media/moveSound.wav"));
+        dropSound		= moveSound;
+        countDownSound	= Applet.newAudioClip(getClass().getResource("Media/countDownSound.wav"));
+        countOverSound	= countDownSound;
+        
         
        // Setting the initial piece conditions.
        setFocusable(true);
@@ -187,7 +206,7 @@ public class Board extends JPanel implements ActionListener {
        start();
     }
     
-    //*************************************GETTER*************************************//
+    //*************************************SETTER/GETTER*************************************//
     
     /**
      * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
@@ -231,6 +250,22 @@ public class Board extends JPanel implements ActionListener {
     	return board[(y * SQUARES_IN_WIDTH) + x];
     }
 
+    /**
+     * Returns the curretn status of audio playback.
+     */
+    protected boolean audioCanPlay() {
+       return isSoundAllowed;
+   }
+
+    /**
+     * Sets the master audio control to the given boolean value.
+     * 
+     * @param audioState True if ausio playback is allowed, false otherwise.
+     */
+    protected void setAudioCanPlay(boolean audioState) {
+    	isSoundAllowed = audioState;
+   }
+    
     //*************************************CONTROL*************************************//
     
 
@@ -257,6 +292,7 @@ public class Board extends JPanel implements ActionListener {
 		myTimer = new Thread(timer);
         
         newPiece();
+        playSoundtrack();
         myTimer.start();
         pause();
     }
@@ -273,8 +309,9 @@ public class Board extends JPanel implements ActionListener {
         
         isPaused = !isPaused;
         timer.setPaused(isPaused);
+        isSoundAllowed = !isPaused;
+        soundTrack.stop(); //stops the soundtrack
         if (isPaused) { //pausing the game
-        	// XXX Timing glitch
             statusBar.setText(" Game [P]aused. ");
             statusBar.setForeground(Color.magenta);
         } else { // resuming the game
@@ -296,6 +333,7 @@ public class Board extends JPanel implements ActionListener {
         isFallingFinished = false;
         isFirstPieceMade = false;
         isPieceHeld = false;
+        isSoundAllowed = true;
         numLinesRemoved = 0;
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
@@ -313,6 +351,16 @@ public class Board extends JPanel implements ActionListener {
         
         pause();
     }
+    /**
+     * Plays the tetris theme song forever in a loop.
+     */
+    private void playSoundtrack()
+    {
+		if(soundTrack == null) //stoopid checking
+			return;
+		else if (isSoundAllowed) //actually controls the music
+			soundTrack.loop();
+	}
 
     //*************************************LOGIC*************************************//
     
@@ -420,7 +468,7 @@ public class Board extends JPanel implements ActionListener {
     {
         try
 		{
-			myTimer.sleep(100);
+			Thread.sleep(100);
 		}
 		catch (InterruptedException e){}
     	
