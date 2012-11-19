@@ -1,5 +1,8 @@
 package Tetris2P;
 
+import java.io.*;
+
+import javax.sound.sampled.*;
 import java.awt.AlphaComposite;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
@@ -68,7 +71,11 @@ public class Tetris2P extends JFrame implements Runnable{
      * Boolean variable that determines if the game will make sounds..
      */
     public boolean isMusicOn = true;
-  
+    
+    /**
+     * Music soundtrack for the game
+     */
+    private Clip tetrisTheme; 
     
     /**
      * Constructor for the Teris multiplayer game.
@@ -105,13 +112,20 @@ public class Tetris2P extends JFrame implements Runnable{
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
         getContentPane().setPreferredSize(new Dimension(600,473));
-        // Necsesary
+        // Necessary
         pack();
         
         // Not needed but works fine
         //revalidate();
         
         opponentGame.setFocusable(false);
+        
+        //Starts playing the soundtrack
+        playTetrisTheme();
+        
+        //muting opponent actions
+        opponentGame.getBoard().toggleMuteDrop();
+        opponentGame.getBoard().toggleMuteMoveRotate();
         
         setTitle("Tetris");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -137,12 +151,64 @@ public class Tetris2P extends JFrame implements Runnable{
 	public void run() {
         // Makes the window open in the center of the screen.
         setLocationRelativeTo(null);
-        
+
         // Makes the frame steady
         //setResizable(false);
-        
+      
         // Shows the window
         setVisible(true);
+        
+        }
+	
+    /**
+     * Begins playing the Tetris theme song in a continuous loop
+     *
+     */
+    public void playTetrisTheme(){
+        try {
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("tetris-theme.aiff"));
+    		tetrisTheme = AudioSystem.getClip();
+            tetrisTheme.open(music);
+            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+	}
+
+    
+    /**
+     * Toggles mute on the tetris theme when called
+     *
+     */
+	public void toggleMuteTheme(){
+	    
+		//obtains mute control for audio clip
+		BooleanControl muteControl = (BooleanControl) tetrisTheme.getControl(BooleanControl.Type.MUTE);
+	    
+	    //toggle mute on audio clip 
+	    if(muteControl.getValue() == true){
+	    	muteControl.setValue(false);
+	    }
+	    else{
+	    	muteControl.setValue(true); 
+	    }
+	}
+	
+    /**
+     * Toggles mute on the entire game when called
+     *
+     */
+	public void toggleMuteGame(){
+		toggleMuteTheme();
+		localGame.getBoard().toggleMuteDrop();
+		localGame.getBoard().toggleMuteMoveRotate();
 	}
 
 

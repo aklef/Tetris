@@ -1,7 +1,8 @@
 package Tetris2P;
 
-import java.applet.Applet;
-import java.applet.AudioClip;
+import java.io.*;
+import javax.sound.sampled.*;
+
 import java.awt.Color;
 //import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -14,7 +15,14 @@ import java.awt.event.KeyEvent;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.io.File;
+import java.io.IOException;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.BooleanControl;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 //import javax.swing.Timer;
@@ -43,12 +51,12 @@ public class Board extends JPanel implements ActionListener {
      */
     private static Font labelFont;
     
-    private AudioClip tetrisTheme; 
-    private AudioClip moveSound; 
-    private AudioClip rotateSound; 
-    private AudioClip hardDropSound; 
-    private AudioClip countDownSound; 
-    private AudioClip countOverSound; 
+//    private AudioClip tetrisTheme; 
+//    private AudioClip moveSound; 
+//    private AudioClip rotateSound; 
+//    private AudioClip hardDropSound; 
+//    private AudioClip countDownSound; 
+//    private AudioClip countOverSound; 
     
     /**
      * Array containing all the colors that can be used in the game.
@@ -136,22 +144,26 @@ public class Board extends JPanel implements ActionListener {
      * Array of {@code Tetrominoes} that encodes all the Tetrominoes on the baord into a single array.
      */
     private final Tetromino[] board;
-
+    
+    /**
+     * Sound effects for the game
+     * 
+     */
+    private Clip rotateSound;
+    private Clip moveSound;
+    private Clip dropSound;
+    
     /**
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
-     */
+     */    
     protected Board(Tetris parent)
     {
-    	/* TODO Sounds
-    	tetrisTheme   = Applet.newAudioClip(getClass().getResource("tetris-theme.aiff"));
-        rotateSound   = Applet.newAudioClip(getClass().getResource("rotateSound.wav"));
-        moveSound     = rotateSound; 
-        dropSound     = Applet.newAudioClip(getClass().getResource("hardDropSound.wav"));
-        countDownSound= Applet.newAudioClip(getClass().getResource("countDownSound.wav"));
-        countOverSound= Applet.newAudioClip(getClass().getResource("countDownSound.wav"));
-        */
-        
+    	
+    	//Initialize Sound effects
+    	initRotateAndMoveSound();
+    	initDropSound();
+    	
        // Setting the initial piece conditions.
        setFocusable(true);
        curPiece = new Shape();
@@ -473,6 +485,7 @@ public class Board extends JPanel implements ActionListener {
         curX = newX;
         curY = newY;
         repaint();
+        
         return true;
     
     }
@@ -517,7 +530,90 @@ public class Board extends JPanel implements ActionListener {
             repaint();
         }
      }
-
+    
+    /**
+     * This method initiates the data line to be able to play rotate and move
+     * sound effects
+     */
+    public void initRotateAndMoveSound(){
+        try {
+    		AudioInputStream rotateMoveAudio = AudioSystem.getAudioInputStream(new File("rotateSound.wav"));
+    		rotateSound = AudioSystem.getClip();
+    		rotateSound.open(rotateMoveAudio);
+    		moveSound = rotateSound;
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+    }
+    
+    /**
+     * This method initiates the data line for to be be able to play drop sound effects
+     */
+    public void initDropSound(){
+        try {
+    		AudioInputStream dropAudio = AudioSystem.getAudioInputStream(new File("hardDropSound.wav"));
+    		dropSound = AudioSystem.getClip();
+    		dropSound.open(dropAudio);
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+    }
+    
+    /**
+     * Toggles mute for drop sound effects
+     *
+     */
+	public void toggleMuteDrop(){
+	    
+		//obtains mute control for audio clip
+		BooleanControl muteControlDrop = (BooleanControl) dropSound.getControl(BooleanControl.Type.MUTE);
+	    
+	    //toggle mute on rotate audio clip 
+	    if(muteControlDrop.getValue() == true){
+	    	muteControlDrop.setValue(false);
+	    }
+	    else{
+	    	muteControlDrop.setValue(true); 
+	    }
+	}
+	
+    /**
+     * Toggles mute rotate and move sounds
+     *
+     */
+	public void toggleMuteMoveRotate(){
+	    
+		//obtains mute control for audio clip
+		BooleanControl muteControlRotate = (BooleanControl) rotateSound.getControl(BooleanControl.Type.MUTE);
+		BooleanControl muteControlMove = (BooleanControl) moveSound.getControl(BooleanControl.Type.MUTE);
+	    
+	    //toggle mute on rotate audio clip 
+	    if(muteControlRotate.getValue() == true){
+	    	muteControlRotate.setValue(false);
+	    	muteControlMove.setValue(false);
+	    }
+	    else{
+	    	muteControlRotate.setValue(true); 
+	    	muteControlMove.setValue(true);
+	    }
+	}
+	
+	
+    
 	/**
 	 * Timer class used to generate game ticks.
 	 * 
@@ -701,25 +797,50 @@ public class Board extends JPanel implements ActionListener {
              case KeyEvent.VK_UP: case 'W': case 'w': // rotate
             	 synchronized(timer) {
             		 tryMove(curPiece.rotate(), curX, curY);
+            		 
+            		 //generates sound effect
+            		 rotateSound.stop();
+            		 rotateSound.flush();
+             		 rotateSound.start(); 
             	 }
                  break;
              case KeyEvent.VK_LEFT: case 'A': case 'a': // move left
             	 synchronized(timer) {
             		 tryMove(curPiece, curX - 1, curY);
+            		 
+            		 //moveSound sound effect
+            		 moveSound.stop();
+            		 moveSound.flush();
+            		 moveSound.start();
             	 }
                  break;
              case KeyEvent.VK_RIGHT: case 'D': case 'd': // move right
             	 synchronized(timer) {
             		 tryMove(curPiece, curX + 1, curY);
+            		 
+            		 //generates sound effect
+            		 moveSound.stop();
+            		 moveSound.flush();
+            		 moveSound.start();
             	 }
                  break;
              case KeyEvent.VK_DOWN: case 'S': case 's': // nudge down
             	 oneLineDown();
+            	 
+        		 //generates sound effect
+            	 moveSound.stop();
+        		 moveSound.flush();
+            	 moveSound.start();
                  break;
              case KeyEvent.VK_SHIFT: case 'H': case 'h': // hold
                  hold();
                  break;
              case KeyEvent.VK_SPACE: // drops piece to bottom
+            	 
+        		 //generates sound effect
+        		 dropSound.stop();
+        		 dropSound.flush();
+            	 dropSound.start();
                  dropDown();
                  break;
              }
