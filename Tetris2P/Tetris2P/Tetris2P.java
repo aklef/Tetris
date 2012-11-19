@@ -81,8 +81,8 @@ public class Tetris2P extends JFrame implements Runnable{
         //setUndecorated(true);
         
         // Creating instances of Tetris panels
-        localGame	 = new Tetris(this);
-        opponentGame = new Tetris(this);
+        localGame	 = new Tetris();
+        opponentGame = new Tetris();
         userList	 = new PlayerList();
         
         // Default background color

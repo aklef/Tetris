@@ -58,7 +58,8 @@ public class Tetris extends JPanel{
     /**
      * Contructor for Tetris game.
      */
-    public Tetris(Tetris2P parent) {
+    public Tetris()
+    {
     	backgroundColor = new Color (13,13,13);
     	
     	toolBar = new ToolBar();
