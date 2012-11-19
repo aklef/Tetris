@@ -83,12 +83,8 @@ public class Tetris2P extends JFrame implements Runnable{
     public Tetris2P() {
         // GridLayout for frame
         GridLayout myGrid = new GridLayout(1, 2, 30, 0);
-        
-        // Awesome feature! but don't use...
-        //setUndecorated(true);
-        
+                
         // Creating instances of Tetris panels
-        
         localGame	 = new Tetris();
         opponentGame = new Tetris();
         userList	 = new PlayerList();
@@ -167,10 +163,10 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     public void playTetrisTheme(){
         try {
-    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_8bit.mp3"));
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_a_8bi.wav"));
     		tetrisTheme = AudioSystem.getClip();
             tetrisTheme.open(music);
-            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
+            tetrisTheme.start(); 
         }
         catch(UnsupportedAudioFileException uae) {
             System.out.println(uae);

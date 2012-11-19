@@ -130,7 +130,7 @@ public class Tetris extends JPanel{
     /**
      * Sets the master audio control to the given boolean value.
      * 
-     * @param audioState True if ausio playback is allowed, false otherwise.
+     * @param audioState True if audio playback is allowed, false otherwise.
      */
     protected void setAudioCanPlay(boolean audioState) {
     	isAudioPlaybackAllowed = audioState;

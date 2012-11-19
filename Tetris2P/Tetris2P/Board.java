@@ -637,10 +637,10 @@ public class Board extends JPanel implements ActionListener {
 		public void setPaused(boolean pause) { 
 			m_paused = pause;
 			if(m_paused) {
-				//XXX sounds.stopSoundtrack();
+				boardAudio = false;
 			}
 			else {
-				//XXX sounds.playSoundtrack();
+				boardAudio = true;
 				synchronized(this) {
 					this.notify();
 				}
@@ -653,7 +653,7 @@ public class Board extends JPanel implements ActionListener {
 			{
 				try {
 					if (m_initial_delay != -1)
-					{ // waits the intial delay
+					{ // waits the initial delay
 						sleep(m_initial_delay);
 						m_initial_delay = -1;
 					} // wait the specified amount of time
