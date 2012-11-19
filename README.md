@@ -14,7 +14,7 @@ Soundtrack Source:
 * A great beat from http://soundcloud.com/neogrit/a-nes-gb
 * "A (NES/GB)" by neogrit is licensed under a Creative Commons License (http://creativecommons.org/licenses/by/3.0/)
 
-![Tetris singleplayer.](https://github.com/akleff/Tetris/Tetris2P/Media/singlePlayer.png)
+![Tetris singleplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/singlePlayer.png?raw=true)
 
 BSD License
 -------
