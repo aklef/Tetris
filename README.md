@@ -5,14 +5,14 @@ The Game of Tetris coded in JAVA as a real-time multiplayer game.
 
 Uses the Object Client-Server Framework (OCSF) provided in SEG2105 at uOttawa for some of its networking core.
 
-Has a chatrrom created by adapting our SimpleChat program.
+Has a chatroom area made by adapting our SimpleChat IM program.
 
 Media
 -------
 
 Soundtrack Source:
 
-* A great beat from http://soundcloud.com/neogrit/a-nes-gb
+* A great audioclip from a guy called Neogrit. Check him out at http://soundcloud.com/neogrit/a-nes-gb
 * "A (NES/GB)" by neogrit is licensed under a Creative Commons License (http://creativecommons.org/licenses/by/3.0/)
 
 	![Tetris singleplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/singlePlayer.png?raw=true)
