@@ -126,7 +126,7 @@ public class Board extends JPanel implements ActionListener {
      */
     private Thread myTimer;
     /**
-     * Array of {@code Tetrominoes} that encodes all the Tetrominoes on the baord into a single array.
+     * Array of {@code Tetrominoes} that encodes all the Tetrominoes on the board into a single array.
      */
     private final Tetromino[] board;
     
@@ -139,7 +139,7 @@ public class Board extends JPanel implements ActionListener {
     private Clip dropSound;
     
     /**
-     * Music soundtrack for the game
+     * Soundtrack for the game
      */
     private Clip tetrisTheme; 
     
