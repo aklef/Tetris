@@ -116,10 +116,7 @@ public class Tetris2P extends JFrame implements Runnable{
         //revalidate();
         
         opponentGame.setFocusable(false);
-                
-        //Starts playing the soundtrack
-        playTetrisTheme();
-        
+                        
         //muting opponents game
         opponentGame.setAudioCanPlay(false);
         
@@ -156,30 +153,7 @@ public class Tetris2P extends JFrame implements Runnable{
         setVisible(true);
         
         }
-	
-    /**
-     * Begins playing the Tetris theme song in a continuous loop
-     *
-     */
-    public void playTetrisTheme(){
-        try {
-    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_a_8bi.wav"));
-    		tetrisTheme = AudioSystem.getClip();
-            tetrisTheme.open(music);
-            tetrisTheme.start(); 
-        }
-        catch(UnsupportedAudioFileException uae) {
-            System.out.println(uae);
-        }
-        catch(IOException ioe) {
-                System.out.println(ioe);
-        }
-        catch(LineUnavailableException lua) {
-                System.out.println(lua);
-        }
-	}
-
-    
+	    
     /**
      * Toggles mute on the entire game when called
      *

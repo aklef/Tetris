@@ -16,12 +16,6 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.BooleanControl;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -145,6 +139,12 @@ public class Board extends JPanel implements ActionListener {
     private Clip dropSound;
     
     /**
+     * Music soundtrack for the game
+     */
+    private Clip tetrisTheme; 
+    
+    
+    /**
      * This variable will be true if audio can play
      * 
      */
@@ -154,8 +154,15 @@ public class Board extends JPanel implements ActionListener {
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
      */    
+    
+    /**
+     * @param
+     */
+    
     protected Board(Tetris parent)
     {    	
+        //Starts playing the soundtrack
+        playSoundtrack();
     	
         // Setting the initial piece conditions.
        setFocusable(true);
@@ -319,12 +326,14 @@ public class Board extends JPanel implements ActionListener {
         isFallingFinished = false;
         isFirstPieceMade = false;
         isPieceHeld = false;
+        boardAudio = true;
         numLinesRemoved = 0;
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
         statusBar.setText(" Game paused");
         statusBar.setForeground(Color.magenta);
         
+        playSoundtrack();
         clearBoard();
         newPiece();
         repaint();
@@ -604,8 +613,29 @@ public class Board extends JPanel implements ActionListener {
                 System.out.println(lua);
         }
     }
-	
     
+    /**
+     * Begins playing the Tetris theme song in a continuous loop
+     *
+     */
+    public void playSoundtrack(){
+        try {
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_a_8bit.wav"));
+    		tetrisTheme = AudioSystem.getClip();
+            tetrisTheme.open(music);
+            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+	}
+   
 	/**
 	 * Timer class used to generate game ticks.
 	 * 
@@ -637,9 +667,11 @@ public class Board extends JPanel implements ActionListener {
 		public void setPaused(boolean pause) { 
 			m_paused = pause;
 			if(m_paused) {
+				tetrisTheme.stop();
 				boardAudio = false;
 			}
 			else {
+				tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY);
 				boardAudio = true;
 				synchronized(this) {
 					this.notify();

@@ -60,7 +60,7 @@ public class Tetris extends JPanel{
     {
     	backgroundColor = new Color (13,13,13);
     	
-    	isAudioPlaybackAllowed = true;
+    	isAudioPlaybackAllowed = false;
     	
     	toolBar = new ToolBar();
     	toolBar.setBackground(backgroundColor);
@@ -118,13 +118,6 @@ public class Tetris extends JPanel{
     @Override
     public Color getBackground() {
        return backgroundColor;
-   }
-
-    /**
-     * Returns the curretn status of audio playback.
-     */
-    protected boolean audioCanPlay() {
-       return isAudioPlaybackAllowed;
    }
 
     /**
