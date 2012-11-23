@@ -1,6 +1,10 @@
 package Tetris2P;
 
+import java.io.*;
+
+import javax.sound.sampled.*;
 import java.awt.AlphaComposite;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,7 +36,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import Tetris2P.Shape.Tetromino;
-import Tetris2P.Tetris.ToolBar;
+import Tetris2P.Tetris.HotBar.ShapeArea;
 
 import java.util.Queue;
 import java.util.LinkedList;
@@ -63,28 +67,39 @@ public class Tetris2P extends JFrame implements Runnable{
      * Variable that holds the GUI for the current connected users
      */
     private final PlayerList userList;
-    
+    /**
+     * Holds the chat contents
+     */
+    private final JTextArea chatBox;
+    /**
+     * Input area for chat messages and commands.
+     */
+    private final JTextField inputBox;
     /**
      * Boolean variable that determines if the game will make sounds..
      */
     public boolean isMusicOn = true;
-  
+    /**
+     * Music soundtrack for the game
+     */
+    private Clip tetrisSoudtrack; 
     
     /**
      * Constructor for the Teris multiplayer game.
      */
-    public Tetris2P() {
-        // GridLayout for frame
+    public Tetris2P()
+    {
+        // Panel for the middle area
+        JPanel middle = new JPanel();
+        // GridLayout for middle area
         GridLayout myGrid = new GridLayout(1, 2, 30, 0);
         
-        // Awesome feature! but don't use...
-        //setUndecorated(true);
-        
-        // Creating instances of Tetris panels
-        
+        // Creating instances of emleents
         localGame	 = new Tetris();
         opponentGame = new Tetris();
         userList	 = new PlayerList();
+        chatBox		 = new JTextArea();
+        inputBox	 = new JTextField();
         
         // Default background color
         backgroundColor = new Color(13,13,13);
@@ -96,23 +111,38 @@ public class Tetris2P extends JFrame implements Runnable{
         opponentGame.setBackground(backgroundColor);
         userList.setBackground(backgroundColor);
         
-        // Setting the frame layout manager
-        setLayout(myGrid);
+        // Setting components' sizes.
+        userList.setPreferredSize(new Dimension(100,200));
+
+        // Setting components as not focusable
+        opponentGame.setFocusable(false);
+        userList.setFocusable(false);
+        chatBox.setFocusable(false);
+        
+        
+        // Setting the middle's layout manager
+        middle.setLayout(myGrid);
         
         // Adding components to frame
-        add(localGame);
-        add(opponentGame);
-        add(userList);
+        middle.add(localGame);
+        middle.add(opponentGame);
+        middle.add(userList);
+        
+        // Adding components to frame
+        //add(toolBar, BorderLayout.NORTH);
+        add(middle, BorderLayout.CENTER);
+        add(inputBox, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
         getContentPane().setPreferredSize(new Dimension(600,473));
-        // Necsesary
+        // Necessary
         pack();
         
         // Not needed but works fine
         //revalidate();
         
-        opponentGame.setFocusable(false);
+        // mute opponent game
+        opponentGame.setAudioCanPlay(false);
         
         setTitle("Tetris");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -135,7 +165,11 @@ public class Tetris2P extends JFrame implements Runnable{
         new Tetris2P();
     }
 
-	public void run() {
+    /**
+     * TODO
+     */
+	public void run()
+	{
         // Makes the window open in the center of the screen.
         setLocationRelativeTo(null);
         
@@ -144,78 +178,29 @@ public class Tetris2P extends JFrame implements Runnable{
         
         // Shows the window
         setVisible(true);
-	}
-
-
-    //*************************************CHATBOX*************************************//
-
-
-	public class ChatBox extends JPanel implements ActionListener
-	{
-        
-        /**
-         * Holds the chat contents
-        */
-        private final JTextArea textArea;
-        /**
-         * Holds the chat contents
-        */
-        private final JTextField textInput;
-
-        /**
-         * Constructor for the chat box
-         */
-        public ChatBox()
-        {
-        	//creates the user interface for the chat box
-            //Creating the chat box
-            setLayout(new BorderLayout());
-            setPreferredSize(new Dimension(200, 400));
-            
-            // The chat display and input areas
-            textArea = new JTextArea();
-            textInput = new JTextField(20);
-            
-            // Interface buttons
-            // Should be replaced with key commands.
-            JButton send = new JButton("Send");
-            JButton reset = new JButton("Clear");
-            
-            // Adding listeners to elements
-            send.addActionListener(this);
-            reset.addActionListener(this);
-            
-            // 
-            
-            
-            //Adding Components to the frame.
-            add(textArea, BorderLayout.CENTER);
-            add(textInput, BorderLayout.SOUTH);
-            
-            // Display the window
-            setVisible(true);
-        }
-
-        
-        public void actionPerformed(ActionEvent e)
-        {
-        	//This will modify the textPane according to messages inputed
-            
-        }
-
-       /**
-        * Returns the content of the text area
-        **/
-        public JTextArea getTextPane() {
-          	return textArea;
-        }
         
 	}
-	
 
-    //*************************************USERLIST*************************************//
+    /**
+     * Toggles mute on the entire game when called
+     */
+	protected void toggleMuteGame(){
+		if(localGame.getAudioCanPlay()){
+			localGame.setAudioCanPlay(false);
+		}
+		else
+			localGame.setAudioCanPlay(true);
+	}
 
-	public class PlayerList extends JPanel
+    //*************************************PLAYERLIST*************************************//
+
+	/**
+	 * TODO
+	 * 
+	 * @author Andréas K.LeF.
+	 * @author Dmitry Anglinov
+	 */
+	protected class PlayerList extends JPanel
 	{
 		
 	   /**
@@ -237,31 +222,37 @@ public class Tetris2P extends JFrame implements Runnable{
 		 * constructor method for list.
 		**/
 	    @SuppressWarnings({ "rawtypes", "unchecked" })
-		public PlayerList() {
-	    	
+		protected PlayerList()
+	    {
 	        setLayout(new BorderLayout());
 	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 20));
 	        
+	        // TODO
 	        users = new LinkedList<String>();
+	        // TODO
 	        userList = new DefaultListModel();
 	        JList list = new JList(userList);
 	        
 	        // XXX Remove! Test addition to the list
-	        for(int i=0; i<50; i++){
+	        for(int i=0; i<10; i++){
 	        	addUserToList("Dingletronic" + i);
 	        }
 	        // Attach a ScrollPane to the list to make it scrollable
 	        JScrollPane scrollPane = new JScrollPane();
+	        
+	        list.setPreferredSize(new Dimension(60, 50));
+	        //list.setSize(100, 30);
 	        scrollPane.getViewport().add(list);
-	        scrollPane.setPreferredSize(new Dimension(100, 100));
+	        
+	        //scrollPane.setSize(new Dimension(100, 100));
 	        
 	        // Title of the playerlist
-	        label = new JLabel(" Players :");
+	        label = new JLabel(" Online Players :");
 	        label.setFont(new Font("Malgun Gothic", Font.BOLD, 14));
 	        label.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 0));
 	        
-	        add(scrollPane, BorderLayout.CENTER);
 	        add(label, BorderLayout.NORTH);
+	        add(scrollPane, BorderLayout.CENTER);
 	    }
 
 	    /**
@@ -270,7 +261,8 @@ public class Tetris2P extends JFrame implements Runnable{
 	     * @param username {@code String} name of player.
 	     */
 	    @SuppressWarnings("unchecked")
-		public void addUserToList(String username){
+		protected void addUserToList(String username)
+	    {
 	    	users.addLast(username); //add to end of list so the new user will be last in the queue to play
 	    	userList.addElement(username); //adds a user to the list GUI
 	    }
@@ -280,9 +272,160 @@ public class Tetris2P extends JFrame implements Runnable{
 	     * 
 	     * @param username {@code String} name of player.
 	     */
-	    public void removeUserFromList(String username){
+	    protected void removeUserFromList(String username)
+	    {
 	    	users.remove(username); //removes the user from the list
 	    	userList.removeElement(username); //adds a user to the list GUI
 	    }
+	    
+		/**
+		 * TODO
+		 */
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+		}
+	}
+	
+	//**************************************TOOLBAR*************************************//
+	
+	/**
+	 * This is a nested class in Tetris2P.java that is a JPanel.
+	 * It is displayed at the top of the main Tetris2P frame and allows 
+	 * for user interaction with buttons.
+	 * 
+	 * @author Andréas K.LeF.
+	 * @author Dmitry Anglinov
+	 */
+	protected class ToolBar extends JPanel
+	{
+		/**
+		 * TODO Icons.
+		
+		/**
+		 * Constructor method.
+		 */
+		protected ToolBar()
+		{
+			/*
+			this.setLayout(new BorderLayout());
+			
+			holdArea = new ShapeArea();
+			add(holdArea, BorderLayout.WEST);
+			
+			previewNextPieceArea = new ShapeArea();
+			
+			previewNextPieceArea.setBackground(backgroundColor);
+			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
+			add(previewNextPieceArea, BorderLayout.EAST);
+			*/
+		}
+		
+		/**
+		 * TODO
+		 */
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+		}
+	}
+	
+	//*************************************OUTPUTBOX*************************************//
+	
+	/**
+	 * This is a nested class in Tetris2P.java that is a JPanel.
+	 * It is displayed at the bottom of the main Tetris2P frame and allows for user input.
+	 * 
+	 * @author Andréas K.LeF.
+	 * @author Dmitry Anglinov
+	 */
+	public class OutputBox extends JPanel /*implements ChatIF*/
+	{
+		/**
+		 * TODO Icons.
+		
+		/**
+		 * Constructor method.
+		 */
+		public OutputBox(/*TetrisClient client*/)
+		{
+			/*
+			this.setLayout(new BorderLayout());
+			
+			holdArea = new ShapeArea();
+			add(holdArea, BorderLayout.WEST);
+			
+			previewNextPieceArea = new ShapeArea();
+			
+			previewNextPieceArea.setBackground(backgroundColor);
+			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
+			add(previewNextPieceArea, BorderLayout.EAST);
+			*/
+		}
+		
+		/**
+		  * This method overrides the method in the ChatIF interface.  It
+		 * displays a message onto the screen.
+		 *
+		 * @param message The string to be displayed.
+		 */
+		public void display(String message) 
+		{
+			System.out.println(message);
+		}
+		
+		/**
+		 * TODO
+		 */
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+		}
+	}
+	
+	//*************************************INPUTBOX*************************************//
+	
+	/**
+	 * This is a nested class in Tetris2P.java that is a JPanel.
+	 * It is displayed at the bottom of the main Tetris2P frame and allows for user input.
+	 * 
+	 * @author Andréas K.LeF.
+	 * @author Dmitry Anglinov
+	 */
+	public class InputBox extends JPanel
+	{
+		/**
+		 * TODO Icons.
+		
+		/**
+		 * Constructor method.
+		 */
+		public InputBox(/*TetrisClient client*/)
+		{
+			/*
+			this.setLayout(new BorderLayout());
+			
+			holdArea = new ShapeArea();
+			add(holdArea, BorderLayout.WEST);
+			
+			previewNextPieceArea = new ShapeArea();
+			
+			previewNextPieceArea.setBackground(backgroundColor);
+			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
+			add(previewNextPieceArea, BorderLayout.EAST);
+			*/
+		}
+		
+		/**
+		 * TODO
+		 */
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+		}
 	}
 }

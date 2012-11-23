@@ -1,7 +1,7 @@
 package Tetris2P;
 
-import java.applet.Applet;
-import java.applet.AudioClip;
+import java.io.*;
+import javax.sound.sampled.*;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -14,12 +14,13 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-
+import java.io.File;
+import java.io.IOException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import Tetris2P.Shape.Tetromino;
-import Tetris2P.Tetris.ToolBar;
+import Tetris2P.Tetris.HotBar;
 
 /**
  * This class represents an instance on the board where a player interacts with the game and moves pieces.
@@ -41,34 +42,7 @@ public class Board extends JPanel implements ActionListener {
      * The font used for labels.
      */
     private static Font labelFont;
-    /**
-     * Master on/off for all game audio.
-     */
-    private boolean isSoundAllowed;
-    /**
-     * The main audio used as the ambience music.
-     */
-    private final AudioClip soundTrack;
-    /**
-     * The sound played when a piece is moved.
-     */
-    private final AudioClip moveSound;
-    /**
-     * The sound played when a piece is rotated.
-     */
-    private final AudioClip rotateSound;
-    /**
-     * The  sound played when a piece is dropped.
-     */
-    private final AudioClip dropSound;
-    /**
-     * XXX The sound played during the countdown.
-     */
-    private final AudioClip countDownSound;
-    /**
-     * XXX The sound played at the end of the countdown.
-     */
-    private final AudioClip countOverSound;
+
     /**
      * Array containing all the colors that can be used in the game.
      */
@@ -129,7 +103,7 @@ public class Board extends JPanel implements ActionListener {
     /**
      * The HUD for the Next and the Hold shapes, and the score(?).
      */
-    private final ToolBar toolBar;
+    private final HotBar toolBar;
     /**
      * The current {@code Shape} object being moved on the board.
      */
@@ -152,31 +126,56 @@ public class Board extends JPanel implements ActionListener {
      */
     private Thread myTimer;
     /**
-     * Array of {@code Tetrominoes} that encodes all the Tetrominoes on the baord into a single array.
+     * Array of {@code Tetrominoes} that encodes all the Tetrominoes on the board into a single array.
      */
     private final Tetromino[] board;
-
+    /**
+     * Sound effect for when a piece is rotated.
+     */
+    private Clip rotateSound;
+    /**
+     * Sound effect for when a piece is rotated.
+     */
+    private Clip moveSound;
+    /**
+     * Sound effect for when a piece is rotated.
+     */
+    private Clip dropSound;
+    /**
+     * Soundtrack for the game
+     */
+    private Clip tetrisTheme; 
+    
+    
+    /**
+     * This variable will be true if audio can play
+     * 
+     */
+    private boolean boardAudio;
+    
     /**
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
+     */    
+    
+    /**
+     * @param
      */
-    protected Board(Tetris parent)
-    {
-        // Setting up the audio.
-    	soundTrack		= Applet.newAudioClip(getClass().getResource("Media/tetris-theme.aiff"));
-        rotateSound		= Applet.newAudioClip(getClass().getResource("Media/rotateSound.wav"));; 
-        moveSound		= Applet.newAudioClip(getClass().getResource("Media/moveSound.wav"));
-        dropSound		= moveSound;
-        countDownSound	= Applet.newAudioClip(getClass().getResource("Media/countDownSound.wav"));
-        countOverSound	= countDownSound;
-        
-        
+    
+    protected Board( Tetris parent )
+    {    	
+        //Starts playing the soundtrack
+        playSoundtrack();
+       
        // Setting the initial piece conditions.
        setFocusable(true);
        curPiece = new Shape();
        nextPiece = new Shape();
        holdPiece = new Shape();
        holdPiece.setShape(Tetromino.NoShape); //player has no shape held at start
+       
+       //checking if muted
+       boardAudio = parent.getAudioCanPlay();
        
        toolBar = parent.getToolBar();
        statusBar = parent.getStatusBar();
@@ -207,6 +206,22 @@ public class Board extends JPanel implements ActionListener {
     }
     
     //*************************************SETTER/GETTER*************************************//
+    
+    /**
+     * Setting board audio
+     * 
+     */
+    public boolean getBoardAudio(){
+    	return boardAudio;
+    }
+    
+    /**
+     * Setting board audio
+     * 
+     */
+    public void setBoardAudio(boolean audioState){
+    	boardAudio = audioState;
+    }
     
     /**
      * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
@@ -249,22 +264,6 @@ public class Board extends JPanel implements ActionListener {
     {
     	return board[(y * SQUARES_IN_WIDTH) + x];
     }
-
-    /**
-     * Returns the curretn status of audio playback.
-     */
-    protected boolean audioCanPlay() {
-       return isSoundAllowed;
-   }
-
-    /**
-     * Sets the master audio control to the given boolean value.
-     * 
-     * @param audioState True if ausio playback is allowed, false otherwise.
-     */
-    protected void setAudioCanPlay(boolean audioState) {
-    	isSoundAllowed = audioState;
-   }
     
     //*************************************CONTROL*************************************//
     
@@ -292,7 +291,6 @@ public class Board extends JPanel implements ActionListener {
 		myTimer = new Thread(timer);
         
         newPiece();
-        playSoundtrack();
         myTimer.start();
         pause();
     }
@@ -309,8 +307,6 @@ public class Board extends JPanel implements ActionListener {
         
         isPaused = !isPaused;
         timer.setPaused(isPaused);
-        isSoundAllowed = !isPaused;
-        soundTrack.stop(); //stops the soundtrack
         if (isPaused) { //pausing the game
             statusBar.setText(" Game [P]aused. ");
             statusBar.setForeground(Color.magenta);
@@ -333,13 +329,14 @@ public class Board extends JPanel implements ActionListener {
         isFallingFinished = false;
         isFirstPieceMade = false;
         isPieceHeld = false;
-        isSoundAllowed = true;
+        boardAudio = true;
         numLinesRemoved = 0;
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
         statusBar.setText(" Game paused");
         statusBar.setForeground(Color.magenta);
         
+        playSoundtrack();
         clearBoard();
         newPiece();
         repaint();
@@ -351,17 +348,30 @@ public class Board extends JPanel implements ActionListener {
         
         pause();
     }
+    
     /**
-     * Plays the tetris theme song forever in a loop.
+     * Method called when the player tops out.
      */
-    private void playSoundtrack()
+    public void gameOver()
     {
-		if(soundTrack == null) //stoopid checking
-			return;
-		else if (isSoundAllowed) //actually controls the music
-			soundTrack.loop();
-	}
-
+        isStarted = false;
+        isFallingFinished = false;
+        isFirstPieceMade = false;
+        isPieceHeld = false;
+        isPaused = true;
+        
+        numLinesRemoved = 0;
+        
+        curPiece.setShape(Tetromino.NoShape);
+        statusBar.setText(" Game over. Press [Q]uit [R]estart");
+        statusBar.setForeground(Color.ORANGE);
+        
+        timer.setPaused(isPaused);
+        
+        repaint();
+        pause();
+    }
+    
     //*************************************LOGIC*************************************//
     
     /**
@@ -386,18 +396,7 @@ public class Board extends JPanel implements ActionListener {
         // XXX Determines if the game is over.
         boolean isGameOver = !tryMove(curPiece, curX, curY);
         if (isGameOver) {
-            isStarted = false;
-            isFallingFinished = false;
-            isFirstPieceMade = false;
-            isPieceHeld = false;
-            isPaused = true;
-            numLinesRemoved = 0;
-            curPiece.setShape(Tetromino.NoShape);
-            statusBar.setText(" Game over. Press [Q]uit [R]estart");
-            statusBar.setForeground(Color.ORANGE);
-            timer.setPaused(isPaused);
-            repaint();
-            pause();
+        	gameOver();
         }
     }
 
@@ -521,6 +520,7 @@ public class Board extends JPanel implements ActionListener {
         curX = newX;
         curY = newY;
         repaint();
+        
         return true;
     
     }
@@ -565,7 +565,93 @@ public class Board extends JPanel implements ActionListener {
             repaint();
         }
      }
-
+    
+    /**
+     * This method initiates and plays a rotate sound effect
+     *  
+     */
+    public void initRotateSound(){
+        try {
+    		AudioInputStream rotateAudio = AudioSystem.getAudioInputStream(new File("Media/rotateSound.wav"));
+    		rotateSound = AudioSystem.getClip();
+    		rotateSound.open(rotateAudio);
+    		rotateSound.start();
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+    }
+    
+    /**
+     * This method initiates and plays a move sound effect
+     */
+    public void initMoveSound(){
+        try {
+    		AudioInputStream moveAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
+    		moveSound = AudioSystem.getClip();
+    		moveSound.open(moveAudio);
+    		moveSound.start();
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+    }
+    
+    /**
+     * This method initiates and plays a drop sound effect
+     */
+    public void initDropSound(){
+        try {
+    		AudioInputStream dropAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
+    		dropSound = AudioSystem.getClip();
+    		dropSound.open(dropAudio);
+    		dropSound.start();
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+    }
+    
+    /**
+     * Begins playing the Tetris theme song in a continuous loop
+     *
+     */
+    public void playSoundtrack(){
+        try {
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_a_8bit.wav"));
+    		tetrisTheme = AudioSystem.getClip();
+            tetrisTheme.open(music);
+            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
+        }
+        catch(UnsupportedAudioFileException uae) {
+            System.out.println(uae);
+        }
+        catch(IOException ioe) {
+                System.out.println(ioe);
+        }
+        catch(LineUnavailableException lua) {
+                System.out.println(lua);
+        }
+	}
+   
 	/**
 	 * Timer class used to generate game ticks.
 	 * 
@@ -597,10 +683,12 @@ public class Board extends JPanel implements ActionListener {
 		public void setPaused(boolean pause) { 
 			m_paused = pause;
 			if(m_paused) {
-				//XXX sounds.stopSoundtrack();
+				tetrisTheme.stop();
+				boardAudio = false;
 			}
 			else {
-				//XXX sounds.playSoundtrack();
+				tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY);
+				boardAudio = true;
 				synchronized(this) {
 					this.notify();
 				}
@@ -613,7 +701,7 @@ public class Board extends JPanel implements ActionListener {
 			{
 				try {
 					if (m_initial_delay != -1)
-					{ // waits the intial delay
+					{ // waits the initial delay
 						sleep(m_initial_delay);
 						m_initial_delay = -1;
 					} // wait the specified amount of time
@@ -727,7 +815,7 @@ public class Board extends JPanel implements ActionListener {
          {
              int keycode = e.getKeyCode();
              
-             // Pcommand statement switch
+             // Command statement switch
              switch (keycode) {
                  case 'Q': case 'q':
                      System.exit(0);
@@ -749,25 +837,45 @@ public class Board extends JPanel implements ActionListener {
              case KeyEvent.VK_UP: case 'W': case 'w': // rotate
             	 synchronized(timer) {
             		 tryMove(curPiece.rotate(), curX, curY);
+            		 
+            		 //generates sound effect
+                	 if(boardAudio)
+                		 initRotateSound();
             	 }
                  break;
              case KeyEvent.VK_LEFT: case 'A': case 'a': // move left
             	 synchronized(timer) {
             		 tryMove(curPiece, curX - 1, curY);
+            		 
+            		 //moveSound sound effect       
+            		 if(boardAudio)
+            			 initMoveSound();
             	 }
                  break;
              case KeyEvent.VK_RIGHT: case 'D': case 'd': // move right
             	 synchronized(timer) {
             		 tryMove(curPiece, curX + 1, curY);
+            		 
+            		 //generates sound effect
+                	 if(boardAudio)
+                		 initMoveSound();
             	 }
                  break;
              case KeyEvent.VK_DOWN: case 'S': case 's': // nudge down
             	 oneLineDown();
-                 break;
+            	 
+        		 //generates sound effect
+            	 if(boardAudio)
+            		 initMoveSound();
+            	 break;
              case KeyEvent.VK_SHIFT: case 'H': case 'h': // hold
                  hold();
                  break;
              case KeyEvent.VK_SPACE: // drops piece to bottom
+            	 
+        		 //generates sound effect
+            	 if(boardAudio)
+            		 initDropSound();
                  dropDown();
                  break;
              }
