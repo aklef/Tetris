@@ -145,7 +145,7 @@ public class Tetris extends JPanel{
     	return isAudioPlaybackAllowed;
     }
 
-	//*************************************TOOLBAR*************************************//
+    //*************************************TOOLBAR*************************************//
 	
 	/**
 	 * This is a nested class in Tetris.java that is a JPanel. It is displayed at the top of the main Tetris frame.
