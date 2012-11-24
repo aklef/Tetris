@@ -100,7 +100,7 @@ public abstract class AbstractClient implements Runnable {
 		// Do not do anything if the connection is already open
 		if (isConnected())
 			return;
-
+		
 		// Create the sockets and the data streams
 		try {
 			clientSocket = new Socket(host, port);

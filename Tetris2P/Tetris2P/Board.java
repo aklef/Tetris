@@ -146,6 +146,7 @@ public class Board extends JPanel implements ActionListener {
      */
     private Clip tetrisTheme; 
     
+    
     /**
      * This variable will be true if audio can play
      * 
@@ -174,7 +175,7 @@ public class Board extends JPanel implements ActionListener {
        holdPiece.setShape(Tetromino.NoShape); //player has no shape held at start
        
        //checking if muted
-       boardAudio = parent.getAudioCanPlay();
+       boardAudio = parent.isAudioPlaybackAllowed();
        
        toolBar = parent.getToolBar();
        statusBar = parent.getStatusBar();
@@ -586,93 +587,7 @@ public class Board extends JPanel implements ActionListener {
             repaint();
         }
      }
-    
-    /**
-     * This method initiates and plays a rotate sound effect
-     *  
-     */
-    public void initRotateSound(){
-        try {
-    		AudioInputStream rotateAudio = AudioSystem.getAudioInputStream(new File("Media/rotateSound.wav"));
-    		rotateSound = AudioSystem.getClip();
-    		rotateSound.open(rotateAudio);
-    		rotateSound.start();
-        }
-        catch(UnsupportedAudioFileException uae) {
-            System.out.println(uae);
-        }
-        catch(IOException ioe) {
-                System.out.println(ioe);
-        }
-        catch(LineUnavailableException lua) {
-                System.out.println(lua);
-        }
-    }
-    
-    /**
-     * This method initiates and plays a move sound effect
-     */
-    public void initMoveSound(){
-        try {
-    		AudioInputStream moveAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
-    		moveSound = AudioSystem.getClip();
-    		moveSound.open(moveAudio);
-    		moveSound.start();
-        }
-        catch(UnsupportedAudioFileException uae) {
-            System.out.println(uae);
-        }
-        catch(IOException ioe) {
-                System.out.println(ioe);
-        }
-        catch(LineUnavailableException lua) {
-                System.out.println(lua);
-        }
-    }
-    
-    /**
-     * This method initiates and plays a drop sound effect
-     */
-    public void initDropSound(){
-        try {
-    		AudioInputStream dropAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
-    		dropSound = AudioSystem.getClip();
-    		dropSound.open(dropAudio);
-    		dropSound.start();
-        }
-        catch(UnsupportedAudioFileException uae) {
-            System.out.println(uae);
-        }
-        catch(IOException ioe) {
-                System.out.println(ioe);
-        }
-        catch(LineUnavailableException lua) {
-                System.out.println(lua);
-        }
-    }
-    
-    /**
-     * Begins playing the Tetris theme song in a continuous loop
-     *
-     */
-    public void playSoundtrack(){
-        try {
-    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_a_8bit.wav"));
-    		tetrisTheme = AudioSystem.getClip();
-            tetrisTheme.open(music);
-            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
-        }
-        catch(UnsupportedAudioFileException uae) {
-            System.out.println(uae);
-        }
-        catch(IOException ioe) {
-                System.out.println(ioe);
-        }
-        catch(LineUnavailableException lua) {
-                System.out.println(lua);
-        }
-	}
-   
+
 	/**
 	 * Timer class used to generate game ticks.
 	 * 
@@ -821,6 +736,67 @@ public class Board extends JPanel implements ActionListener {
         g.drawLine(x + squareWidth() - 1, y + squareHeight() - 1, x + squareWidth() - 1, y + 1);
         
     }
+
+
+    //*************************************AUDIO*************************************//
+    
+    /**
+     * This method initiates and plays a rotate sound effect
+     *  
+     */
+    public void initRotateSound(){
+        try {
+    		AudioInputStream rotateAudio = AudioSystem.getAudioInputStream(new File("Media/rotateSound.wav"));
+    		rotateSound = AudioSystem.getClip();
+    		rotateSound.open(rotateAudio);
+    		rotateSound.start();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * This method initiates and plays a move sound effect
+     */
+    public void initMoveSound(){
+        try {
+    		AudioInputStream moveAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
+    		moveSound = AudioSystem.getClip();
+    		moveSound.open(moveAudio);
+    		moveSound.start();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * This method initiates and plays a drop sound effect
+     */
+    public void initDropSound(){
+        try {
+    		AudioInputStream dropAudio = AudioSystem.getAudioInputStream(new File("Media/moveSound.wav"));
+    		dropSound = AudioSystem.getClip();
+    		dropSound.open(dropAudio);
+    		dropSound.start();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Begins playing the Tetris theme song in a continuous loop
+     *
+     */
+    public void playSoundtrack(){
+        try {
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_8bit.wav"));
+    		tetrisTheme = AudioSystem.getClip();
+            tetrisTheme.open(music);
+            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+	}
 
     //*************************************INPUT*************************************//
 

@@ -98,6 +98,8 @@ public class TetrisServer extends AbstractServer
   public void newClientConnected(ConnectionToClient c)
   {
 	  int indexID;
+	  int opponentIndex = 0;
+	  boolean opponentFound = false;
 	  
 	  ClientNode newNode = new ClientNode(c.getId()); //setting the player
 	  clientList.add(newNode);
@@ -109,11 +111,22 @@ public class TetrisServer extends AbstractServer
 	  }
 	  else
 	  {
+		  //traverse the list and look for clients without an opponent
+		  for(int i=0; i< clientList.size(); i++)
+		  {
+			  //check if an opponent is found that is not the same client 
+			  if(clientList.get(i).opponentID == null && i != indexID)
+			  {
+				  opponentFound = true;
+				  opponentIndex = i;
+			  }
+		  }
+		  
 		 //If there is a client connected that doesn't have an opponent, match him with new connected player
-		 if(clientList.get(indexID - 1).opponentID == null)
+		 if(opponentFound)
 		 {
-			clientList.get(indexID - 1).opponentID = clientList.get(indexID).playerID;
-			clientList.get(indexID).opponentID = clientList.get(indexID - 1).opponentID;
+			clientList.get(opponentIndex).opponentID = clientList.get(indexID).playerID;
+			clientList.get(indexID).opponentID = clientList.get(opponentIndex).opponentID;
 		 }
 		 else
 		 {

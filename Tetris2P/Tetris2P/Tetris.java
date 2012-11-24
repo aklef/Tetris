@@ -13,6 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import Tetris2P.Shape.Tetromino;
+import Tetris2P.Tetris2P.OutputBox;
 
 /**
  * This class represents one complete instance of a gmae of tetris played by a user.
@@ -125,12 +126,12 @@ public class Tetris extends JPanel{
      * 
      * @param audioState True if audio playback is allowed, false otherwise.
      */
-    protected void setAudioCanPlay(boolean audioState) {
+    protected void setAudioPlayback(boolean audioState) {
     	isAudioPlaybackAllowed = audioState;
     	board.setBoardAudio(audioState);
    }
     
-    protected boolean getAudioCanPlay(){
+    protected boolean isAudioPlaybackAllowed(){
     	return isAudioPlaybackAllowed;
     }
 
