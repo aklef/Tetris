@@ -38,7 +38,7 @@ public class Tetris extends JPanel{
     /**
      * The toolbar object.
      */
-    private final ToolBar toolBar;
+    private final HotBar toolBar;
     /**
      * The board object.
      */
@@ -62,7 +62,7 @@ public class Tetris extends JPanel{
     	
     	isAudioPlaybackAllowed = false;
     	
-    	toolBar = new ToolBar();
+    	toolBar = new HotBar();
     	toolBar.setBackground(backgroundColor);
     	
     	// StatusBar can be replaced with console messages.
@@ -101,7 +101,7 @@ public class Tetris extends JPanel{
     /**
      * Returns the {@code ToolBar} Object  belonging to this game.
      */
-    protected ToolBar getToolBar() {
+    protected HotBar getToolBar() {
        return toolBar;
    }
 
@@ -142,7 +142,7 @@ public class Tetris extends JPanel{
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	public class ToolBar extends JPanel
+	public class HotBar extends JPanel
 	{
 	    /**
 	     * The {@code ShapeArea} to show piece on hold.
@@ -156,7 +156,7 @@ public class Tetris extends JPanel{
 		/**
 		 * Constructor method.
 		 */
-		public ToolBar()
+		public HotBar()
 		{
 			
 			this.setLayout(new BorderLayout());
@@ -306,7 +306,8 @@ public class Tetris extends JPanel{
 
 	            /**
 	             * Overrides the {@code Board} panel's default painting behaviour.
-	             * Casts the defualt {@code Graphics} to a {@code Graphics2D} object;
+	             * Casts the defualt {@code Graphics} to a {@code Graphics2D} object to
+	             * possibly use a transparent overlay.
 	             */
 	            @Override
 	            protected void paintComponent(Graphics g)

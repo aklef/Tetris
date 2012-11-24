@@ -78,7 +78,7 @@ public abstract class AbstractServer implements Runnable
    * false by default.
    */
   private boolean readyToStop = false;
-
+  
 
 // CONSTRUCTOR ******************************************************
 
@@ -325,8 +325,9 @@ final public void run()
 
           synchronized(this)
           {
-            ConnectionToClient c = new ConnectionToClient(
-              this.clientThreadGroup, clientSocket, this);
+            ConnectionToClient c = new ConnectionToClient(this.clientThreadGroup, clientSocket, this);
+            
+            newClientConnected(c);
           }
         }
         catch (InterruptedIOException exception)
@@ -361,7 +362,15 @@ final public void run()
 
 // METHODS DESIGNED TO BE OVERRIDDEN BY CONCRETE SUBCLASSES ---------
 
-  /**
+  /** 
+   * This method will be overwritten in order to implement specialized features every time a new
+   * ConnectionToClient is established
+   * 
+   * @param ConnectionToClient c 
+   */
+protected abstract void newClientConnected(ConnectionToClient c);
+
+/**
    * Hook method called each time a new client connection is
    * accepted. The default implementation does nothing.
    * @param client the connection connected to the client.
