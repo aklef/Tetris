@@ -27,6 +27,14 @@ public class TetrisServer extends AbstractServer
    */
   final public static int DEFAULT_PORT = 1337;
   
+
+  /**
+   * This data structures will store the identification of all clients connected
+   * It will be used to pair up player and opponent
+   */
+  private static LinkedList<ClientNode> clientList = new LinkedList<ClientNode>();
+  
+  
   //Instance variables **********************************************
   
   /**
@@ -34,12 +42,6 @@ public class TetrisServer extends AbstractServer
    * the display method in the client.
    */
   ChatIF serverText;
-  
-  /**
-   * This data structures will store the identification of all clients connected
-   * It will be used to pair up player and opponent
-   */
-  private static LinkedList<ClientNode> clientList = new LinkedList<ClientNode>();
   
   
  //Class methods ***************************************************
@@ -51,30 +53,30 @@ public class TetrisServer extends AbstractServer
    * @param args[0] The port number to listen on.  Defaults to 1337 
    *          if no argument is entered.
    */
-  public static void main(String[] args) 
-  {
-    int port = 0; //Port to listen on
-
-    try
-    {
-      port = Integer.parseInt(args[0]); //Get port from command line
-    }
-    catch(Throwable t)
-    {
-      port = DEFAULT_PORT; //Set port to 1337
-    }
-	
-    TetrisServer sv = new TetrisServer(port);
-    
-    try 
-    {
-      sv.listen(); //Start listening for connections
-    } 
-    catch (Exception ex) 
-    {
-      System.out.println("ERROR - Could not listen for clients!");
-    }
-  }
+//  public static void main(String[] args) 
+//  {
+//    int port = 0; //Port to listen on
+//
+//    try
+//    {
+//      port = Integer.parseInt(args[0]); //Get port from command line
+//    }
+//    catch(Throwable t)
+//    {
+//      port = DEFAULT_PORT; //Set port to 1337
+//    }
+//	
+//    TetrisServer sv = new TetrisServer(port);
+//    
+//    try 
+//    {
+//      sv.listen(); //Start listening for connections
+//    } 
+//    catch (Exception ex) 
+//    {
+//      System.out.println("ERROR - Could not listen for clients!");
+//    }
+//  }
 
   
   
@@ -85,10 +87,10 @@ public class TetrisServer extends AbstractServer
    *
    * @param port The port number to connect on.
    */
-  public TetrisServer(int port) 
+  public TetrisServer(int port, ChatIF serverText) 
   {
     super(port);
-//    this.serverText = serverText;
+    this.serverText = serverText;
   }
 
   //Instance methods ************************************************
@@ -162,26 +164,26 @@ public class TetrisServer extends AbstractServer
 	}
   }
   
-//  //Sends the message to the Server User.
-//  public void handleMessageFromServerUI (String msg){
-//	    try
-//	    {
-//	        //If the message was a command message, send the instruction for interpretation
-//	        if(msg.startsWith("#") || msg.startsWith("/"))
-//	        	commandMessage(msg.substring(1), null);
-//	      	else{
-//	      		this.sendToAllClients("SERVER MSG: " + msg );
-//	      	}
-//	    }
-//	    catch(Exception e)
-//	    {
-//	      System.out.println 
-//	      	("Could not send message to clients. Terminating server.");
-//	      quit();
-//	    }
-//	  
-//  }
-// 
+  //Sends the message to the Server User.
+  public void handleMessageFromServerUI (String msg){
+	    try
+	    {
+	        //If the message was a command message, send the instruction for interpretation
+	        if(msg.startsWith("#") || msg.startsWith("/"))
+	        	commandMessage(msg.substring(1), null);
+	      	else{
+	      		this.sendToAllClients("SERVER MSG: " + msg );
+	      	}
+	    }
+	    catch(Exception e)
+	    {
+	      System.out.println 
+	      	("Could not send message to clients. Terminating server.");
+	      quit();
+	    }
+	  
+  }
+ 
   /* 
    * This method will determine the type of command that was inputed by the server admin
    * @param message The message from the UI.
