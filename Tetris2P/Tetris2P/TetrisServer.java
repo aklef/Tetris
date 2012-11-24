@@ -39,7 +39,43 @@ public class TetrisServer extends AbstractServer
    * This data structures will store the identification of all clients connected
    * It will be used to pair up player and opponent
    */
-  private LinkedList<ClientNode> clientList = new LinkedList<ClientNode>();
+  private static LinkedList<ClientNode> clientList = new LinkedList<ClientNode>();
+  
+  
+ //Class methods ***************************************************
+  
+  /**
+   * This method is responsible for the creation of 
+   * the server instance (there is no UI in this phase).
+   *
+   * @param args[0] The port number to listen on.  Defaults to 1337 
+   *          if no argument is entered.
+   */
+  public static void main(String[] args) 
+  {
+    int port = 0; //Port to listen on
+
+    try
+    {
+      port = Integer.parseInt(args[0]); //Get port from command line
+    }
+    catch(Throwable t)
+    {
+      port = DEFAULT_PORT; //Set port to 1337
+    }
+	
+    TetrisServer sv = new TetrisServer(port);
+    
+    try 
+    {
+      sv.listen(); //Start listening for connections
+    } 
+    catch (Exception ex) 
+    {
+      System.out.println("ERROR - Could not listen for clients!");
+    }
+  }
+
   
   
   //Constructors ****************************************************
@@ -49,103 +85,72 @@ public class TetrisServer extends AbstractServer
    *
    * @param port The port number to connect on.
    */
-  public TetrisServer(int port, ChatIF serverText) 
+  public TetrisServer(int port) 
   {
     super(port);
-    this.serverText = serverText;
+//    this.serverText = serverText;
   }
 
   //Instance methods ************************************************
   
   /**
-   * This method handles any string messages from the client
-   *
+   * This method handles any messages send from the client to the server.
+   * If an updater message is detected, it is sent to the opponent of the client.
+   * If a string message is detected, it can be a command message or chat to be sent to all clients.
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
   public void handleMessageFromClient (Object msg, ConnectionToClient client)
   {	  
-	  long clientID;
+	  int indexID = 0;
+	  Long opponent = null;
 	  
 	  if(msg instanceof Updater)
 	  { //string input has been passed from the client
-		clientID = client.getId();
-	  }
-	  
-    try
-    {
-        //If the message was a command message, send the instruction for interpretation
-    	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
-        	commandMessage(((String) msg).substring(1), client);
-      	else{
-      	    System.out.println
-      	    	("["+ client.getInfo("ID") + "] " + msg);
-        	this.sendToAllClients(msg);
-      	}
-    }
-    catch(Exception e)
-    {
-      System.out.println 
-      	("Could not send message to clients. Terminating server.");
-      quit();
-    }
-  }
-  
-  /**
-   * This method attempts to match a newly connected client to a client already connected so they can play Tetris
-   * @param ConnectionToClient c is a newly connected client
-   */
-  public void newClientConnected(ConnectionToClient c)
-  {
-	  int indexID;
-	  int opponentIndex = 0;
-	  boolean opponentFound = false;
-	  
-	  ClientNode newNode = new ClientNode(c.getId()); //setting the player
-	  clientList.add(newNode);
-	  indexID = clientList.indexOf(newNode); //obtaining position of the new element in the list
-	  
-	  //checking for opponent
-	  if(indexID == 0){
-		 clientList.get(indexID).opponentID = null; //if it is the first client connected, then he has no opponent
-	  }
-	  else
-	  {
-		  //traverse the list and look for clients without an opponent
-		  for(int i=0; i< clientList.size(); i++)
+		  
+		  Thread[] clientThreadList = getClientConnections(); //obtains a list of all connections
+		  
+		  //obtaining the ClientNode list index of the client to be disconnected 
+		  for(int i=0; i<clientList.size(); i++)
 		  {
-			  //check if an opponent is found that is not the same client 
-			  if(clientList.get(i).opponentID == null && i != indexID)
+			  if(clientList.get(i).playerID == client.getId())
 			  {
-				  opponentFound = true;
-				  opponentIndex = i;
-			  }
+				  indexID = i;
+				  opponent = clientList.get(indexID).opponentID;
+				  break;
+			  }  
 		  }
 		  
-		 //If there is a client connected that doesn't have an opponent, match him with new connected player
-		 if(opponentFound)
-		 {
-			clientList.get(opponentIndex).opponentID = clientList.get(indexID).playerID;
-			clientList.get(indexID).opponentID = clientList.get(opponentIndex).opponentID;
-		 }
-		 else
-		 {
-			 //if the previously connected client has an opponent, then the current opponent is null
-				clientList.get(indexID).opponentID = null;
-		 }
+		  //obtaining the ConnectionToClient for the opponent and sending the Updater message
+		  if(opponent !=null)
+		  {
+		    for (int i=0; i<clientThreadList.length; i++)
+		     {
+		    	if(((ConnectionToClient)clientThreadList[i]).getId() == opponent)
+		    	{
+			      try
+			      {
+			    	  
+			        ((ConnectionToClient)clientThreadList[i]).sendToClient(msg);
+			      }
+			      catch (Exception ex) {}
+			      
+			      break;
+			    }
+		     }	
+		  }
 	  }
-	  
-  }
-  
-  //Sends the message to the Server User.
-  public void handleMessageFromServerUI (String msg){
+	else
+	{ //a string message has been sent to the server
 	    try
 	    {
 	        //If the message was a command message, send the instruction for interpretation
-	        if(msg.startsWith("#") || msg.startsWith("/"))
-	        	commandMessage(msg.substring(1), null);
+	    	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
+	        	commandMessage(((String) msg).substring(1), client);
 	      	else{
-	      		this.sendToAllClients("SERVER MSG: " + msg );
+	      	    System.out.println
+	      	    	("["+ client.getInfo("ID") + "] " + msg);
+	        	this.sendToAllClients(msg);
 	      	}
 	    }
 	    catch(Exception e)
@@ -154,10 +159,30 @@ public class TetrisServer extends AbstractServer
 	      	("Could not send message to clients. Terminating server.");
 	      quit();
 	    }
-	  
+	}
   }
- 
-  /* *****Changed for E50**** DA, akleff
+  
+//  //Sends the message to the Server User.
+//  public void handleMessageFromServerUI (String msg){
+//	    try
+//	    {
+//	        //If the message was a command message, send the instruction for interpretation
+//	        if(msg.startsWith("#") || msg.startsWith("/"))
+//	        	commandMessage(msg.substring(1), null);
+//	      	else{
+//	      		this.sendToAllClients("SERVER MSG: " + msg );
+//	      	}
+//	    }
+//	    catch(Exception e)
+//	    {
+//	      System.out.println 
+//	      	("Could not send message to clients. Terminating server.");
+//	      quit();
+//	    }
+//	  
+//  }
+// 
+  /* 
    * This method will determine the type of command that was inputed by the server admin
    * @param message The message from the UI.
   */ 
@@ -262,46 +287,7 @@ public class TetrisServer extends AbstractServer
 			
 		break;
 		
-		// Ping, Pong!
-		case "ping": case "Ping":
-			try
-			{
-				client.sendToClient("Pong!");
-			}
-			catch (IOException e){}
-		break;
-		
-		// Pong, Ping!
-		case "pong": case "Pong":
-			try
-			{
-				client.sendToClient("Ping!");
-			}
-			catch (IOException e)
-			{}
-		break;
-		
-		// Pica, Boo!
-		case "pica": case "Pica":
-			try
-			{
-				client.sendToClient("Boo!");
-			}
-			catch (IOException e)
-			{}
-		break;
-		
-		// Pica, Boo!
-		case "doodle": case "Doodle":
-			try
-			{
-				client.sendToClient("Di-Dah!");
-			}
-			catch (IOException e)
-			{}
-		break;
-		
-		// Pica, Boo!
+		// Hello!
 		case "Hello": case "hello":
 			try
 			{
@@ -338,14 +324,12 @@ public class TetrisServer extends AbstractServer
   {
     try
     {
-    	System.out.println
-    		("***SERVER GOING OFFLINE***");
+    	System.out.println("***SERVER GOING OFFLINE***");
     	close();
     }
     catch(IOException e)
     {
-    	System.out.println
-    		("Could not quit server. Aboritng.");
+    	System.out.println("Could not quit server. Aborting.");
     }
     System.exit(0);
   }
@@ -364,8 +348,7 @@ public class TetrisServer extends AbstractServer
 	}
 	catch (IOException e)
 	{
-		System.out.println
-			("Could not close server. Aboritng.");
+		System.out.println("Could not close server. Aboritng.");
 	}
   }
   
@@ -375,8 +358,7 @@ public class TetrisServer extends AbstractServer
    */
   protected void serverStarted()
   {
-    System.out.println
-    	("Server listening for connections on port " + getPort());
+    System.out.println("Server listening for connections on port " + getPort());
   }
   
   /**
@@ -385,8 +367,7 @@ public class TetrisServer extends AbstractServer
    */
   protected void serverStopped()
   {
-    System.out.println
-    	("Server no longer listening for connections.");
+    System.out.println("Server no longer listening for connections.");
   }
   
   /**
@@ -395,27 +376,106 @@ public class TetrisServer extends AbstractServer
    */
   protected void serverClosed()
   {
-    System.out.println
-    	("WARNING - Server now closed.");
+    System.out.println("WARNING - Server now closed.");
   }
   
-  //*****Changed for E49**** DA, AKL
+
+  /**
+   * This method attempts to match a newly connected client to a client already connected so they can play Tetris
+   * @param ConnectionToClient client is a newly connected client
+   */
+
   protected void clientConnected(ConnectionToClient client)
-  {
-	System.out.println
-		("Client " + client.toString() + " connected.");
+  {	
+	  int indexID;
+	  int opponentIndex = 0;
+	  boolean opponentFound = false;
+	  
+	  ClientNode newNode = new ClientNode(client.getId()); //setting the player
+	  clientList.add(newNode);
+	  indexID = clientList.indexOf(newNode); //obtaining position of the new element in the list
+	  
+	  //checking for opponent
+	  if(indexID == 0){
+		 clientList.get(indexID).opponentID = null; //if it is the first client connected, then he has no opponent
+	  }
+	  else
+	  {
+		  //traverse the list and look for clients without an opponent
+		  for(int i=0; i< clientList.size(); i++)
+		  {
+			  //check if an opponent is found that is not the same client 
+			  if(clientList.get(i).opponentID == null && i != indexID)
+			  {
+				  opponentFound = true;
+				  opponentIndex = i;
+				  break;
+			  }
+		  }
+		  
+		 //If there is a client connected that doesn't have an opponent, match him with new connected player
+		 if(opponentFound)
+		 {
+			clientList.get(opponentIndex).opponentID = clientList.get(indexID).playerID;
+			clientList.get(indexID).opponentID = clientList.get(opponentIndex).playerID;
+		 }
+		 else
+		 {
+			 //if all previously connected clients have an opponent, then the new client has no opponent
+				clientList.get(indexID).opponentID = null;
+		 }
+	  }
+	  
+	  System.out.println("Client " + client.toString() + " connected.");
   }
   
-  //*****Changed for E49**** DA, AKL
+  /**
+   * This method removes a client from the list of connected clients and updates the status of the client's opponent
+   * @param ConnectionToClient client is a client about to be disconnected
+   */
+  
   synchronized protected void clientDisconnected( ConnectionToClient client)
   {
-	System.out.println
-		("Client " + client.getInfo("ID") + " disconnected.");
-	sendToAllClients
-		("Client " + client.getInfo("ID") + " left.");
+	  int indexID = 0;
+	  int opponentIndex = 0;
+	  Long opponent = null;
+	  
+	  
+	  //obtaining the ClientNode list index of the client to be disconnected 
+	  for(int i=0; i<clientList.size(); i++)
+	  {
+		  if(clientList.get(i).playerID == client.getId())
+		  {
+			  indexID = i;
+			  opponent = clientList.get(indexID).opponentID;
+			  break;
+		  }
+			  
+	  }
+	  
+	  if(opponent!=null)
+	  {
+		  //obtaining the ID of the opponent and setting them to have no opponent
+		  for(int i=0; i<clientList.size(); i++)
+		  {
+			  if(clientList.get(i).playerID == opponent)
+			  {
+				  opponentIndex = clientList.indexOf(i);
+				  clientList.get(opponentIndex).opponentID = null;
+				  break;
+			  }
+				  
+		  }
+	  }
+	  
+	  //removing the user that disconnected from the clientList
+	  clientList.remove(clientList.indexOf(indexID));
+	  
+	  //notifying other clients
+	  System.out.println("Client " + client.getInfo("ID") + " disconnected.");
+	  sendToAllClients("Client " + client.getInfo("ID") + " left.");
   }
   
-  //*****Changed for E49**** DA, AKL
   synchronized protected void clientException(ConnectionToClient client, Throwable exception)
   {
 	
