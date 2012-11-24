@@ -61,7 +61,14 @@ public class Tetris2P extends JFrame implements Runnable{
      * Instance of a tetris game mapped to a specific remote player during multiplayer sessions.
      */
     private final Tetris opponentGame;
-    
+    /**
+     * TODO
+     */
+    private final OutputBox outputBox;
+    /**
+     * TODO
+     */
+    private final InputBox inputBox;
     /**
      * Static variable representing the background color of the board.
      */
@@ -71,13 +78,17 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     private final PlayerList userList;
     /**
-     * Holds the chat contents
+     * The default port to connect on.
      */
-    private final JTextArea chatBox;
+    final private static int DEFAULT_PORT = 1337;
     /**
-     * Input area for chat messages and commands.
+     * The default hostname to connect with.
      */
-    private final JTextField inputBox;
+    final private static String DEFAULT_HOST = "localhost";
+    /**
+     * Local client for the multiplayer Tetris game.
+     */
+    private final TetrisClient tetrisClient;
     /**
      * Boolean variable that determines if the game will make sounds..
      */
@@ -101,8 +112,12 @@ public class Tetris2P extends JFrame implements Runnable{
         localGame	 = new Tetris();
         opponentGame = new Tetris();
         userList	 = new PlayerList();
-        chatBox		 = new JTextArea();
-        inputBox	 = new JTextField();
+        outputBox	 = new OutputBox();
+        inputBox	 = new InputBox();
+        
+        
+        
+        tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
         
         // Default background color
         backgroundColor = new Color(13,13,13);
@@ -121,7 +136,7 @@ public class Tetris2P extends JFrame implements Runnable{
         // Setting components as not focusable
         opponentGame.setFocusable(false);
         userList.setFocusable(false);
-        chatBox.setFocusable(false);
+        outputBox.setFocusable(false);
         
         
         // Setting the middle's layout manager
@@ -347,26 +362,22 @@ public class Tetris2P extends JFrame implements Runnable{
 	 */
 	public class OutputBox extends JPanel implements ChatIF
 	{
-		/**
-		 * TODO Icons.
+	    /**
+	     * Holds the chat contents
+	     */
+	    private final JTextArea chatBox;
 		
 		/**
 		 * Constructor method.
 		 */
 		public OutputBox(/*TetrisClient client*/)
 		{
-			/*
-			this.setLayout(new BorderLayout());
+			chatBox = new JTextArea();
 			
-			holdArea = new ShapeArea();
-			add(holdArea, BorderLayout.WEST);
+			chatBox.setBackground(backgroundColor);
+			chatBox.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
 			
-			previewNextPieceArea = new ShapeArea();
-			
-			previewNextPieceArea.setBackground(backgroundColor);
-			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
-			add(previewNextPieceArea, BorderLayout.EAST);
-			*/
+			add(chatBox);
 		}
 		
 		/**
@@ -399,30 +410,28 @@ public class Tetris2P extends JFrame implements Runnable{
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	private class InputBox extends JPanel
+	private class InputBox extends JPanel implements ActionListener
 	{
-		/**
-		 * TODO Icons.
+	    /**
+	     * Input area for chat messages and commands.
+	     */
+	    private final JTextField inputBox;
 		
 		/**
 		 * Constructor method.
 		 */
 		public InputBox(/*TetrisClient client*/)
 		{
-			/*
-			this.setLayout(new BorderLayout());
+			inputBox = new JTextField();
 			
-			holdArea = new ShapeArea();
-			add(holdArea, BorderLayout.WEST);
+			inputBox.setBackground(backgroundColor);
+			inputBox.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
 			
-			previewNextPieceArea = new ShapeArea();
-			
-			previewNextPieceArea.setBackground(backgroundColor);
-			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
-			add(previewNextPieceArea, BorderLayout.EAST);
-			*/
+			add(inputBox);
 		}
-
+		
+		//***************************GRAPHICS***************************
+		
 		/**
 		 * TODO
 		 */
@@ -431,246 +440,258 @@ public class Tetris2P extends JFrame implements Runnable{
 		{
 			super.paintComponent(g);
 		}
+		
+		//*****************************INPUT*****************************
+		
+		/**
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			// TODO When the user is typing in the chat input box
+			
+		}
 	}
 	
 	//*************************************TETRISCLIENT*************************************//
 	
 		/**
-		 * This is a nested class in Tetris2P.java that is a JPanel.
-		 * It is displayed at the bottom of the main Tetris2P frame and allows for user input.
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
+	 * This is a nested class in Tetris2P.java that is a JPanel.
+	 * It is displayed at the bottom of the main Tetris2P frame and allows for user input.
+	 * 
+	 * @author Andréas K.LeF.
+	 * @author Dmitry Anglinov
+	 */
+	protected class TetrisClient extends AbstractClient
+	{
+		/**
+		 * The interface type variable.  It allows the implementation of 
+		 * the display method in the client.
 		 */
-		protected class TetrisClient extends AbstractClient
+		ChatIF clientUI; 
+
+		
+		/**
+		 * Constructs an instance of the Tetris client.
+		 * Initially calls the Abstractclient constructor
+		 *
+		 * @param host The server to connect to.
+		 * @param port The port number to connect on.
+		 * @param clientUI The interface type variable.
+		 */
+		protected TetrisClient(String host, int port, ChatIF clientUI)
 		{
-			/**
-			 * The interface type variable.  It allows the implementation of 
-			 * the display method in the client.
-			 */
-			ChatIF clientUI; 
-
-			
-			/**
-			 * Constructs an instance of the Tetris client.
-			 * Initially calls the Abstractclient constructor
-			 *
-			 * @param host The server to connect to.
-			 * @param port The port number to connect on.
-			 * @param clientUI The interface type variable.
-			 */
-			protected TetrisClient(String host, int port, ChatIF clientUI)
+			super(host, port); 
+			this.clientUI = clientUI;
+			try
 			{
-				super(host, port); 
-				this.clientUI = clientUI;
-				try
-				{
-					openConnection();
-				}
-				catch (IOException e)
-				{
-					clientUI.display("Cannot open connection. Awaiting command.");
-				}
+				openConnection();
 			}
-
-			//Instance methods ************************************************
-			  
-			/**
-			 * This method handles all data that comes in from the server.
-			 *
-			 * @param msg The message from the server.
-			 */
-			public void handleMessageFromServer(Object msg) 
+			catch (IOException e)
 			{
-				/*if ( msg instanceof Updater )
-				{
-					
-				}*/
-				//If the message was a command message, send the instruction for interpretation
-				if(((String) msg).startsWith("/"))
-					commandMessage(((String) msg).substring(1));
-				else
-					clientUI.display("> "+msg.toString());
-			}
-
-			/* ****Changed for E49**** DA, akleff
-			 * This method handles all data coming from the UI            
-			 * 
-			 * @param message The message from the UI.    
-			 */
-			public void handleMessageFromClientUI(String message)
-			{
-    			try
-        		{
-        			// Idiot-proofing the input
-        			if(message.equals(""))
-        			return;
-        			
-        			//If the message was a command message, send the instruction for interpretation
-        			if(message.startsWith("#") || message.startsWith("/"))
-        			{
-        				commandMessage(message.substring(1));
-        			}
-        			else
-        			{
-        			sendToServer(message);
-        			}
-        		}
-        		catch(IOException e)
-        		{
-        			clientUI.display("Could not send message to server. Terminating client.");
-        			quit();
-        		}
-			}
-			
-			/**
-			 * This method will determine the type of command that was inputed by the user
-			 * @param message The message from the UI.
-			 */
-			public void commandMessage( String msg )
-			{
-				//initialize local variables
-				String message[]   = msg.split(" ");
-				String instruction = "";
-				String operand     = "";
-				
-				boolean hasWhiteSpace = false;
-				
-				//Find if multipart message
-				if ( message.length != 1) hasWhiteSpace = true;
-				
-				//If there is a white space, we must load the instruction with its operand
-				if(hasWhiteSpace) 
-				{
-					instruction = message[0];
-					operand 	= message[1];
-				}
-				else //If there is no white space, then there is no operand and only load the instruction
-				instruction = message[0];
-				
-				// ****************************************************************************************//
-				// List of all client-side usable commands
-				
-				switch (instruction)
-				{
-					//*******************************************************************//
-					// Authentication Methods
-					
-					//Log the client back in if the client is not connected
-					 case ("connect"):
-						if(this.isConnected())
-							clientUI.display("Client already connected.");
-						else{
-							try{
-							openConnection();
-							}
-							catch(IOException e) {
-								clientUI.display("Could not connect.");
-							}
-						}
-					break;
-					
-					//Log off client but does not terminate
-					case ("disconnect"):
-						try{
-							closeConnection();
-						}
-						catch(IOException e) {
-							clientUI.display("Could not disconnect.");
-						}
-					break;
-					
-					//*******************************************************************//
-					// Client Control methods
-					
-					//Terminates the client
-					case ("exit"): case ("quit"):
-						quit();
-					break;
-					
-					//*******************************************************************//
-					// Setter methods
-					
-					//Sets the host if client not connected
-					case ("sethost"): case ("setHost"):
-						if(this.isConnected())
-							clientUI.display("The client is connected. Please logoff to set host.");
-						else{
-							setHost(operand);
-							clientUI.display("The host has been set to: " + getHost());
-						}
-					break;
-					
-					//Sets the port if client not connected
-					case ("setport"): case ("setPort"):
-						if(this.isConnected())
-							clientUI.display("Client connected. Logoff to set port.");
-						else{
-							setPort(Integer.parseInt(operand));
-							clientUI.display("Port set: " + getPort());
-						}
-					break;
-					
-					//*******************************************************************//
-					// Getter methods
-					
-					//Get the host
-					case ("gethost"):
-						clientUI.display("The host is: " + getHost());
-					break;
-					
-					//Get the port
-					case ("getport"):
-						clientUI.display("The port is: " + getPort());
-					break;
-					
-					//*******************************************************************//
-					// Operation not found
-					default:
-						System.out.println
-							("> Command Not Found. Sending cmd to server.");
-						try
-						{
-							sendToServer("/"+msg);
-						}
-						catch (IOException e) {}
-					break;
-				}
-			}
-			
-			//*****Changed for E49**** DA, akleff
-			//Method informs the user server has been terminated and closes the client
-			protected void connectionClosed(){
-				clientUI.display("Disconnected from server. Terminating client.");
-			}
-			
-			/**
-			 * Method informs the user server has been terminated and closes the client
-			 */
-			protected void connectionException(Exception exception)
-			{
-				clientUI.display("Server closed. Abnormal termination of connection.");
-			}
-			
-			/**
-			 * TODO
-			 */
-			protected void connectionEstablished()
-			{
-				clientUI.display("Connected to server.");
-			}
-
-			/**
-			 * This method terminates the client.
-			 */
-			public void quit()
-			{
-				try
-				{
-					closeConnection();
-				}
-				catch(IOException e) {}
-				System.exit(0);
+				clientUI.display("Cannot open connection. Awaiting command.");
 			}
 		}
+
+		//Instance methods ************************************************
+		  
+		/**
+		 * This method handles all data that comes in from the server.
+		 *
+		 * @param msg The message from the server.
+		 */
+		public void handleMessageFromServer(Object msg) 
+		{
+			/*if ( msg instanceof Updater )
+			{
+				
+			}*/
+			//If the message was a command message, send the instruction for interpretation
+			if(((String) msg).startsWith("/"))
+				commandMessage(((String) msg).substring(1));
+			else
+				clientUI.display("> "+msg.toString());
+		}
+
+		/* ****Changed for E49**** DA, akleff
+		 * This method handles all data coming from the UI            
+		 * 
+		 * @param message The message from the UI.    
+		 */
+		public void handleMessageFromClientUI(String message)
+		{
+			try
+    		{
+    			// Idiot-proofing the input
+    			if(message.equals(""))
+    			return;
+    			
+    			//If the message was a command message, send the instruction for interpretation
+    			if(message.startsWith("#") || message.startsWith("/"))
+    			{
+    				commandMessage(message.substring(1));
+    			}
+    			else
+    			{
+    			sendToServer(message);
+    			}
+    		}
+    		catch(IOException e)
+    		{
+    			clientUI.display("Could not send message to server. Terminating client.");
+    			quit();
+    		}
+		}
+		
+		/**
+		 * This method will determine the type of command that was inputed by the user
+		 * @param message The message from the UI.
+		 */
+		public void commandMessage( String msg )
+		{
+			//initialize local variables
+			String message[]   = msg.split(" ");
+			String instruction = "";
+			String operand     = "";
+			
+			boolean hasWhiteSpace = false;
+			
+			//Find if multipart message
+			if ( message.length != 1) hasWhiteSpace = true;
+			
+			//If there is a white space, we must load the instruction with its operand
+			if(hasWhiteSpace) 
+			{
+				instruction = message[0];
+				operand 	= message[1];
+			}
+			else //If there is no white space, then there is no operand and only load the instruction
+			instruction = message[0];
+			
+			// ****************************************************************************************//
+			// List of all client-side usable commands
+			
+			switch (instruction)
+			{
+				//*******************************************************************//
+				// Authentication Methods
+				
+				//Log the client back in if the client is not connected
+				 case ("connect"):
+					if(this.isConnected())
+						clientUI.display("Client already connected.");
+					else{
+						try{
+						openConnection();
+						}
+						catch(IOException e) {
+							clientUI.display("Could not connect.");
+						}
+					}
+				break;
+				
+				//Log off client but does not terminate
+				case ("disconnect"):
+					try{
+						closeConnection();
+					}
+					catch(IOException e) {
+						clientUI.display("Could not disconnect.");
+					}
+				break;
+				
+				//*******************************************************************//
+				// Client Control methods
+				
+				//Terminates the client
+				case ("exit"): case ("quit"):
+					quit();
+				break;
+				
+				//*******************************************************************//
+				// Setter methods
+				
+				//Sets the host if client not connected
+				case ("sethost"): case ("setHost"):
+					if(this.isConnected())
+						clientUI.display("The client is connected. Please logoff to set host.");
+					else{
+						setHost(operand);
+						clientUI.display("The host has been set to: " + getHost());
+					}
+				break;
+				
+				//Sets the port if client not connected
+				case ("setport"): case ("setPort"):
+					if(this.isConnected())
+						clientUI.display("Client connected. Logoff to set port.");
+					else{
+						setPort(Integer.parseInt(operand));
+						clientUI.display("Port set: " + getPort());
+					}
+				break;
+				
+				//*******************************************************************//
+				// Getter methods
+				
+				//Get the host
+				case ("gethost"):
+					clientUI.display("The host is: " + getHost());
+				break;
+				
+				//Get the port
+				case ("getport"):
+					clientUI.display("The port is: " + getPort());
+				break;
+				
+				//*******************************************************************//
+				// Operation not found
+				default:
+					System.out.println
+						("> Command Not Found. Sending cmd to server.");
+					try
+					{
+						sendToServer("/"+msg);
+					}
+					catch (IOException e) {}
+				break;
+			}
+		}
+		
+		//*****Changed for E49**** DA, akleff
+		//Method informs the user server has been terminated and closes the client
+		protected void connectionClosed(){
+			clientUI.display("Disconnected from server. Terminating client.");
+		}
+		
+		/**
+		 * Method informs the user server has been terminated and closes the client
+		 */
+		protected void connectionException(Exception exception)
+		{
+			clientUI.display("Server closed. Abnormal termination of connection.");
+		}
+		
+		/**
+		 * TODO
+		 */
+		protected void connectionEstablished()
+		{
+			clientUI.display("Connected to server.");
+		}
+
+		/**
+		 * This method terminates the client.
+		 */
+		public void quit()
+		{
+			try
+			{
+				closeConnection();
+			}
+			catch(IOException e) {}
+			System.exit(0);
+		}
+	}
 }
