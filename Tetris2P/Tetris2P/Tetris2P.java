@@ -77,7 +77,7 @@ public class Tetris2P extends JFrame implements Runnable{
     /**
      * Variable that holds the GUI for the current connected users
      */
-    private final PlayerList userList;
+    private final PlayerList playerList;
     /**
      * The default port to connect on.
      */
@@ -112,7 +112,7 @@ public class Tetris2P extends JFrame implements Runnable{
         // Creating instances of emleents
         localGame	 = new Tetris(this);
         opponentGame = new Tetris(this);
-        userList	 = new PlayerList();
+        playerList	 = new PlayerList();
         outputBox	 = new OutputBox();
         inputBox	 = new InputBox();
                 
@@ -127,14 +127,14 @@ public class Tetris2P extends JFrame implements Runnable{
         middle.setBackground(backgroundColor);
         localGame.setBackground(backgroundColor);
         opponentGame.setBackground(backgroundColor);
-        userList.setBackground(backgroundColor);
+        playerList.setBackground(backgroundColor);
         
         // Setting components' sizes.
-        userList.setPreferredSize(new Dimension(100,200));
+        playerList.setPreferredSize(new Dimension(100,200));
 
         // Setting components as not focusable
         opponentGame.setFocusable(false);
-        userList.setFocusable(false);
+        playerList.setFocusable(false);
         outputBox.setFocusable(false);
         
         
@@ -144,7 +144,7 @@ public class Tetris2P extends JFrame implements Runnable{
         // Adding components to frame
         middle.add(localGame);
         middle.add(opponentGame);
-        middle.add(userList);
+        middle.add(playerList);
         
         // Adding components to frame
         //add(toolBar, BorderLayout.NORTH);
@@ -246,6 +246,7 @@ public class Tetris2P extends JFrame implements Runnable{
 		**/
 	    private LinkedList<String> users; 
 	    
+	    
 		/**
 		 * constructor method for list.
 		**/
@@ -257,6 +258,7 @@ public class Tetris2P extends JFrame implements Runnable{
 	        
 	        // TODO
 	        users = new LinkedList<String>();
+	        
 	        // TODO
 	        userList = new DefaultListModel();
 	        JList list = new JList(userList);
@@ -671,7 +673,6 @@ public class Tetris2P extends JFrame implements Runnable{
 			}
 		}
 		
-		//*****Changed for E49**** DA, akleff
 		//Method informs the user server has been terminated and closes the client
 		protected void connectionClosed(){
 			clientUI.display("Disconnected from server. Terminating client.");

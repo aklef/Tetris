@@ -428,6 +428,7 @@ public class TetrisServer extends AbstractServer
 		 }
 	  }
 	  
+	  
 	  System.out.println("Client " + client.toString() + " connected.");
   }
   
