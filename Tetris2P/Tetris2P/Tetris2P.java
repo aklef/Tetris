@@ -25,6 +25,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import javax.swing.JList;
 import javax.swing.DefaultListModel;
@@ -45,7 +47,9 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 /**
- * TODO
+ * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
+ * Contains two instances of a {@code Tetris} game. One is fo rthe current user and the other is for the opponent.
+ * 
  * 
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
@@ -62,13 +66,19 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     private final Tetris opponentGame;
     /**
-     * TODO
+     * Extends {@code JPanel} and implements {@code ChatIF}. Contains only one
+     * {@code JTextArea} to show the contents of chat.
      */
     private final OutputBox outputBox;
     /**
-     * TODO
+     * Extends {@code JPanel} and implements {@code ActionListener}. Contains only one
+     * JInputField to let the player type in the chat and input commands.
      */
     private final InputBox inputBox;
+    /**
+     * Contains icons that perform useful functions such as muting sounds.
+     */
+    private final JPanel toolBar;
     /**
      * Static variable representing the background color of the board.
      */
@@ -103,10 +113,25 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     public Tetris2P()
     {
-        // Panel for the middle area
-        JPanel middle = new JPanel();
-        // GridLayout for middle area
-        GridLayout myGrid = new GridLayout(1, 2, 30, 0);
+    	// Sets default UI colors:
+		UIManager.put("nimbusBase", Color.BLACK);
+		UIManager.put("control", Color.WHITE);
+		
+		// Attemps to set the Nimbus L&F
+		try {
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+		    // If Nimbus is not available, you can set the GUI to another look and feel.
+		}
+		
+		// Panel for the middle area
+        JPanel middle = new JPanel( new GridLayout(1, 3, 30, 0) );
+        JPanel socialArea = new JPanel( new GridLayout(2, 1) );
         
         // Creating instances of emleents
         localGame	 = new Tetris();
@@ -114,53 +139,60 @@ public class Tetris2P extends JFrame implements Runnable{
         userList	 = new PlayerList();
         outputBox	 = new OutputBox();
         inputBox	 = new InputBox();
+        toolBar		 = new JPanel();
         
-        
-        
-        tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
+        //tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
+        tetrisClient = null;
         
         // Default background color
-        backgroundColor = new Color(13,13,13);
+        backgroundColor = new Color(16,16,32);
         
-        // Setting the frame's background
+        // Setting the frame's colors
         getContentPane().setBackground(backgroundColor);
-        // Setting each component's background
+        // Setting each component's colors
         middle.setBackground(backgroundColor);
         localGame.setBackground(backgroundColor);
         opponentGame.setBackground(backgroundColor);
-        userList.setBackground(backgroundColor);
         
-        // Setting components' sizes.
-        userList.setPreferredSize(new Dimension(100,200));
-
+        userList.setBackground(backgroundColor);
+        userList.setForeground(Color.WHITE);
+        
+        outputBox.setBackground(backgroundColor);
+        outputBox.setForeground(Color.WHITE);
+        
+        inputBox.setBackground(backgroundColor);
+        inputBox.setForeground(Color.WHITE);
+        
+        toolBar.setBackground(backgroundColor);
+        
         // Setting components as not focusable
+        toolBar.setFocusable(false);
         opponentGame.setFocusable(false);
+        
         userList.setFocusable(false);
         outputBox.setFocusable(false);
-        
-        
-        // Setting the middle's layout manager
-        middle.setLayout(myGrid);
         
         // Adding components to frame
         middle.add(localGame);
         middle.add(opponentGame);
-        middle.add(userList);
+        socialArea.add(userList, BorderLayout.CENTER);
+        socialArea.add(outputBox, BorderLayout.SOUTH);
+        middle.add(socialArea);
         
         // Adding components to frame
-        //add(toolBar, BorderLayout.NORTH);
+        add(toolBar, BorderLayout.NORTH);
         add(middle, BorderLayout.CENTER);
         add(inputBox, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
-        getContentPane().setPreferredSize(new Dimension(600,473));
+        getContentPane().setPreferredSize(new Dimension(600,465));
         // Necessary
         pack();
         
         // Not needed but works fine
         //revalidate();
         
-        // mute opponent game
+        // Mute opponent game
         opponentGame.setAudioPlayback(false);
         
         setTitle("Tetris");
@@ -181,7 +213,7 @@ public class Tetris2P extends JFrame implements Runnable{
      * Main method of the multiplayer Tetris game.
      */
     public static void main(String[] args) {
-        new Tetris2P();
+    	new Tetris2P();
     }
 
     /**
@@ -189,11 +221,11 @@ public class Tetris2P extends JFrame implements Runnable{
      */
 	public void run()
 	{
-        // Makes the window open in the center of the screen.
+		// Makes the window open in the center of the screen.
         setLocationRelativeTo(null);
         
         // Makes the frame steady
-        //setResizable(false);
+        //XXX setResizable(false);
         
         // Shows the window
         setVisible(true);
@@ -225,18 +257,20 @@ public class Tetris2P extends JFrame implements Runnable{
 	   /**
 	    * This label will show the "Users Connected" title
 	    **/
-		private JLabel label;
-
+		private final JLabel label;
 	   /**
 	    * GUI componenent that displays list of users
 	    **/
-	    private DefaultListModel userList;
-	    
+	    @SuppressWarnings("rawtypes")
+		private final DefaultListModel userList;
 		/**
 		 * LinkedList to hold the list of players
 		**/
-	    private LinkedList<String> users; 
-	    
+	    private final LinkedList<String> users; 
+	    /**
+		 * {@code JScrollPane} to show the list of players
+		**/
+		private final  JScrollPane scrollPane; 
 		/**
 		 * constructor method for list.
 		**/
@@ -247,27 +281,23 @@ public class Tetris2P extends JFrame implements Runnable{
 	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 20));
 	        
 	        // TODO
-	        users = new LinkedList<String>();
-	        // TODO
+	        users 	 = new LinkedList<String>();
 	        userList = new DefaultListModel();
-	        JList list = new JList(userList);
+	        JList list 	 = new JList(userList);
 	        
 	        // XXX Remove! Test addition to the list
 	        for(int i=0; i<10; i++){
 	        	addUserToList("Dingletronic" + i);
 	        }
 	        // Attach a ScrollPane to the list to make it scrollable
-	        JScrollPane scrollPane = new JScrollPane();
-	        
-	        list.setPreferredSize(new Dimension(60, 50));
-	        //list.setSize(100, 30);
+	        scrollPane = new JScrollPane();
+	        // Adding the list to the scrollable area
 	        scrollPane.getViewport().add(list);
-	        
-	        //scrollPane.setSize(new Dimension(100, 100));
 	        
 	        // Title of the playerlist
 	        label = new JLabel(" Online Players :");
 	        label.setFont(new Font("Malgun Gothic", Font.BOLD, 14));
+	        label.setForeground(Color.WHITE);
 	        label.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 0));
 	        
 	        add(label, BorderLayout.NORTH);

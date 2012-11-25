@@ -28,6 +28,7 @@ import Tetris2P.Tetris.HotBar;
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
  */
+@SuppressWarnings("unused")
 public class Board extends JPanel implements ActionListener {
 
     /**
@@ -506,10 +507,10 @@ public class Board extends JPanel implements ActionListener {
     public void updateBoard(Updater updater){
 		
     	//updates the opponent toolbar
-    	holdPiece.setShape(updater.holdPiece.getShape());
-		nextPiece.setShape(updater.nextPiece.getShape());
-		curPiece.setShape(updater.curPiece.getShape());
-		board = updater.board;
+    	holdPiece.setShape(updater.newHoldPiece.getShape());
+		nextPiece.setShape(updater.newNextPiece.getShape());
+		curPiece.setShape(updater.newCurPiece.getShape());
+		board = updater.newBoard;
 		
 		//repainting the opponent game board
 		repaint();
@@ -623,7 +624,7 @@ public class Board extends JPanel implements ActionListener {
 				boardAudio = false;
 			}
 			else {
-				tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY);
+				tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
 				boardAudio = true;
 				synchronized(this) {
 					this.notify();
@@ -792,7 +793,7 @@ public class Board extends JPanel implements ActionListener {
     		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_8bit.wav"));
     		tetrisTheme = AudioSystem.getClip();
             tetrisTheme.open(music);
-            tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY); 
+            tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY); 
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -888,10 +889,10 @@ public class Board extends JPanel implements ActionListener {
      */
     public class Updater
     {
-    	private Shape holdPiece;
-    	private Shape nextPiece;
-    	private Shape curPiece;
-    	private Tetromino[] board;
+		private Shape newHoldPiece;
+    	private Shape newNextPiece;
+    	private Shape newCurPiece;
+    	private Tetromino[] newBoard;
     	
     	/**
     	 * This constructor updates the local clients game with the new input after a piece has been dropped.
@@ -899,12 +900,12 @@ public class Board extends JPanel implements ActionListener {
     	 * The inputs are taken from board since Updater is a nested class.
     	 * 
     	 */
-    	public Updater(){
-    		this.holdPiece = holdPiece;
-    		this.nextPiece = nextPiece;
-    		this.curPiece = curPiece;
-    		this.board = board;
+    	public Updater()
+    	{
+    		newHoldPiece = holdPiece;
+    		newNextPiece = nextPiece;
+    		newCurPiece = curPiece;
+    		newBoard = board;
     	}
- 
-    }   
+    }
 }

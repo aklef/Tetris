@@ -16,8 +16,9 @@ import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris2P.OutputBox;
 
 /**
- * This class represents one complete instance of a gmae of tetris played by a user.
- * It has several subcomponents.
+ * This class represents one complete instance of a game of tetris played by a single user.
+ * Is composed of a central {@code Board} area, where {@code Shapes} can be seen falling.
+ * Has a small {@code HotBar} where the {@code currentPiece} and {@code nextPiece} are displayed.
  * 
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
@@ -39,7 +40,7 @@ public class Tetris extends JPanel{
     /**
      * The toolbar object.
      */
-    private final HotBar toolBar;
+    private final HotBar hotBar;
     /**
      * The board object.
      */
@@ -63,14 +64,14 @@ public class Tetris extends JPanel{
     	
     	isAudioPlaybackAllowed = false;
     	
-    	toolBar = new HotBar();
-    	toolBar.setBackground(backgroundColor);
+    	hotBar = new HotBar();
+    	hotBar.setBackground(backgroundColor);
     	
     	// StatusBar can be replaced with console messages.
         statusBar = new JLabel(" 0");
         statusBar.setOpaque(true);
         statusBar.setBackground(backgroundColor);
-        statusBar.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, Color.LIGHT_GRAY));
+        statusBar.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
         
         board = new Board(this);
         board.setMinimumSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
@@ -80,13 +81,13 @@ public class Tetris extends JPanel{
         
         setLayout(new BorderLayout());
         
-        add(toolBar, BorderLayout.NORTH);
+        add(hotBar, BorderLayout.NORTH);
         add(board, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
         
         Dimension areaDim =  new Dimension(board.squareWidth()*4, board.squareHeight()*4);
-        toolBar.holdArea.setPreferredSize(areaDim );
-        toolBar.previewNextPieceArea.setPreferredSize(areaDim);
+        hotBar.holdArea.setPreferredSize(areaDim );
+        hotBar.previewNextPieceArea.setPreferredSize(areaDim);
         
         setPreferredSize(getSize());
    }
@@ -103,7 +104,7 @@ public class Tetris extends JPanel{
      * Returns the {@code ToolBar} Object  belonging to this game.
      */
     protected HotBar getToolBar() {
-       return toolBar;
+       return hotBar;
    }
 
     /**
@@ -274,7 +275,7 @@ public class Tetris extends JPanel{
 	         * @author Andréas K.LeF.
 	         * @author Dmitry Anglinov
 	         */
-	        private class TextOverlay extends JComponent
+			private class TextOverlay extends JComponent
 	        {
 	            /**
 		         * The overlay text.
@@ -292,7 +293,6 @@ public class Tetris extends JPanel{
 		        /**
 		         * @param overlayText
 		         */
-		        @SuppressWarnings("unused")
 		        protected TextOverlay(String overlayText)
 		        {
 		            this.overlayText = overlayText;
@@ -327,7 +327,6 @@ public class Tetris extends JPanel{
 	             * Setter method to change the message on the overlay.
 	             * @param newOverLayText 
 	             */
-	            @SuppressWarnings("unused")
 	            protected void setOverlayText(String newOverLayText)
 	            {
 	            	overlayText = newOverLayText;
