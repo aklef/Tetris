@@ -9,15 +9,16 @@ import java.awt.Graphics2D;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris2P.OutputBox;
+import Tetris2P.Tetris2P.TetrisClient;
 
 /**
- * This class represents one complete instance of a gmae of tetris played by a user.
- * It has several subcomponents.
+ * This class represents one complete instance of a game of tetris played by a single user.
+ * Is composed of a central {@code Board} area, where {@code Shapes} can be seen falling.
+ * Has a small {@code HotBar} where the {@code currentPiece} and {@code nextPiece} are displayed.
  * 
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
@@ -27,83 +28,87 @@ public class Tetris extends JPanel{
     /**
      * The width of the game.
      */
-	private static int BOARD_WIDTH = 200;
+	private static int 		BOARD_WIDTH = 200;
     /**
      * The height of the game.
      */
-    private static int BOARD_HEIGHT = 400;
+    private static int 		BOARD_HEIGHT = 400;
     /**
-     * The status bar object.
+     * The output {@code ChatIF} for game statuses.
      */
-    private final JLabel statusBar;
+    @SuppressWarnings("unused")
+	private OutputBox 		output;
     /**
      * The toolbar object.
      */
-    private final HotBar toolBar;
+    private final HotBar 	hotBar;
     /**
      * The board object.
      */
-    private final Board board;
+    private final Board 	board;
     /**
      * Static variable representing the backroung color of the board.
      */
-    private static Color backgroundColor;
+    private static Color 	backgroundColor;
     /**
      * Master on/off for all game audio.
      */
-    private boolean isAudioPlaybackAllowed;
+    private boolean 		isAudioPlaybackAllowed;
 
+    //*************************************CONSTRUCTORS*************************************//
     
     /**
-     * Contructor for Tetris game.
+     * Constructor for a Tetris game.
      */
-    public Tetris(Tetris2P parent)
+    public Tetris(OutputBox output)
     {
     	backgroundColor = new Color (13,13,13);
     	
     	isAudioPlaybackAllowed = false;
     	
-    	toolBar = new HotBar();
-    	toolBar.setBackground(backgroundColor);
+    	hotBar = new HotBar();
+    	hotBar.setBackground(backgroundColor);
     	
-    	// StatusBar can be replaced with console messages.
-        statusBar = new JLabel(" 0");
-        statusBar.setOpaque(true);
-        statusBar.setBackground(backgroundColor);
-        statusBar.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, Color.LIGHT_GRAY));
+    	this.output = output;
         
-        board = new Board(this, parent);
+        board = new Board(this, output);
         board.setMinimumSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setBackground(backgroundColor);
-        board.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, Color.LIGHT_GRAY));
+        board.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
         
         setLayout(new BorderLayout());
         
-        add(toolBar, BorderLayout.NORTH);
+        add(hotBar, BorderLayout.NORTH);
         add(board, BorderLayout.CENTER);
-        add(statusBar, BorderLayout.SOUTH);
         
         Dimension areaDim =  new Dimension(board.squareWidth()*4, board.squareHeight()*4);
-        toolBar.holdArea.setPreferredSize(areaDim );
-        toolBar.previewNextPieceArea.setPreferredSize(areaDim);
+        hotBar.holdArea.setPreferredSize(areaDim );
+        hotBar.previewNextPieceArea.setPreferredSize(areaDim);
         
         setPreferredSize(getSize());
    }
 
     /**
-     * Returns the {@code statusBar} Object that contains system messages.
-     * TODO Sould be replaced with messages in the console/in-game chat.
-     */
-    protected JLabel getStatusBar() {
-       return statusBar;
-   }
+     * Calls the default constructor of this class
+     * 
+	 * @param tetrisClient this game's parent's client.
+	 * @param outputBox the output area.
+	 */
+	public Tetris(TetrisClient tetrisClient, OutputBox outputBox)
+	{
+		this(outputBox);
 
-    /**
+		board.setClient(tetrisClient);
+	}
+
+    //*************************************SETTER/GETTER*************************************//
+
+	/**
      * Returns the {@code ToolBar} Object  belonging to this game.
      */
     protected HotBar getToolBar() {
-       return toolBar;
+       return hotBar;
    }
 
     /**
@@ -136,7 +141,7 @@ public class Tetris extends JPanel{
     }
 
     //*************************************TOOLBAR*************************************//
-	
+
 	/**
 	 * This is a nested class in Tetris.java that is a JPanel. It is displayed at the top of the main Tetris frame.
 	 * 
@@ -153,26 +158,26 @@ public class Tetris extends JPanel{
 	     * The {@code ShapeArea} to show the upcoming piece.
 	     */
 	    private ShapeArea previewNextPieceArea;
-	    
+
 		/**
 		 * Constructor method.
 		 */
 		public HotBar()
 		{
-			
+
 			this.setLayout(new BorderLayout());
-			
+
 			holdArea = new ShapeArea();
 			holdArea.setBackground(backgroundColor);
 			holdArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLUE));
 			add(holdArea, BorderLayout.WEST);
-			
+
 			previewNextPieceArea = new ShapeArea();
-			
+
 			previewNextPieceArea.setBackground(backgroundColor);
 			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
 			add(previewNextPieceArea, BorderLayout.EAST);
-			
+
 			this.setFocusable(false);
 			this.setVisible(true);
 		}
@@ -186,7 +191,7 @@ public class Tetris extends JPanel{
 		{
 			previewNextPieceArea.setShape(nextPiece);
 		}
-		
+
 		/**
 		 * Sets a new held shape to be displayed.
 		 * Calling this method forces the {@code ShapeArea} to call {@code repaint()}.
@@ -197,10 +202,14 @@ public class Tetris extends JPanel{
 			holdArea.setShape(holdPiece);
 		}
 
-        public void paintComponent(Graphics g)
-        {
-            super.paintComponent(g);
-        }
+		/**
+		 * The paint method.
+		 */
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+		}
     
 	    //*************************************SHAPEAREA*************************************//
 
@@ -229,7 +238,7 @@ public class Tetris extends JPanel{
 	    	{
 	    		piece = new Shape();
 	    		piece.setShape(Tetromino.NoShape);
-	    		
+
 	    		setFocusable(false);
 	    		setVisible(true);
 	    	}
@@ -251,9 +260,9 @@ public class Tetris extends JPanel{
 	        public void paintComponent(Graphics g)
 	        {
 	            super.paintComponent(g);
-	            
+
 	            setPreferredSize( new Dimension(board.squareWidth()*4, board.squareHeight()*4) );
-	            
+
 	            if (piece.getShape() != Tetromino.NoShape)
 	            {
 	            	int x, y;
@@ -267,14 +276,14 @@ public class Tetris extends JPanel{
 	        }
 
 	      //*************************************TEXTOVERLAY*************************************//
-	        
+
 	        /**
 	         * 
 	         * 
 	         * @author Andréas K.LeF.
 	         * @author Dmitry Anglinov
 	         */
-	        private class TextOverlay extends JComponent
+			private class TextOverlay extends JComponent
 	        {
 	            /**
 		         * The overlay text.
@@ -288,20 +297,19 @@ public class Tetris extends JPanel{
 		         * 
 		         */
 		        private float alpha;
-		        
+
 		        /**
 		         * @param overlayText
 		         */
-		        @SuppressWarnings("unused")
 		        protected TextOverlay(String overlayText)
 		        {
 		            this.overlayText = overlayText;
-		            
+
 		            setFocusable(false);
 		            //setOpaque(false);
-		            
+
 		            alpha = 0.75f;
-		            
+
 		            ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
 	            }
 
@@ -315,10 +323,10 @@ public class Tetris extends JPanel{
 	            {
 	                super.paintComponent( g );
 	                Graphics2D g2 = (Graphics2D) g;
-	                
+
 	                g2.setColor(Color.CYAN);
 	                g2.setComposite(ac);
-	                
+
 	                //g2.drawString(overlayText, board.squareWidth()*2, board.squareHeight()*2);
 	                g2.fillRect(10, 10, 10, 10);
 	            }
@@ -327,7 +335,6 @@ public class Tetris extends JPanel{
 	             * Setter method to change the message on the overlay.
 	             * @param newOverLayText 
 	             */
-	            @SuppressWarnings("unused")
 	            protected void setOverlayText(String newOverLayText)
 	            {
 	            	overlayText = newOverLayText;

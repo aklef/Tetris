@@ -6,7 +6,6 @@ package ocsf.client;
 
 import java.io.*;
 import java.net.*;
-import Tetris2P.Board.Updater;
 
 /**
  * The <code> AbstractClient </code> contains all the methods necessary to set

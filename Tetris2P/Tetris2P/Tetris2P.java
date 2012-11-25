@@ -4,7 +4,10 @@ import java.io.*;
 
 import javax.sound.sampled.*;
 import java.awt.AlphaComposite;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,15 +19,26 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import javax.swing.JList;
 import javax.swing.DefaultListModel;
@@ -32,13 +46,13 @@ import javax.swing.DefaultListModel;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import javax.swing.JButton;
+import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import Tetris2P.Shape.Tetromino;
-//import Tetris2P.Board.Updater;
 import Tetris2P.Tetris.HotBar.ShapeArea;
-import Tetris2P.Board.Updater;
+import Tetris2P.Board.*;
 import 	ocsf.client.*;
 
 
@@ -46,14 +60,16 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 /**
- * TODO
+ * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
+ * Contains two instances of a {@code Tetris} game. One is fo rthe current user and the other is for the opponent.
+ * 
  * 
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
  */
 @SuppressWarnings("unused")
-public class Tetris2P extends JFrame implements Runnable{
-	
+public class Tetris2P extends JFrame implements Runnable
+{
     /**
      * Instance of a tetris game mapped to the local player.
      */
@@ -63,13 +79,19 @@ public class Tetris2P extends JFrame implements Runnable{
      */
     private final Tetris opponentGame;
     /**
-     * TODO
+     * Extends {@code JPanel} and implements {@code ChatIF}. Contains only one
+     * {@code JTextArea} to show the contents of chat.
      */
     private final OutputBox outputBox;
     /**
-     * TODO
+     * Extends {@code JPanel} and implements {@code ActionListener}. Contains only one
+     * JInputField to let the player type in the chat and input commands.
      */
     private final InputBox inputBox;
+    /**
+     * Contains icons that perform useful functions such as muting sounds.
+     */
+    private final JPanel toolBar;
     /**
      * Static variable representing the background color of the board.
      */
@@ -77,7 +99,11 @@ public class Tetris2P extends JFrame implements Runnable{
     /**
      * Variable that holds the GUI for the current connected users
      */
-    private final PlayerList playerList;
+    private final PlayerList userList;
+    /**
+     * Label that displays server information when it is active.
+     */
+    private final JLabel serverInfo;
     /**
      * The default port to connect on.
      */
@@ -98,89 +124,144 @@ public class Tetris2P extends JFrame implements Runnable{
      * Music soundtrack for the game
      */
     private Clip tetrisSoudtrack; 
+
+
+    //*************************************CONSTRUCTOR*************************************//
     
     /**
-     * Constructor for the Teris multiplayer game.
+     * Constructor for the Teris multiplayer game. UI dispatcher.
      */
     public Tetris2P()
     {
-        // Panel for the middle area
-        JPanel middle = new JPanel();
-        // GridLayout for middle area
-        GridLayout myGrid = new GridLayout(1, 2, 30, 0);
-        
-        // Creating instances of emleents
-        localGame	 = new Tetris(this);
-        opponentGame = new Tetris(this);
-        playerList	 = new PlayerList();
+        // Must create OutputBox before setting L&F to nimbus or bad things happen.
         outputBox	 = new OutputBox();
-        inputBox	 = new InputBox();
-                
+        
+        // Sets default UIManager values
+        UIManager.put("nimbusBase", Color.BLACK);
+        
+        try// Attemps to set the Nimbus L&F
+        {
+        	for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
+        	{
+        		if ("Nimbus".equals(info.getName()))
+        		{
+        			UIManager.setLookAndFeel(info.getClassName());
+        			break;
+                    }
+            }
+        }
+        catch (Exception e)
+        {
+        	// If Nimbus is not available, the GUI can be set to another look and feel.
+        }
+        
+        // Creating instances of elements
         tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
         
-        // Default background color
-        backgroundColor = new Color(13,13,13);
+        localGame	 = new Tetris(tetrisClient, outputBox);
+        opponentGame = new Tetris(outputBox);
+        userList	 = new PlayerList();
+        serverInfo	 = new JLabel("TESTING");
         
-        // Setting the frame's background
+        inputBox	 = new InputBox();
+        toolBar		 = new ToolBar();
+        
+        createAndShowGUI();
+   }
+    /** 
+     * Create the GUI and show it.  For thread safety, 
+     * this method should be invoked from the 
+     * event-dispatching thread. 
+     */  
+    private void createAndShowGUI()
+    {
+        
+        // Panel for the middle area
+        JPanel middle		 = new JPanel( new GridLayout(1, 3, 30, 0) );
+        JPanel bottom		 = new JPanel( new FlowLayout(FlowLayout.LEFT));
+        JPanel socialArea	 = new JPanel( new GridLayout(2, 1) );
+        
+        // Default background color
+        backgroundColor = new Color(16,16,32);
+        
+        // Setting the frame's colors
         getContentPane().setBackground(backgroundColor);
-        // Setting each component's background
+        
+        // Setting each component's colors
         middle.setBackground(backgroundColor);
+        bottom.setBackground(backgroundColor);
+        socialArea.setBackground(backgroundColor);
+        
         localGame.setBackground(backgroundColor);
         opponentGame.setBackground(backgroundColor);
-        playerList.setBackground(backgroundColor);
         
-        // Setting components' sizes.
-        playerList.setPreferredSize(new Dimension(100,200));
-
+        userList.setBackground(backgroundColor);
+        
+        serverInfo.setBackground(backgroundColor);
+        serverInfo.setForeground(Color.LIGHT_GRAY);
+        
+        outputBox.setBackground(backgroundColor.brighter());
+        inputBox.setForeground(Color.WHITE);
+        
+        toolBar.setBackground(backgroundColor);
+        
+        // Creating spacing
+        socialArea.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        
+        serverInfo.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+        inputBox.setPreferredSize(new Dimension(450, 30));
+        
+        bottom.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
+                
         // Setting components as not focusable
         opponentGame.setFocusable(false);
-        playerList.setFocusable(false);
-        outputBox.setFocusable(false);
+        userList.setFocusable(false);
         
-        
-        // Setting the middle's layout manager
-        middle.setLayout(myGrid);
+        // Setting the Label's properties
+        serverInfo.setVisible(true);
         
         // Adding components to frame
         middle.add(localGame);
         middle.add(opponentGame);
-        middle.add(playerList);
+        
+        //socialArea.add(serverInfo, BorderLayout.NORTH);
+        socialArea.add(userList, BorderLayout.CENTER);
+        socialArea.add(outputBox, BorderLayout.SOUTH);
+        
+        middle.add(socialArea);
+        
+        bottom.add(inputBox);
+        bottom.add(serverInfo);
         
         // Adding components to frame
-        //add(toolBar, BorderLayout.NORTH);
+        add(toolBar, BorderLayout.NORTH);
         add(middle, BorderLayout.CENTER);
-        add(inputBox, BorderLayout.SOUTH);
+        add(bottom, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
-        getContentPane().setPreferredSize(new Dimension(600,473));
+        getContentPane().setPreferredSize(new Dimension(600,465));
         // Necessary
         pack();
         
         // Not needed but works fine
         //revalidate();
         
-        // mute opponent game
+        // Mute opponent game
         opponentGame.setAudioPlayback(false);
         
         setTitle("Tetris");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         
         run();
-   }
+    }
 
-    /**
-     * Returns the background color of this panel.
-     */
-    @Override
-    public Color getBackground() {
-       return backgroundColor;
-   }
-
+    //*************************************THREAD-LOGIC*************************************//
+    
     /**
      * Main method of the multiplayer Tetris game.
      */
     public static void main(String[] args) {
-        new Tetris2P();
+    	new Tetris2P();
     }
 
     /**
@@ -188,17 +269,19 @@ public class Tetris2P extends JFrame implements Runnable{
      */
 	public void run()
 	{
-        // Makes the window open in the center of the screen.
+		// Makes the window open in the center of the screen.
         setLocationRelativeTo(null);
         
         // Makes the frame steady
-        //setResizable(false);
+        //XXX setResizable(false);
         
         // Shows the window
         setVisible(true);
         
 	}
 
+    //*************************************TOGGLES*************************************//
+	
     /**
      * Toggles mute on the entire game when called
      */
@@ -210,6 +293,8 @@ public class Tetris2P extends JFrame implements Runnable{
 			localGame.setAudioPlayback(true);
 	}
 	
+    //*************************************SETTER/GETTER*************************************//
+	
 	/**
 	 * Allows the tetris client to be accessed from outside Tetris2P in order to send messages to server
 	 * @return tetrisClient
@@ -218,7 +303,14 @@ public class Tetris2P extends JFrame implements Runnable{
 	public TetrisClient getTetrisClient(){
 		return tetrisClient;
 	}
-	
+    
+    /**
+     * Returns the background color of this panel.
+     */
+    @Override
+    public Color getBackground() {
+       return backgroundColor;
+   }
 
     //*************************************PLAYERLIST*************************************//
 
@@ -234,19 +326,20 @@ public class Tetris2P extends JFrame implements Runnable{
 	   /**
 	    * This label will show the "Users Connected" title
 	    **/
-		private JLabel label;
-
+		private final JLabel label;
 	   /**
 	    * GUI componenent that displays list of users
 	    **/
-	    private DefaultListModel userList;
-	    
+	    @SuppressWarnings("rawtypes")
+		private final DefaultListModel userList;
 		/**
 		 * LinkedList to hold the list of players
 		**/
-	    private LinkedList<String> users; 
-	    
-	    
+	    private final LinkedList<String> users; 
+	    /**
+		 * {@code JScrollPane} to show the list of players
+		**/
+		private final  JScrollPane scrollPane; 
 		/**
 		 * constructor method for list.
 		**/
@@ -254,31 +347,31 @@ public class Tetris2P extends JFrame implements Runnable{
 		protected PlayerList()
 	    {
 	        setLayout(new BorderLayout());
-	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 20));
+	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 	        
 	        // TODO
-	        users = new LinkedList<String>();
-	        
-	        // TODO
+	        users 	 = new LinkedList<String>();
 	        userList = new DefaultListModel();
-	        JList list = new JList(userList);
+	        JList list 	 = new JList(userList);
 	        
 	        // XXX Remove! Test addition to the list
 	        for(int i=0; i<10; i++){
 	        	addUserToList("Dingletronic" + i);
 	        }
 	        // Attach a ScrollPane to the list to make it scrollable
-	        JScrollPane scrollPane = new JScrollPane();
+	        scrollPane = new JScrollPane();
 	        
-	        list.setPreferredSize(new Dimension(60, 50));
-	        //list.setSize(100, 30);
+	        list.setOpaque(true);
+	        list.setCellRenderer(new CustomCellRenderer());
+	        list.setForeground(Color.WHITE);
+	        
+	        // Adding the list to the scrollable area
 	        scrollPane.getViewport().add(list);
-	        
-	        //scrollPane.setSize(new Dimension(100, 100));
 	        
 	        // Title of the playerlist
 	        label = new JLabel(" Online Players :");
 	        label.setFont(new Font("Malgun Gothic", Font.BOLD, 14));
+	        label.setForeground(Color.WHITE);
 	        label.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 0));
 	        
 	        add(label, BorderLayout.NORTH);
@@ -308,14 +401,17 @@ public class Tetris2P extends JFrame implements Runnable{
 	    	userList.removeElement(username); //adds a user to the list GUI
 	    }
 	    
-		/**
-		 * TODO
-		 */
-		@Override
-		public void paintComponent(Graphics g)
-		{
-			super.paintComponent(g);
-		}
+	    private class CustomCellRenderer extends DefaultListCellRenderer
+	    {
+	        @SuppressWarnings("rawtypes")
+			public Component getListCellRendererComponent( JList list, Object value, int index, boolean isSelected, boolean cellHasFocus )
+	        {
+	            Component c = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus );
+	            
+	            c.setBackground( backgroundColor.brighter() );
+	            return c;  
+	        }  
+	    } 
 	}
 	
 	//**************************************TOOLBAR*************************************//
@@ -331,84 +427,202 @@ public class Tetris2P extends JFrame implements Runnable{
 	protected class ToolBar extends JPanel
 	{
 		/**
-		 * TODO Icons.
-		
-		/**
-		 * Constructor method.
+		 * Constructor method to create toolbar of icons
 		 */
 		protected ToolBar()
 		{
-			/*
-			this.setLayout(new BorderLayout());
+			setLayout(new BorderLayout());
 			
-			holdArea = new ShapeArea();
-			add(holdArea, BorderLayout.WEST);
-			
-			previewNextPieceArea = new ShapeArea();
-			
-			previewNextPieceArea.setBackground(backgroundColor);
-			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
-			add(previewNextPieceArea, BorderLayout.EAST);
-			*/
+			//icons declarations
+		    ImageIcon soundOn = new ImageIcon(getClass().getResource("/Media/Icons/soundOn.png"));
+		    System.out.println(soundOn.getIconHeight());
+	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Media/Icons/soundoff.png"));
+	        ImageIcon play = new ImageIcon(getClass().getResource("/Media/Icons/play.png"));
+	        ImageIcon pause = new ImageIcon(getClass().getResource("/Media/Icons/pause.png"));
+	        ImageIcon restart = new ImageIcon(getClass().getResource("/Media/Icons/restart.png"));	 
+	        
+	        //buttons for user interactivity with icons
+	        JButton soundButton = new JButton(soundOn);
+	        JButton playButton = new JButton(play);
+	        JButton restartButton = new JButton(restart);
+	        
+	        //adding the action listeners for the buttons in order to allow events
+	        soundButton.addActionListener(new SoundButtonListener(soundButton, soundOn, soundOff));
+	        playButton.addActionListener(new PlayButtonListener(playButton, play, pause));
+	        restartButton.addActionListener(new RestartButtonListener());
+	        
+	        //adding the buttons to the JPanel and displaying to the UI
+	        add(playButton, BorderLayout.EAST);
+	        add(restartButton, BorderLayout.CENTER);
+	        add(soundButton, BorderLayout.WEST);
+	        setVisible(true);
+	        setFocusable(true);
+	        
 		}
 		
 		/**
-		 * TODO
+		 * Implements the functionality of the mute button by muting the game and changing the icon when pressed
+		 * 
+		 * @author Andréas K.LeF.
+		 * @author Dmitry Anglinov
+		 *
 		 */
-		@Override
-		public void paintComponent(Graphics g)
-		{
-			super.paintComponent(g);
-		}
+		
+	    private class SoundButtonListener implements ActionListener {
+	    	
+	    	private JButton soundButton;
+	    	private ImageIcon soundOn;
+	    	private ImageIcon soundOff;
+	    	
+	    	public SoundButtonListener(JButton soundButton, ImageIcon soundOnIcon, ImageIcon soundOffIcon)
+	    	{
+	    		this.soundButton = soundButton;
+	    		this.soundOn = soundOnIcon;
+	    		this.soundOff = soundOffIcon;
+	    	}
+
+	        public void actionPerformed(ActionEvent e) {
+	        	if(soundButton.getIcon() == soundOn)
+	        	{
+	        		soundButton.setIcon(soundOff);
+	        		toggleMuteGame();
+	        	}
+	        	else
+	        	{
+	        		soundButton.setIcon(soundOn);
+	        		toggleMuteGame();
+	        	}
+	        }
+	    }
+	    
+		/**
+		 * Implements the functionality of the play/pause toggle button by pausing or playing the game 
+		 * when clicked.
+		 * 
+		 * @author Andréas K.LeF.
+		 * @author Dmitry Anglinov
+		 *
+		 */
+		
+	    private class PlayButtonListener implements ActionListener {
+	    	
+	    	private JButton playButton;
+	    	private ImageIcon play;
+	    	private ImageIcon pause;
+	    	
+	    	public PlayButtonListener(JButton playButton, ImageIcon playIcon, ImageIcon pauseIcon)
+	    	{
+	    		this.playButton = playButton;
+	    		this.play = playIcon;
+	    		this.pause = pauseIcon;
+	    	}
+
+	        public void actionPerformed(ActionEvent e) {
+	        	if(playButton.getIcon() == play)
+	        	{
+	        		playButton.setIcon(pause);
+	        		localGame.getBoard().pause();
+	        	}
+	        	else
+	        	{
+	        		playButton.setIcon(play);
+	        		localGame.getBoard().pause();
+	        	}
+	        }
+	    }
+	    
+		/**
+		 * Implements the restart functionality for the restart button icon
+		 * 
+		 * @author Andréas K.LeF.
+		 * @author Dmitry Anglinov
+		 *
+		 */
+	    private class RestartButtonListener implements ActionListener
+	    {
+	    	public void actionPerformed(ActionEvent e)
+	    	{
+	    		localGame.getBoard().restart();
+	    	}
+	    }
+	    
+	    
+
 	}
 	
 	//*************************************OUTPUTBOX*************************************//
 	
 	/**
-	 * This is a nested class in Tetris2P.java that is a JPanel.
-	 * It is displayed at the bottom of the main Tetris2P frame and allows for user input.
+	 * This is a nested class in Tetris2P.java that holds the chat content.
+	 * It is displayed at the right of the main Tetris2P frame.
 	 * 
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	public class OutputBox extends JPanel implements ChatIF
+	protected class OutputBox extends JTextPane implements ChatIF
 	{
-	    /**
-	     * Holds the chat contents
-	     */
-	    private final JTextArea chatBox;
+		/**
+		 * Default font
+		 */
+		private final Font defaultFont;
 		
 		/**
 		 * Constructor method.
 		 */
-		public OutputBox(/*TetrisClient client*/)
+		private OutputBox()
 		{
-			chatBox = new JTextArea();
+			super();
 			
-			chatBox.setBackground(backgroundColor);
-			chatBox.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
+			defaultFont = getFont();
 			
-			add(chatBox);
+			setBorder(BorderFactory.createMatteBorder(0, 0, 0, 18, new Color (16,16,32)));
+			
+			setFocusable(false);
 		}
 		
 		/**
-		  * This method overrides the method in the ChatIF interface.  It
-		 * displays a message onto the screen.
+		 * This method overrides the method in the ChatIF interface.
+		 * It displays a message on the chatBox in the default color.
 		 *
 		 * @param message The string to be displayed.
 		 */
 		public void display(String message) 
 		{
-			System.out.println(message);
+			display(message, Color.WHITE);
 		}
 		
 		/**
-		 * TODO
+		 * This method overrides the method in the ChatIF interface.
+		 * It displays a message on the chatBox in the given {@code color}.
+		 *
+		 * @param message The string to be displayed.
+		 * @param message The color in which the string will be displayed.
 		 */
-		@Override
-		public void paintComponent(Graphics g)
+		public void display(String message, Color color, Font font)
 		{
-			super.paintComponent(g);
+			// uses StyleContext
+			StyleContext sc = StyleContext.getDefaultStyleContext();
+			
+			AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, color);
+			
+			int len = getDocument().getLength(); // same value as getText().length();
+			setCaretPosition(len); // place caret at the end (with no selection)
+			
+			setFont(font);
+			setCharacterAttributes(aset, false);
+			
+			replaceSelection("\n"+message); // there is no selection, so inserts at caret
+		}
+		
+		/**
+		 * This method overrides the method in the ChatIF interface.
+		 * It displays a message on the chatBox in the default color.
+		 *
+		 * @param message The string to be displayed.
+		 */
+		public void display(String message, Color color)
+		{
+			display(message, color, defaultFont);
 		}
 	}
 	
@@ -416,52 +630,55 @@ public class Tetris2P extends JFrame implements Runnable{
 	
 	/**
 	 * This is a nested class in Tetris2P.java that is a JPanel.
-	 * It is displayed at the bottom of the main Tetris2P frame and allows for user input.
+	 * It is displayed at the bottom of the main Tetris2P frame. 
+	 * Allows for user inputsuch as chat messages and commands.
 	 * 
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	private class InputBox extends JPanel implements ActionListener
+	private class InputBox extends JTextField
 	{
-	    /**
-	     * Input area for chat messages and commands.
-	     */
-	    private final JTextField inputBox;
-		
 		/**
 		 * Constructor method.
 		 */
-		public InputBox(/*TetrisClient client*/)
+		private InputBox()
 		{
-			inputBox = new JTextField();
+			super(); 
+			setBackground(backgroundColor);
 			
-			inputBox.setBackground(backgroundColor);
-			inputBox.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
+			KeyAdapter keyListener = new KeyAdapter() {
+				public void keyPressed(KeyEvent e)
+				{
+					// Command statement switch
+					switch (e.getKeyCode()) {
+						case KeyEvent.VK_ENTER:
+							
+							String msg = getText();
+							
+							tetrisClient.handleMessageFromClientUI(msg);
+							
+							setText(null);
+							repaint();
+							break;
+					}
+				}
+			};
 			
-			add(inputBox);
+			addKeyListener(keyListener);
+			
+			setFocusable(true);
+			
 		}
 		
 		//***************************GRAPHICS***************************
 		
 		/**
-		 * TODO
+		 * The paint method.
 		 */
 		@Override
 		public void paintComponent(Graphics g)
 		{
 			super.paintComponent(g);
-		}
-		
-		//*****************************INPUT*****************************
-		
-		/**
-		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-		 */
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			// TODO When the user is typing in the chat input box
-			
 		}
 	}
 	
@@ -480,9 +697,13 @@ public class Tetris2P extends JFrame implements Runnable{
 		 * The interface type variable.  It allows the implementation of 
 		 * the display method in the client.
 		 */
-		ChatIF clientUI; 
-
+		OutputBox clientUI; 
 		
+	    /**
+	     * Local server for the multiplayer Tetris game.
+	     */
+	    private TetrisServer tetrisServer;
+	    
 		/**
 		 * Constructs an instance of the Tetris client.
 		 * Initially calls the Abstractclient constructor
@@ -494,16 +715,7 @@ public class Tetris2P extends JFrame implements Runnable{
 		protected TetrisClient(String host, int port, ChatIF clientUI)
 		{
 			super(host, port); 
-			this.clientUI = clientUI;
-			try
-			{
-				openConnection();
-			}
-			catch (IOException e)
-			{
-				clientUI.display("Cannot open connection. Awaiting command.");
-			}
-	        
+			this.clientUI = (OutputBox) clientUI;
 		}
 
 		//Instance methods ************************************************
@@ -525,13 +737,13 @@ public class Tetris2P extends JFrame implements Runnable{
 			if(((String) msg).startsWith("/"))
 				commandMessage(((String) msg).substring(1));
 			else
-				clientUI.display("> "+msg.toString());
+				clientUI.display("> "+msg.toString(), Color.LIGHT_GRAY);
 			}
 		}
 
-		/** This method handles all data coming from the UI            
+		/** This method handles all data coming from the UI
 		 * 
-		 * @param message The message from the UI.    
+		 * @param message The message from the UI.
 		 */
 		public void handleMessageFromClientUI(String message)
 		{
@@ -539,7 +751,7 @@ public class Tetris2P extends JFrame implements Runnable{
     		{
     			// Idiot-proofing the input
     			if(message.equals(""))
-    			return;
+    				return;
     			
     			//If the message was a command message, send the instruction for interpretation
     			if(message.startsWith("#") || message.startsWith("/"))
@@ -586,64 +798,55 @@ public class Tetris2P extends JFrame implements Runnable{
 			// ****************************************************************************************//
 			// List of all client-side usable commands
 			
-			switch (instruction)
+			switch (instruction.toLowerCase())
 			{
 				//*******************************************************************//
 				// Authentication Methods
 				
 				//Log the client back in if the client is not connected
 				 case ("connect"):
-					if(this.isConnected())
-						clientUI.display("Client already connected.");
-					else{
-						try{
-						openConnection();
-						}
-						catch(IOException e) {
-							clientUI.display("Could not connect.");
-						}
-					}
+					 connect();
 				break;
 				
 				//Log off client but does not terminate
 				case ("disconnect"):
-					try{
-						closeConnection();
-					}
-					catch(IOException e) {
-						clientUI.display("Could not disconnect.");
-					}
+					disconnect();
 				break;
 				
 				//*******************************************************************//
-				// Client Control methods
+				// Control methods
 				
+				//Terminates the client
+				case ("start"):
+					start();
+				break;
 				//Terminates the client
 				case ("exit"): case ("quit"):
 					quit();
 				break;
 				
+				//The client won the match.
+				case ("GameOver"):
+					matchWon();
+				break;
 				//*******************************************************************//
 				// Setter methods
 				
 				//Sets the host if client not connected
-				case ("sethost"): case ("setHost"):
+				case ("sethost"):
 					if(this.isConnected())
-						clientUI.display("The client is connected. Please logoff to set host.");
-					else{
-						setHost(operand);
-						clientUI.display("The host has been set to: " + getHost());
-					}
+						disconnect();
+					setHost(operand);
+					clientUI.display("The host has been set to: " + getHost(), Color.RED);
+					connect();
 				break;
 				
 				//Sets the port if client not connected
-				case ("setport"): case ("setPort"):
+				case ("setport"):
 					if(this.isConnected())
-						clientUI.display("Client connected. Logoff to set port.");
-					else{
-						setPort(Integer.parseInt(operand));
-						clientUI.display("Port set: " + getPort());
-					}
+						disconnect();
+					setPort(Integer.parseInt(operand));
+					clientUI.display("Port set: " + getPort());
 				break;
 				
 				//*******************************************************************//
@@ -673,9 +876,11 @@ public class Tetris2P extends JFrame implements Runnable{
 			}
 		}
 		
-		//Method informs the user server has been terminated and closes the client
+		/**
+		 * Method informs the user server has been terminated and closes the client
+		 */
 		protected void connectionClosed(){
-			clientUI.display("Disconnected from server. Terminating client.");
+			clientUI.display("Disconnected from server. Terminating client.", Color.RED);
 		}
 		
 		/**
@@ -683,7 +888,7 @@ public class Tetris2P extends JFrame implements Runnable{
 		 */
 		protected void connectionException(Exception exception)
 		{
-			clientUI.display("Server closed. Abnormal termination of connection.");
+			clientUI.display("Server closed. Abnormal termination of connection.", Color.ORANGE);
 		}
 		
 		/**
@@ -703,6 +908,26 @@ public class Tetris2P extends JFrame implements Runnable{
 		}
 
 		/**
+		 * This method starts the server.
+		 */
+		public void start()
+		{
+			tetrisServer = new TetrisServer(getPort(), clientUI);
+			
+			try 
+			{
+				tetrisServer.listen(); //Start listening for connections
+			}
+			catch (Exception ex) 
+			{
+				clientUI.display("ERROR - Could not listen for clients!", Color.YELLOW);
+				System.exit(0);
+			}
+			// connects with default parameters.
+			connect();
+		}
+		
+		/**
 		 * This method terminates the client.
 		 */
 		public void quit()
@@ -713,6 +938,49 @@ public class Tetris2P extends JFrame implements Runnable{
 			}
 			catch(IOException e) {}
 			System.exit(0);
+		}
+		
+		/**
+		 * Resets this player's opponent ghost board and display a win message.
+		 */
+		private void matchWon()
+		{
+			clientUI.display("You won!", Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
+			localGame.getBoard().restart();
+			opponentGame.getBoard().restart();
+		}
+		
+		/**
+		 * This method connects the client to a server with default parameters.
+		 */
+		public void connect()
+		{
+			if(this.isConnected())
+				clientUI.display("Client already connected.", Color.LIGHT_GRAY);
+			else
+			{
+				try
+				{
+				openConnection();
+				}
+				catch(IOException e)
+				{
+					clientUI.display("Cannot open connection. Awaiting command.", Color.ORANGE);
+				}
+			}
+		}
+		
+		/**
+		 * This method disconnects the client from the server.
+		 */
+		public void disconnect()
+		{
+			try{
+				closeConnection();
+			}
+			catch(IOException e) {
+				clientUI.display("Could not disconnect.", Color.LIGHT_GRAY);
+			}
 		}
 	}
 }
