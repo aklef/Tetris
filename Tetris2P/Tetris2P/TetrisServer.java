@@ -276,7 +276,6 @@ public class TetrisServer extends AbstractServer
 			catch (IOException e)
 			{}
 		break;
-		
 		// Pong!
 		case "Pong": case "pong":
 			try
