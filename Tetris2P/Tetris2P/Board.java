@@ -18,9 +18,12 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.HotBar;
+import Tetris2P.Tetris2P.OutputBox;
+import Tetris2P.Tetris2P.TetrisClient;
 
 /**
  * This class represents an instance on the board where a player interacts with the game and moves pieces.
@@ -98,9 +101,9 @@ public class Board extends JPanel implements ActionListener {
      */
     private int curY = 0;
     /**
-     * The current game status is displayed here. This will be replaced with console/in-game chat output.
+     * The current game status is displayed here.
      */
-    private final JLabel statusBar;
+    private final OutputBox output;
     /**
      * The HUD for the Next and the Hold shapes, and the score(?).
      */
@@ -145,14 +148,15 @@ public class Board extends JPanel implements ActionListener {
     /**
      * Soundtrack for the game
      */
-    private Clip tetrisTheme; 
-    
-    
+    private Clip tetrisTheme;
     /**
-     * This variable will be true if audio can play
-     * 
+     * This variable will be true if sound effects can play
      */
     private boolean boardAudio;
+    /**
+     * This is a reference to this Board's parent's parent's client.
+     */
+    private TetrisClient client;
 
     /**
      * Instance of the tetris client that allows updates to the server
@@ -163,7 +167,7 @@ public class Board extends JPanel implements ActionListener {
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
      */    
-    protected Board( Tetris parent )
+    public Board( Tetris parent, OutputBox output )
     {    	
         //Starts playing the soundtrack
         playSoundtrack();
@@ -179,10 +183,11 @@ public class Board extends JPanel implements ActionListener {
        boardAudio = parent.isAudioPlaybackAllowed();
        
        toolBar = parent.getToolBar();
-       statusBar = parent.getStatusBar();
-       labelFont = new Font(statusBar.getFont().getName(), Font.ITALIC+Font.BOLD, statusBar.getFont().getSize());
-       statusBar.setFont(labelFont);
-       statusBar.setForeground(Color.WHITE);
+       this.output = output;
+       client = null;
+       labelFont = new Font(output.getFont().getName(), Font.ITALIC+Font.BOLD, output.getFont().getSize());
+       output.setFont(labelFont);
+       output.setForeground(Color.WHITE);
        
        board = new Tetromino[SQUARES_IN_WIDTH * SQUARES_IN_HEIGHT];
        // Sets the listener for the board to an instance of the TAdapter class.
@@ -266,6 +271,16 @@ public class Board extends JPanel implements ActionListener {
     	return board[(y * SQUARES_IN_WIDTH) + x];
     }
     
+
+	/**
+	 * @param tetrisClient
+	 */
+	public void setClient(TetrisClient tetrisClient)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+    
     //*************************************CONTROL*************************************//
     
 
@@ -298,7 +313,7 @@ public class Board extends JPanel implements ActionListener {
 
 
     /**
-     * Pauses the game by stoping the timer. Changes the statusBar message.
+     * Pauses the game by stoping the timer. Changes the output message.
      * If the method was called when game was paused, game resumes
      */
     private void pause()
@@ -309,11 +324,9 @@ public class Board extends JPanel implements ActionListener {
         isPaused = !isPaused;
         timer.setPaused(isPaused);
         if (isPaused) { //pausing the game
-            statusBar.setText(" Game [P]aused. ");
-            statusBar.setForeground(Color.magenta);
+            output.display(" Game [P]aused. ", Color.magenta);
         } else { // resuming the game
-            statusBar.setText(" "+numLinesRemoved);
-            statusBar.setForeground(Color.green);
+            output.display(" "+numLinesRemoved, Color.green);
         }
         repaint();
     }
@@ -334,8 +347,7 @@ public class Board extends JPanel implements ActionListener {
         numLinesRemoved = 0;
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
-        statusBar.setText(" Game paused");
-        statusBar.setForeground(Color.magenta);
+        output.display(" Game paused", Color.magenta);
         
         playSoundtrack();
         clearBoard();
@@ -364,8 +376,8 @@ public class Board extends JPanel implements ActionListener {
         numLinesRemoved = 0;
         
         curPiece.setShape(Tetromino.NoShape);
-        statusBar.setText(" Game over. Press [Q]uit [R]estart");
-        statusBar.setForeground(Color.ORANGE);
+        output.setText(" Game over. Press [Q]uit [R]estart");
+        output.setForeground(Color.ORANGE);
         
         timer.setPaused(isPaused);
         
@@ -484,9 +496,8 @@ public class Board extends JPanel implements ActionListener {
         if (!isFallingFinished)
             newPiece();
         
-        //Saving the current contents of the game to be able to pass to the opponent ghost board
-        Updater update = new Updater();
-        
+        if (client != null)
+        	sendUpdateToServer();
         
     }
 
@@ -495,38 +506,22 @@ public class Board extends JPanel implements ActionListener {
      */
     private void clearBoard()
     {
-        for (int i = 0; i < SQUARES_IN_HEIGHT * SQUARES_IN_WIDTH; ++i)
-            board[i] = Tetromino.NoShape;
-    }
-    
-    /**
-     * This method updates the opponent ghost with the new information. 
-     * It is called through the opponentGame instance .
-     * @param Updater which contains data to update the opponent's board.
-     */
-    public void updateBoard(Updater updater){
-		
-    	//updates the opponent toolbar
-    	holdPiece.setShape(updater.newHoldPiece.getShape());
-		nextPiece.setShape(updater.newNextPiece.getShape());
-		curPiece.setShape(updater.newCurPiece.getShape());
-		board = updater.newBoard;
-		
-		//repainting the opponent game board
-		repaint();
+            for (int i = 0; i < SQUARES_IN_HEIGHT * SQUARES_IN_WIDTH; ++i)
+                board[i] = Tetromino.NoShape;
     }
 
     /**
-     *      * Attemps to lower a given {@author Shape} at a certain {@code x} and {@code y} corrdinate by one vertically.
-     * This method needs fixing!
+     * Attemps to lower a given {@author Shape} at a certain {@code x} and {@code y} corrdinate by one vertically.
+     * This method needs fixing (but will not be fixed)!
      * 
-     * Iterates through all the possible locations defined for a shape and checks if any of them are out of bounds or illegal.
-     *
+     * This iterates through all the possible locations defined for the given {@code shape}.
+     * Checks if any of them are out of bounds or illegal and returns {@code false) if so.
+     * Returns {@code true} otherwise.
      * 
      * @param newPiece the {@code Shape} that we are checking
-     * @param newX the new
-     * @param newY
-     * @return
+     * @param newX The desired X position
+     * @param newY The desired Y position
+     * @return true If move operation is succesful
      */
     private synchronized boolean tryMove(Shape newPiece, int newX, int newY)
     {
@@ -581,7 +576,7 @@ public class Board extends JPanel implements ActionListener {
 		//Updating the total number of lines removed by the user
         if (numFullLines > 0) {
             numLinesRemoved += numFullLines;
-            statusBar.setText(String.valueOf(numLinesRemoved));
+            output.setText(String.valueOf(numLinesRemoved));
             isFallingFinished = true;
             isPieceHeld = false;
             curPiece.setShape(Tetromino.NoShape);
@@ -589,6 +584,43 @@ public class Board extends JPanel implements ActionListener {
         }
      }
 
+    //*************************************SERVER-LOGIC*************************************//
+    
+    /**
+     * This method updates the opponent ghost with the new information. 
+     * It is called through the opponentGame instance .
+     * @param Updater which contains data to update the opponent's board.
+     */
+    public void updateBoard(Updater updater)
+    {
+    	holdPiece.setShape(updater.newHoldPiece.getShape());
+		nextPiece.setShape(updater.newNextPiece.getShape());
+		curPiece.setShape(updater.newCurPiece.getShape());
+		board = updater.newBoard;
+		
+		repaint();
+    }
+    
+    /**
+     * This method will send this {@code Board}'s game information to the server so 
+     * the "opponent board" of the opposing player can be updated.
+     */
+    private void sendUpdateToServer()
+    {
+    	//Copying the current state of the game and passing it to the server
+    	try
+    	{
+    		client.sendToServer(new Updater());
+    	}
+    	catch(IOException e)
+		{
+			output.display("Could not send the udpater to server. Terminating client.");
+			client.quit();
+		}
+	}
+    
+    //*************************************TICKER*************************************//
+    
 	/**
 	 * Timer class used to generate game ticks.
 	 * 
@@ -879,6 +911,8 @@ public class Board extends JPanel implements ActionListener {
              }
          }
      }
+    
+    //*************************************UPDATER*************************************//
     
     /**
      * This class contains variables used to update the board of the opponent Tetris game.

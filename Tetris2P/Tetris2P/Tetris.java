@@ -9,11 +9,11 @@ import java.awt.Graphics2D;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris2P.OutputBox;
+import Tetris2P.Tetris2P.TetrisClient;
 
 /**
  * This class represents one complete instance of a game of tetris played by a single user.
@@ -28,37 +28,39 @@ public class Tetris extends JPanel{
     /**
      * The width of the game.
      */
-	private static int BOARD_WIDTH = 200;
+	private static int 		BOARD_WIDTH = 200;
     /**
      * The height of the game.
      */
-    private static int BOARD_HEIGHT = 400;
+    private static int 		BOARD_HEIGHT = 400;
     /**
-     * The status bar object.
+     * The output {@code ChatIF} for game statuses.
      */
-    private final JLabel statusBar;
+    @SuppressWarnings("unused")
+	private OutputBox 		output;
     /**
      * The toolbar object.
      */
-    private final HotBar hotBar;
+    private final HotBar 	hotBar;
     /**
      * The board object.
      */
-    private final Board board;
+    private final Board 	board;
     /**
      * Static variable representing the backroung color of the board.
      */
-    private static Color backgroundColor;
+    private static Color 	backgroundColor;
     /**
      * Master on/off for all game audio.
      */
-    private boolean isAudioPlaybackAllowed;
+    private boolean 		isAudioPlaybackAllowed;
 
+    //*************************************CONSTRUCTORS*************************************//
     
     /**
-     * Contructor for Tetris game.
+     * Constructor for a Tetris game.
      */
-    public Tetris()
+    public Tetris(OutputBox output)
     {
     	backgroundColor = new Color (13,13,13);
     	
@@ -67,23 +69,18 @@ public class Tetris extends JPanel{
     	hotBar = new HotBar();
     	hotBar.setBackground(backgroundColor);
     	
-    	// StatusBar can be replaced with console messages.
-        statusBar = new JLabel(" 0");
-        statusBar.setOpaque(true);
-        statusBar.setBackground(backgroundColor);
-        statusBar.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
+    	this.output = output;
         
-        board = new Board(this);
+        board = new Board(this, output);
         board.setMinimumSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setBackground(backgroundColor);
-        board.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, Color.LIGHT_GRAY));
+        board.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
         
         setLayout(new BorderLayout());
         
         add(hotBar, BorderLayout.NORTH);
         add(board, BorderLayout.CENTER);
-        add(statusBar, BorderLayout.SOUTH);
         
         Dimension areaDim =  new Dimension(board.squareWidth()*4, board.squareHeight()*4);
         hotBar.holdArea.setPreferredSize(areaDim );
@@ -93,14 +90,21 @@ public class Tetris extends JPanel{
    }
 
     /**
-     * Returns the {@code statusBar} Object that contains system messages.
-     * TODO Sould be replaced with messages in the console/in-game chat.
-     */
-    protected JLabel getStatusBar() {
-       return statusBar;
-   }
+     * Calls the default constructor of this class
+     * 
+	 * @param tetrisClient this game's parent's client.
+	 * @param outputBox the output area.
+	 */
+	public Tetris(TetrisClient tetrisClient, OutputBox outputBox)
+	{
+		this(outputBox);
+		
+		board.setClient(tetrisClient);
+	}
 
-    /**
+    //*************************************SETTER/GETTER*************************************//
+	
+	/**
      * Returns the {@code ToolBar} Object  belonging to this game.
      */
     protected HotBar getToolBar() {
@@ -197,11 +201,15 @@ public class Tetris extends JPanel{
 		{
 			holdArea.setShape(holdPiece);
 		}
-
-        public void paintComponent(Graphics g)
-        {
-            super.paintComponent(g);
-        }
+		
+		/**
+		 * The paint method.
+		 */
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+		}
     
 	    //*************************************SHAPEAREA*************************************//
 

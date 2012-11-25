@@ -41,44 +41,7 @@ public class TetrisServer extends AbstractServer
    * The interface type variable.  It allows the implementation of 
    * the display method in the client.
    */
-  ChatIF serverText;
-  
-  
- //Class methods ***************************************************
-  
-  /**
-   * This method is responsible for the creation of 
-   * the server instance (there is no UI in this phase).
-   *
-   * @param args[0] The port number to listen on.  Defaults to 1337 
-   *          if no argument is entered.
-   */
-//  public static void main(String[] args) 
-//  {
-//    int port = 0; //Port to listen on
-//
-//    try
-//    {
-//      port = Integer.parseInt(args[0]); //Get port from command line
-//    }
-//    catch(Throwable t)
-//    {
-//      port = DEFAULT_PORT; //Set port to 1337
-//    }
-//	
-//    TetrisServer sv = new TetrisServer(port);
-//    
-//    try 
-//    {
-//      sv.listen(); //Start listening for connections
-//    } 
-//    catch (Exception ex) 
-//    {
-//      System.out.println("ERROR - Could not listen for clients!");
-//    }
-//  }
-
-  
+  ChatIF serverOutputt;
   
   //Constructors ****************************************************
   
@@ -89,8 +52,9 @@ public class TetrisServer extends AbstractServer
    */
   public TetrisServer(int port, ChatIF serverText) 
   {
-    super(port);
-    this.serverText = serverText;
+	// Calls constructor in parent
+	super(port);
+	serverOutputt = serverText;
   }
 
   //Instance methods ************************************************
@@ -103,65 +67,31 @@ public class TetrisServer extends AbstractServer
    * @param client The connection from which the message originated.
    */
   public void handleMessageFromClient (Object msg, ConnectionToClient client)
-  {	  
-	  int indexID = 0;
-	  Long opponent = null;
-	  
-	  if(msg instanceof Updater)
-	  { //string input has been passed from the client
-		  
-		  Thread[] clientThreadList = getClientConnections(); //obtains a list of all connections
-		  
-		  //obtaining the ClientNode list index of the client to be disconnected 
-		  for(int i=0; i<clientList.size(); i++)
-		  {
-			  if(clientList.get(i).playerID == client.getId())
-			  {
-				  indexID = i;
-				  opponent = clientList.get(indexID).opponentID;
-				  break;
-			  }  
-		  }
-		  
-		  //obtaining the ConnectionToClient for the opponent and sending the Updater message
-		  if(opponent !=null)
-		  {
-		    for (int i=0; i<clientThreadList.length; i++)
-		     {
-		    	if(((ConnectionToClient)clientThreadList[i]).getId() == opponent)
-		    	{
-			      try
-			      {
-			    	  
-			        ((ConnectionToClient)clientThreadList[i]).sendToClient(msg);
-			      }
-			      catch (Exception ex) {}
-			      
-			      break;
-			    }
-		     }	
-		  }
-	  }
-	else
-	{ //a string message has been sent to the server
-	    try
-	    {
-	        //If the message was a command message, send the instruction for interpretation
-	    	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
-	        	commandMessage(((String) msg).substring(1), client);
-	      	else{
-	      	    System.out.println
-	      	    	("["+ client.getInfo("ID") + "] " + msg);
-	        	this.sendToAllClients(msg);
-	      	}
-	    }
-	    catch(Exception e)
-	    {
-	      System.out.println 
-	      	("Could not send message to clients. Terminating server.");
-	      quit();
-	    }
+  {
+	// Object received is an Updater.
+	if (msg instanceof Updater)
+	{
+		performUpdate((Updater) msg, client);
+		return;
 	}
+	// Continue assuming astring message has been sent to the server
+    try
+    {
+        //If the message was a command message, send the instruction for interpretation
+    	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
+        	commandMessage(((String) msg).substring(1), client);
+      	else{
+      	    System.out.println
+      	    	("["+ client.getInfo("ID") + "] " + msg);
+        	this.sendToAllClients(msg);
+      	}
+    }
+    catch(Exception e)
+    {
+      System.out.println 
+      	("Could not send message to clients. Terminating server.");
+      quit();
+    }
   }
   
   //Sends the message to the Server User.
@@ -184,11 +114,58 @@ public class TetrisServer extends AbstractServer
 	  
   }
  
-  /* 
-   * This method will determine the type of command that was inputed by the server admin
-   * @param message The message from the UI.
-  */ 
-  public void commandMessage(String msg , ConnectionToClient client){
+  /** 
+   * This method will send an update package to a given client's opponent.
+   * 
+   * @param client The {@code ConnectionToClient} that this message originated from.
+   * @param update The {@code Updater} object to be sent to the given client's opponent.
+   */ 
+  private void performUpdate(Updater update, ConnectionToClient client){
+		int indexID = 0;
+		Long opponent = null;
+	
+		Thread[] clientThreadList = getClientConnections(); //obtains a list of all connections
+		
+		//obtaining the ClientNode list index of the client to be disconnected 
+		for(int i=0; i<clientList.size(); i++)
+		{
+			if(clientList.get(i).playerID == client.getId())
+			{
+				indexID = i;
+				opponent = clientList.get(indexID).opponentID;
+				break;
+			}
+		}
+		
+		// Obtain the client's opponent and send them an update.
+		if(opponent !=null)
+		{
+			for (int i=0; i<clientThreadList.length; i++)
+			{
+				if((clientThreadList[i]).getId() == opponent)
+				{
+					try
+					{
+						((ConnectionToClient)clientThreadList[i]).sendToClient(update);
+					}
+					catch (IOException ex)
+					{
+						System.out.println("Could not send update package to client's opponent.");
+						ex.printStackTrace();
+					}
+					break;
+				}
+			}
+		}
+  }
+  
+  /** 
+    * This method will determine the type of command that is received by the server admin.
+    * 
+    * @param msg The {@code String} message from the UI.
+    * @param client The {@code ConnectionToClient} that this message came from.
+    */ 
+  private void commandMessage(String msg , ConnectionToClient client){
 	
 	//initialize local variables
 	String message[]   = msg.split(" ");
@@ -507,4 +484,3 @@ public class TetrisServer extends AbstractServer
 	  
   }
 }
-//End of EchoServer class

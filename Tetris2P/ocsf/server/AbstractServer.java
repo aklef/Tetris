@@ -38,17 +38,17 @@ public abstract class AbstractServer implements Runnable
   /**
    * The server socket: listens for clients who want to connect.
    */
-  private ServerSocket serverSocket = null;
+  private ServerSocket 	serverSocket = null;
 
   /**
    * The connection listener thread.
    */
-  private Thread connectionListener;
+  private Thread 		connectionListener;
 
   /**
-   * The port number
+   * The port number yeah.
    */
-  private int port;
+  private int 			port;
 
   /**
    * The server timeout while for accepting connections.
@@ -57,26 +57,26 @@ public abstract class AbstractServer implements Runnable
    * connections.
    * Set to half a second by default.
    */
-  private int timeout = 500;
+  private int 			timeout = 500;
 
   /**
    * The maximum queue length; i.e. the maximum number of clients that
    * can be waiting to connect.
    * Set to 10 by default.
    */
-  private int backlog = 10;
+  private int 			backlog = 10;
 
   /**
    * The thread group associated with client threads. Each member of the
    * thread group is a <code> ConnectionToClient </code>.
    */
-  private ThreadGroup clientThreadGroup;
+  private ThreadGroup 	clientThreadGroup;
 
   /**
    * Indicates if the listening thread is ready to stop.  Set to
    * false by default.
    */
-  private boolean readyToStop = false;
+  private boolean 		readyToStop = false;
   
 
 // CONSTRUCTOR ******************************************************
@@ -90,8 +90,7 @@ public abstract class AbstractServer implements Runnable
   {
     this.port = port;
 
-    this.clientThreadGroup =
-      new ThreadGroup("ConnectionToClient threads")
+    this.clientThreadGroup = new ThreadGroup("ConnectionToClient threads")
       {
         // All uncaught exceptions in connection threads will
         // be sent to the clientException callback method.
@@ -276,7 +275,7 @@ public abstract class AbstractServer implements Runnable
    * The server must be stopped and restarted for the timeout
    * change to be effective.
    *
-   * @param timeout the timeout time in ms.
+   * @param  the timeout time in ms.
    */
   final public void setTimeout(int timeout)
   {
@@ -454,4 +453,3 @@ final public void run()
     this.handleMessageFromClient(msg, client);
   }
 }
-// End of AbstractServer Class
