@@ -117,12 +117,12 @@ public abstract class AbstractServer implements Runnable
   {
     if (!isListening())
     {
-      if (serverSocket == null)
+      if (getServerSocket() == null)
       {
-        serverSocket = new ServerSocket(getPort(), backlog);
+        setServerSocket(new ServerSocket(getPort(), backlog));
       }
       
-      serverSocket.setSoTimeout(timeout);
+      getServerSocket().setSoTimeout(timeout);
       readyToStop = false;
       connectionListener = new Thread(this);
       connectionListener.start();
@@ -151,12 +151,12 @@ public abstract class AbstractServer implements Runnable
    */
   final synchronized public void close() throws IOException
   {
-    if (serverSocket == null)
+    if (getServerSocket() == null)
       return;
       stopListening();
     try
     {
-      serverSocket.close();
+      getServerSocket().close();
     }
     finally
     {
@@ -171,7 +171,7 @@ public abstract class AbstractServer implements Runnable
          // Ignore all exceptions when closing clients.
          catch(Exception ex) {}
       }
-      serverSocket = null;
+      setServerSocket(null);
       serverClosed();
     }
   }
@@ -269,6 +269,24 @@ public abstract class AbstractServer implements Runnable
   }
 
   /**
+ * @return the serverSocket
+ */
+public ServerSocket getServerSocket()
+{
+	return serverSocket;
+}
+
+
+/**
+ * @param serverSocket the serverSocket to set
+ */
+public void setServerSocket(ServerSocket serverSocket)
+{
+	this.serverSocket = serverSocket;
+}
+
+
+/**
    * Sets the timeout time when accepting connections.
    * The default is half a second. This means that stopping the
    * server may take up to timeout duration to actually stop.
@@ -316,7 +334,7 @@ final public void run()
         try
         {
           // Wait here for new connection attempts, or a timeout
-          Socket clientSocket = serverSocket.accept();
+          Socket clientSocket = getServerSocket().accept();
 
           // When a client is accepted, create a thread to handle
           // the data exchange, then add it to thread group

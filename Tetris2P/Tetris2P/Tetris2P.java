@@ -4,7 +4,10 @@ import java.io.*;
 
 import javax.sound.sampled.*;
 import java.awt.AlphaComposite;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -28,6 +31,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -156,7 +160,7 @@ public class Tetris2P extends JFrame implements Runnable
         localGame	 = new Tetris(tetrisClient, outputBox);
         opponentGame = new Tetris(outputBox);
         userList	 = new PlayerList();
-        serverInfo	 = new JLabel();
+        serverInfo	 = new JLabel("TESTING");
         
         inputBox	 = new InputBox();
         toolBar		 = new JPanel();
@@ -173,6 +177,7 @@ public class Tetris2P extends JFrame implements Runnable
         
         // Panel for the middle area
         JPanel middle		 = new JPanel( new GridLayout(1, 3, 30, 0) );
+        JPanel bottom		 = new JPanel( new FlowLayout(FlowLayout.LEFT));
         JPanel socialArea	 = new JPanel( new GridLayout(2, 1) );
         
         // Default background color
@@ -183,28 +188,30 @@ public class Tetris2P extends JFrame implements Runnable
         
         // Setting each component's colors
         middle.setBackground(backgroundColor);
+        bottom.setBackground(backgroundColor);
         socialArea.setBackground(backgroundColor);
         
         localGame.setBackground(backgroundColor);
         opponentGame.setBackground(backgroundColor);
         
         userList.setBackground(backgroundColor);
-        userList.setForeground(Color.WHITE);
         
         serverInfo.setBackground(backgroundColor);
         serverInfo.setForeground(Color.LIGHT_GRAY);
         
-        outputBox.setBackground(backgroundColor);
-        outputBox.setForeground(Color.WHITE);
+        outputBox.setBackground(backgroundColor.brighter());
         
-        inputBox.setBackground(backgroundColor);
         inputBox.setForeground(Color.WHITE);
         
         toolBar.setBackground(backgroundColor);
         
         // Creating spacing
         socialArea.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        serverInfo.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
+        
+        serverInfo.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+        inputBox.setPreferredSize(new Dimension(450, 30));
+        
+        bottom.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
         
         // Setting components as not focusable
         toolBar.setFocusable(false);
@@ -213,7 +220,7 @@ public class Tetris2P extends JFrame implements Runnable
         userList.setFocusable(false);
         
         // Setting the Label's properties
-        serverInfo.setVisible(false);
+        serverInfo.setVisible(true);
         
         // Adding components to frame
         middle.add(localGame);
@@ -225,10 +232,13 @@ public class Tetris2P extends JFrame implements Runnable
         
         middle.add(socialArea);
         
+        bottom.add(inputBox);
+        bottom.add(serverInfo);
+        
         // Adding components to frame
         add(toolBar, BorderLayout.NORTH);
         add(middle, BorderLayout.CENTER);
-        add(inputBox, BorderLayout.SOUTH);
+        add(bottom, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
         getContentPane().setPreferredSize(new Dimension(600,465));
@@ -352,6 +362,11 @@ public class Tetris2P extends JFrame implements Runnable
 	        }
 	        // Attach a ScrollPane to the list to make it scrollable
 	        scrollPane = new JScrollPane();
+	        
+	        list.setOpaque(true);
+	        list.setCellRenderer(new CustomCellRenderer());
+	        list.setForeground(Color.WHITE);
+	        
 	        // Adding the list to the scrollable area
 	        scrollPane.getViewport().add(list);
 	        
@@ -387,6 +402,18 @@ public class Tetris2P extends JFrame implements Runnable
 	    	users.remove(username); //removes the user from the list
 	    	userList.removeElement(username); //adds a user to the list GUI
 	    }
+	    
+	    private class CustomCellRenderer extends DefaultListCellRenderer
+	    {
+	        @SuppressWarnings("rawtypes")
+			public Component getListCellRendererComponent( JList list, Object value, int index, boolean isSelected, boolean cellHasFocus )
+	        {
+	            Component c = super.getListCellRendererComponent( list, value, index, isSelected, cellHasFocus );
+	            
+	            c.setBackground( backgroundColor.brighter() );
+	            return c;  
+	        }  
+	    } 
 	}
 	
 	//**************************************TOOLBAR*************************************//
@@ -445,12 +472,11 @@ public class Tetris2P extends JFrame implements Runnable
 		 */
 		private OutputBox()
 		{
-			new JTextPane();
+			super();
 			
-			defaultFont = this.getFont();
+			defaultFont = getFont();
 			
-			setBackground(backgroundColor);
-			setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
+			setBorder(BorderFactory.createMatteBorder(0, 0, 0, 18, new Color (16,16,32)));
 			
 			setFocusable(false);
 		}
@@ -520,8 +546,6 @@ public class Tetris2P extends JFrame implements Runnable
 		{
 			super(); 
 			setBackground(backgroundColor);
-			
-			setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
 			
 			KeyAdapter keyListener = new KeyAdapter() {
 				public void keyPressed(KeyEvent e)
@@ -702,6 +726,10 @@ public class Tetris2P extends JFrame implements Runnable
 					quit();
 				break;
 				
+				//The client won the match.
+				case ("GameOver"):
+					matchWon();
+				break;
 				//*******************************************************************//
 				// Setter methods
 				
@@ -753,7 +781,7 @@ public class Tetris2P extends JFrame implements Runnable
 		 * Method informs the user server has been terminated and closes the client
 		 */
 		protected void connectionClosed(){
-			clientUI.display("Disconnected from server. Terminating client.");
+			clientUI.display("Disconnected from server. Terminating client.", Color.RED);
 		}
 		
 		/**
@@ -761,7 +789,7 @@ public class Tetris2P extends JFrame implements Runnable
 		 */
 		protected void connectionException(Exception exception)
 		{
-			clientUI.display("Server closed. Abnormal termination of connection.");
+			clientUI.display("Server closed. Abnormal termination of connection.", Color.ORANGE);
 		}
 		
 		/**
@@ -793,7 +821,7 @@ public class Tetris2P extends JFrame implements Runnable
 			}
 			catch (Exception ex) 
 			{
-				System.out.println("ERROR - Could not listen for clients!");
+				clientUI.display("ERROR - Could not listen for clients!", Color.YELLOW);
 				System.exit(0);
 			}
 			// connects with default parameters.
@@ -814,12 +842,22 @@ public class Tetris2P extends JFrame implements Runnable
 		}
 		
 		/**
+		 * Resets this player's opponent ghost board and display a win message.
+		 */
+		private void matchWon()
+		{
+			clientUI.display("You won!", Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
+			localGame.getBoard().restart();
+			opponentGame.getBoard().restart();
+		}
+		
+		/**
 		 * This method connects the client to a server with default parameters.
 		 */
 		public void connect()
 		{
 			if(this.isConnected())
-				clientUI.display("Client already connected.");
+				clientUI.display("Client already connected.", Color.LIGHT_GRAY);
 			else
 			{
 				try
@@ -828,7 +866,7 @@ public class Tetris2P extends JFrame implements Runnable
 				}
 				catch(IOException e)
 				{
-					clientUI.display("Cannot open connection. Awaiting command.");
+					clientUI.display("Cannot open connection. Awaiting command.", Color.ORANGE);
 				}
 			}
 		}
@@ -842,7 +880,7 @@ public class Tetris2P extends JFrame implements Runnable
 				closeConnection();
 			}
 			catch(IOException e) {
-				clientUI.display("Could not disconnect.");
+				clientUI.display("Could not disconnect.", Color.LIGHT_GRAY);
 			}
 		}
 	}

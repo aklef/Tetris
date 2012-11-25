@@ -42,7 +42,7 @@ public class TetrisServer extends AbstractServer
    * The interface type variable.  It allows the implementation of 
    * the display method in the client.
    */
-  ChatIF serverOutputt;
+  ChatIF serverOutput;
   
   //Constructors ****************************************************
   
@@ -55,7 +55,7 @@ public class TetrisServer extends AbstractServer
   {
 	// Calls constructor in parent
 	super(port);
-	serverOutputt = serverText;
+	serverOutput = serverText;
   }
 
   //Instance methods ************************************************
@@ -72,7 +72,7 @@ public class TetrisServer extends AbstractServer
 	// Object received is an Updater.
 	if (msg instanceof Updater)
 	{
-		performUpdate((Updater) msg, (ConnectionToTetrisClient)client);
+		performUpdate((Updater) msg, (ConnectionToTetrisClient) client);
 		return;
 	}
 	// Continue assuming astring message has been sent to the server
@@ -231,11 +231,11 @@ public class TetrisServer extends AbstractServer
 		// Sets the port if client not connected
 		case "setport": case "setPort":
 			if(this.isListening())
-				System.out.println
+				serverOutput.display
 					("Server running. Close server to set port.");
 			else{
 				setPort(Integer.parseInt(operand));
-				System.out.println
+				serverOutput.display
 					("Port set: " + getPort());
 			}
 		break;
@@ -245,7 +245,7 @@ public class TetrisServer extends AbstractServer
 		
 		// Get the port
 		case "getport": case "getPort":
-			System.out.println
+			serverOutput.display
 				("The port is: " + getPort());
 		break;
 		
@@ -254,7 +254,7 @@ public class TetrisServer extends AbstractServer
 		
 		// Returns a list of available commands and their usage.
 		case "help": case "Help":
-			System.out.println
+			serverOutput.display
 				("   —————————————————————————————— Help ——————————————————————————————"+
 				 "\n/quit	: Quit gracefully"+
 				 "\n/stop	: Stop listening for new clients"+
@@ -265,6 +265,13 @@ public class TetrisServer extends AbstractServer
 				 "\n/pong	: Ping!"
 				 );
 			
+		break;
+		
+		case "status":
+			if(this.isListening())
+				serverOutput.display("Listening on port: " + getPort());
+			else
+				serverOutput.display("Closed. Current port: " + getPort());
 		break;
 		
 		// Ping!
@@ -364,7 +371,7 @@ public class TetrisServer extends AbstractServer
    */
   protected void serverClosed()
   {
-    System.out.println("WARNING - Server now closed.");
+    System.out.println("Server closed.");
   }
   
 
@@ -442,49 +449,53 @@ public class TetrisServer extends AbstractServer
   
   synchronized protected void clientDisconnected( ConnectionToTetrisClient client)
   {
-	  int indexID = 0;
-	  int opponentIndex = 0;
-	  Long opponent = null;
-	  
-	  
-		  
-	  for(int i=0; i<clientList.size(); i++)
-	  {
-		  if(clientList.get(i).playerID == client.getId())
-		  {
-			  //obtaining the ClientNode list index of the client to be disconnected 
-			  if(indexID!=0)
-			  {
-				  indexID = i;
-				  opponent = clientList.get(indexID).opponentID;
-			  }
-			  
-			  break;
-		  }
-			  
-	  }
-	  
-	  if(opponent!=null)
-	  {
-		  //obtaining the ID of the opponent and setting them to have no opponent
-		  for(int i=0; i<clientList.size(); i++)
-		  {
-			  if(clientList.get(i).playerID == opponent)
-			  {
-				  opponentIndex = clientList.indexOf(i);
-				  clientList.get(opponentIndex).opponentID = null;
-				  break;
-			  }
-				  
-		  }
-	  }
-	  
-	  //removing the user that disconnected from the clientList
-	  clientList.remove(indexID);
-	  
-	  //notifying other clients
-	  System.out.println("Client " + client.getInfo("ID") + " disconnected.");
-	  sendToAllClients("Client " + client.getInfo("ID") + " left.");
+	int indexID = 0;
+	int opponentIndex = 0;
+	Long opponent = null;
+	
+	for(int i=0; i<clientList.size(); i++)
+	{
+		if(clientList.get(i).playerID == client.getId())
+		{
+			//obtaining the ClientNode list index of the client to be disconnected 
+			if(indexID!=0)
+			{
+				indexID = i;
+				opponent = clientList.get(indexID).opponentID;
+				
+				try
+				{
+					client.sendToClient("You no longer have an opponent!");
+					client.opponent.sendToClient("You no longer have an opponent!");
+				}
+				catch (IOException e){}
+			}
+			
+			break;
+		}
+		
+	}
+	
+	if(opponent!=null)
+	{
+		//obtaining the ID of the opponent and setting them to have no opponent
+		for(int i=0; i<clientList.size(); i++)
+		{
+			if(clientList.get(i).playerID == opponent)
+			{
+				opponentIndex = clientList.indexOf(i);
+				clientList.get(opponentIndex).opponentID = null;
+				break;
+			}
+		}
+	}
+	
+	//removing the user that disconnected from the clientList
+	clientList.remove(indexID);
+	
+	// Notifying other clients
+	System.out.println("Client " + client.getInfo("ID") + " disconnected.");
+	sendToAllClients("Client " + client.getInfo("ID") + " left.");
   }
   
   synchronized protected void clientException(ConnectionToTetrisClient client, Throwable exception)
@@ -492,6 +503,7 @@ public class TetrisServer extends AbstractServer
 	
 	  clientDisconnected(client);
   }
+  
   /**
    * This will group clients into a player and their respective opponent ID
    * 

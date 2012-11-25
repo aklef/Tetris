@@ -334,7 +334,7 @@ public class Board extends JPanel implements ActionListener {
     /**
      * Restarts the game.
      */
-    private void restart()
+    protected void restart()
     {
         if (!isPaused)
             return;
@@ -376,8 +376,17 @@ public class Board extends JPanel implements ActionListener {
         numLinesRemoved = 0;
         
         curPiece.setShape(Tetromino.NoShape);
-        output.setText(" Game over. Press [Q]uit [R]estart");
-        output.setForeground(Color.ORANGE);
+        output.display(" Game over. Press [Q]uit [R]estart", Color.ORANGE);
+        
+        try
+		{
+			client.sendToServer(new Updater("/GameOver"));
+		}
+		catch (IOException e)
+		{
+			output.display(" Could not reach oponent for game over confirmation", Color.RED);
+			client.quit();
+		}
         
         timer.setPaused(isPaused);
         
@@ -614,9 +623,9 @@ public class Board extends JPanel implements ActionListener {
     	}
     	catch(IOException e)
 		{
-			output.display("Could not send the udpater to server. Terminating client.");
-			client.quit();
+			output.display("Could not send the updater to opponent. Terminating client.");
 		}
+    	client.quit();
 	}
     
     //*************************************TICKER*************************************//
@@ -923,10 +932,26 @@ public class Board extends JPanel implements ActionListener {
      */
     public class Updater
     {
-		private Shape newHoldPiece;
+		/**
+		 * TODO
+		 */
+    	private Shape newHoldPiece;
+		/**
+		 * TODO
+		 */
     	private Shape newNextPiece;
+		/**
+		 * TODO
+		 */
     	private Shape newCurPiece;
+		/**
+		 * TODO
+		 */
     	private Tetromino[] newBoard;
+		/**
+		 * TODO
+		 */
+    	private String command;
     	
     	/**
     	 * This constructor updates the local clients game with the new input after a piece has been dropped.
@@ -940,6 +965,11 @@ public class Board extends JPanel implements ActionListener {
     		newNextPiece = nextPiece;
     		newCurPiece = curPiece;
     		newBoard = board;
+    	}
+    	
+    	public Updater(String msg)
+    	{
+    		command = msg;
     	}
     }
 }
