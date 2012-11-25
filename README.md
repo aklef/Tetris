@@ -12,8 +12,7 @@ Media
 
 Soundtrack Source:
 
-* A great beat from http://soundcloud.com/neogrit/a-nes-gb
-=======
+* Beat from http://soundcloud.com/neogrit/a-nes-gb
 * A great guy called Neogrit made it. Check him out at http://soundcloud.com/neogrit/
 * "A (NES/GB)" by neogrit is licensed under a Creative Commons License (http://creativecommons.org/licenses/by/3.0/)
 
