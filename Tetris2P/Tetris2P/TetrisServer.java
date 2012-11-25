@@ -4,6 +4,7 @@ package Tetris2P;
 // license found at www.lloseng.com 
 
 import java.io.*;
+
 import ocsf.server.*;
 import Tetris2P.Board.Updater;
 import java.util.LinkedList;
@@ -71,7 +72,7 @@ public class TetrisServer extends AbstractServer
 	// Object received is an Updater.
 	if (msg instanceof Updater)
 	{
-		performUpdate((Updater) msg, client);
+		performUpdate((Updater) msg, (ConnectionToTetrisClient)client);
 		return;
 	}
 	// Continue assuming astring message has been sent to the server
@@ -79,7 +80,7 @@ public class TetrisServer extends AbstractServer
     {
         //If the message was a command message, send the instruction for interpretation
     	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
-        	commandMessage(((String) msg).substring(1), client);
+        	commandMessage(((String) msg).substring(1), (ConnectionToTetrisClient) client);
       	else{
       	    System.out.println
       	    	("["+ client.getInfo("ID") + "] " + msg);
@@ -117,10 +118,10 @@ public class TetrisServer extends AbstractServer
   /** 
    * This method will send an update package to a given client's opponent.
    * 
-   * @param client The {@code ConnectionToClient} that this message originated from.
+   * @param client The {@code ConnectionToTetrisclient} that this message originated from.
    * @param update The {@code Updater} object to be sent to the given client's opponent.
    */ 
-  private void performUpdate(Updater update, ConnectionToClient client){
+  private void performUpdate(Updater update, ConnectionToTetrisClient client){
 		int indexID = 0;
 		Long opponent = null;
 	
@@ -146,7 +147,7 @@ public class TetrisServer extends AbstractServer
 				{
 					try
 					{
-						((ConnectionToClient)clientThreadList[i]).sendToClient(update);
+						((ConnectionToTetrisClient)clientThreadList[i]).sendToClient(update);
 					}
 					catch (IOException ex)
 					{
@@ -163,9 +164,9 @@ public class TetrisServer extends AbstractServer
     * This method will determine the type of command that is received by the server admin.
     * 
     * @param msg The {@code String} message from the UI.
-    * @param client The {@code ConnectionToClient} that this message came from.
+    * @param client The {@code ConnectionToTetrisclient} that this message came from.
     */ 
-  private void commandMessage(String msg , ConnectionToClient client){
+  private void commandMessage(String msg , ConnectionToTetrisClient client){
 	
 	//initialize local variables
 	String message[]   = msg.split(" ");
@@ -266,25 +267,15 @@ public class TetrisServer extends AbstractServer
 			
 		break;
 		
-		// Hello!
-		case "Hello": case "hello":
+		// Ping!
+		case "Ping": case "ping":
 			try
 			{
-				client.sendToClient("Yo.");
+				client.sendToClient("Pong.");
 			}
 			catch (IOException e)
 			{}
 		break;
-		
-		// Ping!
-				case "Ping": case "ping":
-					try
-					{
-						client.sendToClient("Pong.");
-					}
-					catch (IOException e)
-					{}
-				break;
 		
 		// Pong!
 		case "Pong": case "pong":
@@ -380,59 +371,77 @@ public class TetrisServer extends AbstractServer
 
   /**
    * This method attempts to match a newly connected client to a client already connected so they can play Tetris
-   * @param ConnectionToClient client is a newly connected client
+   * @param ConnectionToTetrisclient client is a newly connected client
    */
 
-  protected void clientConnected(ConnectionToClient client)
+  protected void clientConnected(ConnectionToTetrisClient client)
   {	
-	  int indexID;
-	  int opponentIndex = 0;
-	  boolean opponentFound = false;
-	  
-	  ClientNode newNode = new ClientNode(client.getId()); //setting the player
-	  clientList.add(newNode);
-	  indexID = clientList.indexOf(newNode); //obtaining position of the new element in the list
-	  
-	  //checking for opponent
-	  if(indexID == 0){
-		 clientList.get(indexID).opponentID = null; //if it is the first client connected, then he has no opponent
-	  }
-	  else
-	  {
-		  //traverse the list and look for clients without an opponent
-		  for(int i=0; i< clientList.size(); i++)
-		  {
-			  //check if an opponent is found that is not the same client 
-			  if(clientList.get(i).opponentID == null && i != indexID)
-			  {
-				  opponentFound = true;
-				  opponentIndex = i;
-				  break;
-			  }
-		  }
-		  
-		 //If there is a client connected that doesn't have an opponent, match him with new connected player
-		 if(opponentFound)
-		 {
+	int indexID;
+	int opponentIndex = 0;
+	boolean opponentFound = false;
+	
+	ClientNode newNode = new ClientNode(client.getId()); //setting the player
+	clientList.add(newNode);
+	indexID = clientList.indexOf(newNode); //obtaining position of the new element in the list
+	
+	//checking for opponent
+	if(indexID == 0){
+		clientList.get(indexID).opponentID = null; //if it is the first client connected, then he has no opponent
+	}
+	else
+	{
+		//traverse the list and look for clients without an opponent
+		for(int i=0; i< clientList.size(); i++)
+		{
+			//check if an opponent is found that is not the same client 
+			if(clientList.get(i).opponentID == null && i != indexID)
+			{
+				opponentFound = true;
+				opponentIndex = i;
+				break;
+			}
+		}
+		
+		//If there is a client connected that doesn't have an opponent, match him with new connected player
+		if(opponentFound)
+		{
 			clientList.get(opponentIndex).opponentID = clientList.get(indexID).playerID;
 			clientList.get(indexID).opponentID = clientList.get(opponentIndex).playerID;
-		 }
-		 else
-		 {
-			 //if all previously connected clients have an opponent, then the new client has no opponent
+			try
+			{
+				client.sendToClient("You have a new opponent!");
+				client.opponent.sendToClient("You have a new opponent!");
+			}
+			catch (IOException e){}
+		}
+		else
+		{
+			//if all previously connected clients have an opponent, then the new client has no opponent
 				clientList.get(indexID).opponentID = null;
-		 }
-	  }
-	  
-	  System.out.println("Client " + client.toString() + " connected.");
+		}
+	}
+	
+	if(indexID == 0) {
+		try
+		{
+			client.sendToClient("Server running!");
+		}
+		catch (IOException e){}
+		
+		System.out.println("Host client " + client.toString() + " connected.");
+	}
+	else
+	{
+		System.out.println("Client " + client.toString() + " connected.");
+	}
   }
   
   /**
    * This method removes a client from the list of connected clients and updates the status of the client's opponent
-   * @param ConnectionToClient client is a client about to be disconnected
+   * @param ConnectionToTetrisclient client is a client about to be disconnected
    */
   
-  synchronized protected void clientDisconnected( ConnectionToClient client)
+  synchronized protected void clientDisconnected( ConnectionToTetrisClient client)
   {
 	  int indexID = 0;
 	  int opponentIndex = 0;
@@ -479,7 +488,7 @@ public class TetrisServer extends AbstractServer
 	  sendToAllClients("Client " + client.getInfo("ID") + " left.");
   }
   
-  synchronized protected void clientException(ConnectionToClient client, Throwable exception)
+  synchronized protected void clientException(ConnectionToTetrisClient client, Throwable exception)
   {
 	
 	  clientDisconnected(client);

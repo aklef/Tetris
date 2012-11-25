@@ -574,12 +574,12 @@ public class Tetris2P extends JFrame implements Runnable
 		 * The interface type variable.  It allows the implementation of 
 		 * the display method in the client.
 		 */
-		ChatIF clientUI; 
+		OutputBox clientUI; 
 		
 	    /**
 	     * Local server for the multiplayer Tetris game.
 	     */
-	    private final TetrisServer tetrisServer;
+	    private TetrisServer tetrisServer;
 	    
 		/**
 		 * Constructs an instance of the Tetris client.
@@ -592,24 +592,7 @@ public class Tetris2P extends JFrame implements Runnable
 		protected TetrisClient(String host, int port, ChatIF clientUI)
 		{
 			super(host, port); 
-			this.clientUI = clientUI;
-			
-			tetrisServer = new TetrisServer(port, clientUI);
-			
-			try 
-			{
-				tetrisServer.listen(); //Start listening for connections
-				openConnection();
-			}
-			catch (IOException e)
-			{
-				clientUI.display("Cannot open connection. Awaiting command.");
-			}
-			catch (Exception ex) 
-			{
-				System.out.println("ERROR - Could not listen for clients!");
-				System.exit(0);
-			}
+			this.clientUI = (OutputBox) clientUI;
 		}
 
 		//Instance methods ************************************************
@@ -631,7 +614,7 @@ public class Tetris2P extends JFrame implements Runnable
 			if(((String) msg).startsWith("/"))
 				commandMessage(((String) msg).substring(1));
 			else
-				clientUI.display("> "+msg.toString());
+				clientUI.display("> "+msg.toString(), Color.LIGHT_GRAY);
 			}
 		}
 
@@ -692,38 +675,28 @@ public class Tetris2P extends JFrame implements Runnable
 			// ****************************************************************************************//
 			// List of all client-side usable commands
 			
-			switch (instruction)
+			switch (instruction.toLowerCase())
 			{
 				//*******************************************************************//
 				// Authentication Methods
 				
 				//Log the client back in if the client is not connected
 				 case ("connect"):
-					if(this.isConnected())
-						clientUI.display("Client already connected.");
-					else{
-						try{
-						openConnection();
-						}
-						catch(IOException e) {
-							clientUI.display("Could not connect.");
-						}
-					}
+					 connect();
 				break;
 				
 				//Log off client but does not terminate
 				case ("disconnect"):
-					try{
-						closeConnection();
-					}
-					catch(IOException e) {
-						clientUI.display("Could not disconnect.");
-					}
+					disconnect();
 				break;
 				
 				//*******************************************************************//
-				// Client Control methods
+				// Control methods
 				
+				//Terminates the client
+				case ("start"):
+					start();
+				break;
 				//Terminates the client
 				case ("exit"): case ("quit"):
 					quit();
@@ -733,23 +706,20 @@ public class Tetris2P extends JFrame implements Runnable
 				// Setter methods
 				
 				//Sets the host if client not connected
-				case ("sethost"): case ("setHost"):
+				case ("sethost"):
 					if(this.isConnected())
-						clientUI.display("The client is connected. Please logoff to set host.");
-					else{
-						setHost(operand);
-						clientUI.display("The host has been set to: " + getHost());
-					}
+						disconnect();
+					setHost(operand);
+					clientUI.display("The host has been set to: " + getHost(), Color.RED);
+					connect();
 				break;
 				
 				//Sets the port if client not connected
-				case ("setport"): case ("setPort"):
+				case ("setport"):
 					if(this.isConnected())
-						clientUI.display("Client connected. Logoff to set port.");
-					else{
-						setPort(Integer.parseInt(operand));
-						clientUI.display("Port set: " + getPort());
-					}
+						disconnect();
+					setPort(Integer.parseInt(operand));
+					clientUI.display("Port set: " + getPort());
 				break;
 				
 				//*******************************************************************//
@@ -811,6 +781,26 @@ public class Tetris2P extends JFrame implements Runnable
 		}
 
 		/**
+		 * This method starts the server.
+		 */
+		public void start()
+		{
+			tetrisServer = new TetrisServer(getPort(), clientUI);
+			
+			try 
+			{
+				tetrisServer.listen(); //Start listening for connections
+			}
+			catch (Exception ex) 
+			{
+				System.out.println("ERROR - Could not listen for clients!");
+				System.exit(0);
+			}
+			// connects with default parameters.
+			connect();
+		}
+		
+		/**
 		 * This method terminates the client.
 		 */
 		public void quit()
@@ -821,6 +811,39 @@ public class Tetris2P extends JFrame implements Runnable
 			}
 			catch(IOException e) {}
 			System.exit(0);
+		}
+		
+		/**
+		 * This method connects the client to a server with default parameters.
+		 */
+		public void connect()
+		{
+			if(this.isConnected())
+				clientUI.display("Client already connected.");
+			else
+			{
+				try
+				{
+				openConnection();
+				}
+				catch(IOException e)
+				{
+					clientUI.display("Cannot open connection. Awaiting command.");
+				}
+			}
+		}
+		
+		/**
+		 * This method disconnects the client from the server.
+		 */
+		public void disconnect()
+		{
+			try{
+				closeConnection();
+			}
+			catch(IOException e) {
+				clientUI.display("Could not disconnect.");
+			}
 		}
 	}
 }
