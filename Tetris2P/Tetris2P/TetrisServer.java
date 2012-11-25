@@ -443,13 +443,18 @@ public class TetrisServer extends AbstractServer
 	  Long opponent = null;
 	  
 	  
-	  //obtaining the ClientNode list index of the client to be disconnected 
+		  
 	  for(int i=0; i<clientList.size(); i++)
 	  {
 		  if(clientList.get(i).playerID == client.getId())
 		  {
-			  indexID = i;
-			  opponent = clientList.get(indexID).opponentID;
+			  //obtaining the ClientNode list index of the client to be disconnected 
+			  if(indexID!=0)
+			  {
+				  indexID = i;
+				  opponent = clientList.get(indexID).opponentID;
+			  }
+			  
 			  break;
 		  }
 			  
@@ -471,7 +476,7 @@ public class TetrisServer extends AbstractServer
 	  }
 	  
 	  //removing the user that disconnected from the clientList
-	  clientList.remove(clientList.indexOf(indexID));
+	  clientList.remove(indexID);
 	  
 	  //notifying other clients
 	  System.out.println("Client " + client.getInfo("ID") + " disconnected.");

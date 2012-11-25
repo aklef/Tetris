@@ -1,8 +1,9 @@
 package Tetris2P;
 
-import java.io.*;
-import javax.sound.sampled.*;
 
+import java.io.*;
+import ocsf.client.*;
+import javax.sound.sampled.*;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -156,13 +157,15 @@ public class Board extends JPanel implements ActionListener {
     /**
      * Instance of the tetris client that allows updates to the server
      */
-    //private TetrisClient client;
+    private Tetris2P client;
+    
+    
     
     /**
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
      */    
-    protected Board( Tetris parent )
+    protected Board( Tetris parent, Tetris2P client )
     {    	
         //Starts playing the soundtrack
         playSoundtrack();
@@ -177,6 +180,7 @@ public class Board extends JPanel implements ActionListener {
        //checking if muted
        boardAudio = parent.isAudioPlaybackAllowed();
        
+       this.client = client;
        toolBar = parent.getToolBar();
        statusBar = parent.getStatusBar();
        labelFont = new Font(statusBar.getFont().getName(), Font.ITALIC+Font.BOLD, statusBar.getFont().getSize());
@@ -398,7 +402,7 @@ public class Board extends JPanel implements ActionListener {
         if (isGameOver) {
         	gameOver();
         }
-    }
+     }
 
     
     /**
@@ -483,10 +487,27 @@ public class Board extends JPanel implements ActionListener {
         if (!isFallingFinished)
             newPiece();
         
-        //Saving the current contents of the game to be able to pass to the opponent ghost board
+        sendUpdateToServer();
+        
+    }
+    
+    /**
+     * This method will send the updated game information to the server so it can be applied to 
+     * the "opponent board" of the opposing player
+     */
+    private void sendUpdateToServer(){
+
+    	//Saving the current contents of the game and passing it to the server
         Updater update = new Updater();
-        
-        
+        try
+        {
+        	client.getTetrisClient().sendToServer(update); //the server will update the opponent ghost board of the opponent player
+        }
+        catch(IOException e)
+		{
+			client.getTetrisClient().getClientUI().display("Could not send the udpater to server. Terminating client.");
+			//client.getTetrisClient().quit();
+		}
     }
 
     /**
@@ -506,10 +527,10 @@ public class Board extends JPanel implements ActionListener {
     public void updateBoard(Updater updater){
 		
     	//updates the opponent toolbar
-    	holdPiece.setShape(updater.holdPiece.getShape());
-		nextPiece.setShape(updater.nextPiece.getShape());
-		curPiece.setShape(updater.curPiece.getShape());
-		board = updater.board;
+    	holdPiece.setShape(updater.updaterHoldPiece.getShape());
+		nextPiece.setShape(updater.updaterNextPiece.getShape());
+		curPiece.setShape(updater.updaterCurPiece.getShape());
+		board = updater.updaterBoard;
 		
 		//repainting the opponent game board
 		repaint();
@@ -888,10 +909,10 @@ public class Board extends JPanel implements ActionListener {
      */
     public class Updater
     {
-    	private Shape holdPiece;
-    	private Shape nextPiece;
-    	private Shape curPiece;
-    	private Tetromino[] board;
+    	private Shape updaterHoldPiece;
+    	private Shape updaterNextPiece;
+    	private Shape updaterCurPiece;
+    	private Tetromino[] updaterBoard;
     	
     	/**
     	 * This constructor updates the local clients game with the new input after a piece has been dropped.
@@ -900,10 +921,11 @@ public class Board extends JPanel implements ActionListener {
     	 * 
     	 */
     	public Updater(){
-    		this.holdPiece = holdPiece;
-    		this.nextPiece = nextPiece;
-    		this.curPiece = curPiece;
-    		this.board = board;
+    		
+    		updaterHoldPiece = holdPiece;
+    		updaterNextPiece = nextPiece;
+    		updaterCurPiece = curPiece;
+    		updaterBoard = board;
     	}
  
     }   

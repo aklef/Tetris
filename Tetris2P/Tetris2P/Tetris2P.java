@@ -38,6 +38,7 @@ import javax.swing.SwingUtilities;
 import Tetris2P.Shape.Tetromino;
 //import Tetris2P.Board.Updater;
 import Tetris2P.Tetris.HotBar.ShapeArea;
+import Tetris2P.Board.Updater;
 import 	ocsf.client.*;
 
 
@@ -109,14 +110,12 @@ public class Tetris2P extends JFrame implements Runnable{
         GridLayout myGrid = new GridLayout(1, 2, 30, 0);
         
         // Creating instances of emleents
-        localGame	 = new Tetris();
-        opponentGame = new Tetris();
+        localGame	 = new Tetris(this);
+        opponentGame = new Tetris(this);
         userList	 = new PlayerList();
         outputBox	 = new OutputBox();
         inputBox	 = new InputBox();
-        
-        
-        
+                
         tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
         
         // Default background color
@@ -210,6 +209,16 @@ public class Tetris2P extends JFrame implements Runnable{
 		else
 			localGame.setAudioPlayback(true);
 	}
+	
+	/**
+	 * Allows the tetris client to be accessed from outside Tetris2P in order to send messages to server
+	 * @return tetrisClient
+	 */
+	
+	public TetrisClient getTetrisClient(){
+		return tetrisClient;
+	}
+	
 
     //*************************************PLAYERLIST*************************************//
 
@@ -492,6 +501,7 @@ public class Tetris2P extends JFrame implements Runnable{
 			{
 				clientUI.display("Cannot open connection. Awaiting command.");
 			}
+	        
 		}
 
 		//Instance methods ************************************************
@@ -503,19 +513,21 @@ public class Tetris2P extends JFrame implements Runnable{
 		 */
 		public void handleMessageFromServer(Object msg) 
 		{
-			/*if ( msg instanceof Updater )
+			if ( msg instanceof Updater)
+			{ //the updater was sent from the server to update the board of the opponent
+				opponentGame.getBoard().updateBoard((Updater)msg);
+			}
+			else
 			{
-				
-			}*/
 			//If the message was a command message, send the instruction for interpretation
 			if(((String) msg).startsWith("/"))
 				commandMessage(((String) msg).substring(1));
 			else
 				clientUI.display("> "+msg.toString());
+			}
 		}
 
-		/* ****Changed for E49**** DA, akleff
-		 * This method handles all data coming from the UI            
+		/** This method handles all data coming from the UI            
 		 * 
 		 * @param message The message from the UI.    
 		 */
@@ -679,6 +691,14 @@ public class Tetris2P extends JFrame implements Runnable{
 		protected void connectionEstablished()
 		{
 			clientUI.display("Connected to server.");
+		}
+		
+		/**
+		 * Returns the chat interface of the TetrisClient
+		 * @return clientUI
+		 */
+		public ChatIF getClientUI(){
+			return clientUI;
 		}
 
 		/**

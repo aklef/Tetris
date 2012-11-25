@@ -7,6 +7,8 @@ package ocsf.server;
 import java.io.*;
 import java.net.*;
 import java.util.HashMap;
+import Tetris2P.Board.Updater;
+
 
 /**
  * An instance of this class is created by the server when a client connects. It

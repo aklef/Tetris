@@ -57,7 +57,7 @@ public class Tetris extends JPanel{
     /**
      * Contructor for Tetris game.
      */
-    public Tetris()
+    public Tetris(Tetris2P parent)
     {
     	backgroundColor = new Color (13,13,13);
     	
@@ -72,7 +72,7 @@ public class Tetris extends JPanel{
         statusBar.setBackground(backgroundColor);
         statusBar.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, Color.LIGHT_GRAY));
         
-        board = new Board(this);
+        board = new Board(this, parent);
         board.setMinimumSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setBackground(backgroundColor);

@@ -7,6 +7,7 @@ package ocsf.server;
 import java.net.*;
 //import java.util.*;
 import java.io.*;
+import Tetris2P.Board.Updater;
 
 /**
 * The <code> AbstractServer </code> class maintains a thread that waits
