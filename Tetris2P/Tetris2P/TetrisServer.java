@@ -276,6 +276,25 @@ public class TetrisServer extends AbstractServer
 			{}
 		break;
 		
+		// Ping!
+				case "Ping": case "ping":
+					try
+					{
+						client.sendToClient("Pong.");
+					}
+					catch (IOException e)
+					{}
+				break;
+		
+		// Pong!
+		case "Pong": case "pong":
+			try
+			{
+				client.sendToClient("Ping.");
+			}
+			catch (IOException e)
+			{}
+		break;
 		
 		//*******************************************************************//
 		// Operation not found
