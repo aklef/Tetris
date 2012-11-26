@@ -2,6 +2,8 @@ package Tetris2P;
 
 import java.io.*;
 import javax.sound.sampled.*;
+
+import java.awt.AWTException;
 import java.awt.AlphaComposite;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -12,7 +14,12 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Dimension;
+import java.awt.Image;
+import java.awt.PopupMenu;
 import java.awt.Rectangle;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -171,12 +178,42 @@ public class Tetris2P extends JFrame implements Runnable
      */  
     private void createAndShowGUI()
     {
+     TrayIcon trayIcon = null;
+     if (SystemTray.isSupported()) {
+         // get the SystemTray instance
+         SystemTray tray = SystemTray.getSystemTray();
+         // load an image
+         Image image = (new ImageIcon(new File("Media/img.jpg").getAbsolutePath())).getImage();
+         // create a action listener to listen for default action executed on the tray icon
+         ActionListener listener = new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 // execute default action of the application
+                 
+             }
+         };
+         // construct a TrayIcon
+         trayIcon = new TrayIcon(image, "Tetris 2P", null);
+         // set the TrayIcon properties
+         trayIcon.addActionListener(listener);
+         // add the tray image
+         try {
+             tray.add(trayIcon);
+         } catch (AWTException e) {
+             System.err.println(e);
+         }
+     }
+        
+        
         
         // Panel for the middle area
         JPanel middle		 = new JPanel( new GridLayout(1, 3, 30, 0) );
         JPanel bottom		 = new JPanel( new FlowLayout(FlowLayout.LEFT));
         JPanel socialArea	 = new JPanel( new GridLayout(2, 1) );
         
+        JScrollPane scroll = new JScrollPane (outputBox);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+              scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+              
         // Default background color
         backgroundColor = new Color(16,16,32);
         
@@ -193,11 +230,12 @@ public class Tetris2P extends JFrame implements Runnable
         
         userList.setBackground(backgroundColor);
         
-        serverInfo.setBackground(backgroundColor);
-        serverInfo.setForeground(Color.LIGHT_GRAY);
         
         outputBox.setBackground(backgroundColor.brighter());
         inputBox.setForeground(Color.WHITE);
+        
+        serverInfo.setBackground(backgroundColor);
+        serverInfo.setForeground(Color.LIGHT_GRAY);
         
         iconBar.setBackground(backgroundColor);
         
@@ -222,7 +260,7 @@ public class Tetris2P extends JFrame implements Runnable
         
         //socialArea.add(serverInfo, BorderLayout.NORTH);
         socialArea.add(userList, BorderLayout.CENTER);
-        socialArea.add(outputBox, BorderLayout.SOUTH);
+        socialArea.add(scroll, BorderLayout.SOUTH);
         
         middle.add(socialArea);
         
@@ -814,8 +852,13 @@ public class Tetris2P extends JFrame implements Runnable
     		}
     		catch(IOException e)
     		{
-    			clientUI.display("Could not send message to server. Terminating client.");
-    			//quit();
+    			clientUI.display("Could not send message to server.");
+    			if (tetrisServer == null)
+    			{
+    				clientUI.display("**Starting server**", Color.RED);
+    				start();
+    				handleMessageFromClientUI(message);
+    			}
     		}
 		}
 		
