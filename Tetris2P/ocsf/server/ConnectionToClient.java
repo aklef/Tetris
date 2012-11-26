@@ -116,9 +116,9 @@ public class ConnectionToClient extends Thread {
 	 * @exception IOException
 	 *                if an I/O error occur when sending the message.
 	 */
-	final public void sendToClient(Object msg) throws IOException {
+	final public void send(Object msg) throws IOException {
 		if (clientSocket == null || output == null)
-			throw new SocketException("socket does not exist");
+			throw new SocketException("Output socket is null.");
 
 		output.writeObject(msg);
 	}
@@ -222,7 +222,7 @@ public class ConnectionToClient extends Thread {
 					closeAll();
 				} catch (Exception ex) {
 				}
-
+				
 				server.clientException(this, exception);
 			}
 		}

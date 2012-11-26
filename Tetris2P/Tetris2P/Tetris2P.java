@@ -424,129 +424,69 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class ToolBar extends JPanel
+	protected class ToolBar extends JPanel implements ActionListener
 	{
+		/**
+		 * 
+		 */
+		private final JButton soundButton;
+		/**
+		 * 
+		 */
+		private final JButton playPauseButton;
+		/**
+		 * 
+		 */
+		private final JButton restartButton;
+		
 		/**
 		 * Constructor method to create toolbar of icons
 		 */
 		protected ToolBar()
 		{
-			setLayout(new BorderLayout());
-			
-			//icons declarations
-		    ImageIcon soundOn = new ImageIcon(getClass().getResource("/Media/Icons/soundOn.png"));
-		    System.out.println(soundOn.getIconHeight());
-	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Media/Icons/soundoff.png"));
-	        ImageIcon play = new ImageIcon(getClass().getResource("/Media/Icons/play.png"));
-	        ImageIcon pause = new ImageIcon(getClass().getResource("/Media/Icons/pause.png"));
-	        ImageIcon restart = new ImageIcon(getClass().getResource("/Media/Icons/restart.png"));	 
+	        JPanel left = new JPanel();
+	        JPanel right = new JPanel();
 	        
-	        //buttons for user interactivity with icons
-	        JButton soundButton = new JButton(soundOn);
-	        JButton playButton = new JButton(play);
-	        JButton restartButton = new JButton(restart);
+	        //icons declarations
+	        ImageIcon soundOn = new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
+	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
 	        
-	        //adding the action listeners for the buttons in order to allow events
-	        soundButton.addActionListener(new SoundButtonListener(soundButton, soundOn, soundOff));
-	        playButton.addActionListener(new PlayButtonListener(playButton, play, pause));
-	        restartButton.addActionListener(new RestartButtonListener());
+	        ImageIcon play = new ImageIcon(getClass().getResource("/Icons/play.png"));
+	        ImageIcon pause = new ImageIcon(getClass().getResource("/Icons/pause.png"));
+	        
+	        ImageIcon restart = new ImageIcon(getClass().getResource("/Icons/restart.png"));	 
+	        
+	        // Defaults to the sound being on
+	        soundButton = new JButton(soundOn);
+	        
+	        playPauseButton = new JButton(play);
+	        restartButton = new JButton(restart);
+	        
+	        // Adding the action listeners to the buttons
+	        soundButton.addActionListener(this);
+	        playPauseButton.addActionListener(this);
+	        restartButton.addActionListener(this);
 	        
 	        //adding the buttons to the JPanel and displaying to the UI
-	        add(playButton, BorderLayout.EAST);
+	        add(playPauseButton, BorderLayout.EAST);
 	        add(restartButton, BorderLayout.CENTER);
 	        add(soundButton, BorderLayout.WEST);
-	        setVisible(true);
-	        setFocusable(true);
 	        
+	        setVisible(true);
+	        setFocusable(false);
+		}
+
+		/**
+		 * 
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			
+			
 		}
 		
-		/**
-		 * Implements the functionality of the mute button by muting the game and changing the icon when pressed
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
 		
-	    private class SoundButtonListener implements ActionListener {
-	    	
-	    	private JButton soundButton;
-	    	private ImageIcon soundOn;
-	    	private ImageIcon soundOff;
-	    	
-	    	public SoundButtonListener(JButton soundButton, ImageIcon soundOnIcon, ImageIcon soundOffIcon)
-	    	{
-	    		this.soundButton = soundButton;
-	    		this.soundOn = soundOnIcon;
-	    		this.soundOff = soundOffIcon;
-	    	}
-
-	        public void actionPerformed(ActionEvent e) {
-	        	if(soundButton.getIcon() == soundOn)
-	        	{
-	        		soundButton.setIcon(soundOff);
-	        		toggleMuteGame();
-	        	}
-	        	else
-	        	{
-	        		soundButton.setIcon(soundOn);
-	        		toggleMuteGame();
-	        	}
-	        }
-	    }
-	    
-		/**
-		 * Implements the functionality of the play/pause toggle button by pausing or playing the game 
-		 * when clicked.
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
-		
-	    private class PlayButtonListener implements ActionListener {
-	    	
-	    	private JButton playButton;
-	    	private ImageIcon play;
-	    	private ImageIcon pause;
-	    	
-	    	public PlayButtonListener(JButton playButton, ImageIcon playIcon, ImageIcon pauseIcon)
-	    	{
-	    		this.playButton = playButton;
-	    		this.play = playIcon;
-	    		this.pause = pauseIcon;
-	    	}
-
-	        public void actionPerformed(ActionEvent e) {
-	        	if(playButton.getIcon() == play)
-	        	{
-	        		playButton.setIcon(pause);
-	        		localGame.getBoard().pause();
-	        	}
-	        	else
-	        	{
-	        		playButton.setIcon(play);
-	        		localGame.getBoard().pause();
-	        	}
-	        }
-	    }
-	    
-		/**
-		 * Implements the restart functionality for the restart button icon
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
-	    private class RestartButtonListener implements ActionListener
-	    {
-	    	public void actionPerformed(ActionEvent e)
-	    	{
-	    		localGame.getBoard().restart();
-	    	}
-	    }
-	    
-	    
 
 	}
 	

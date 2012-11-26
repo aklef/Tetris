@@ -17,7 +17,7 @@ public class ConnectionToTetrisClient extends ConnectionToClient
 {
 
 	/**
-	 * This client's opponent.
+	 * This client's opponent as a {@code ConnectionToTetrisClient}.
 	 */
 	protected ConnectionToTetrisClient opponent;
 	
@@ -30,7 +30,6 @@ public class ConnectionToTetrisClient extends ConnectionToClient
 	ConnectionToTetrisClient(ThreadGroup group, Socket clientSocket, AbstractServer server) throws IOException
 	{
 		super(group, clientSocket, server);
-		
 	}
 	
 }

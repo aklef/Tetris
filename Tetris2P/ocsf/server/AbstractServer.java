@@ -195,7 +195,7 @@ public abstract class AbstractServer implements Runnable
     {
       try
       {
-        ((ConnectionToClient)clientThreadList[i]).sendToClient(msg);
+        ((ConnectionToClient)clientThreadList[i]).send(msg);
       }
       catch (Exception ex) {}
     }
