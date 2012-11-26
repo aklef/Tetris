@@ -492,7 +492,12 @@ public class Tetris2P extends JFrame implements Runnable
 	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
-	        	        
+	        
+	        // Setting foreground colors
+	        soundButton.setForeground(Color.WHITE);
+	        playPauseButton.setForeground(Color.WHITE);
+	        restartButton.setForeground(Color.WHITE);
+	        
 	        // Adding the action listeners to the buttons
 	        soundButton.addActionListener(this);
 	        playPauseButton.addActionListener(this);
@@ -503,7 +508,6 @@ public class Tetris2P extends JFrame implements Runnable
 	        left.add(restartButton);
 	        left.add(soundButton);
 	        
-	        add(left);
 	        add(left);
 	        add(right);
 	        
