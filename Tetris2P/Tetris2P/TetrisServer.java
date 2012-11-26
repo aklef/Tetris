@@ -534,7 +534,6 @@ public class TetrisServer extends AbstractServer
     	 * 
     	 * @param playerID
     	 */
-    	@SuppressWarnings("unused")
 		public ClientNode(Long playerID)
     	{
     		this.playerID = playerID;
