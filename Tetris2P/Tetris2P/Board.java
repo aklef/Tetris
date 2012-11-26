@@ -961,19 +961,26 @@ public class Board extends JPanel implements ActionListener {
     public class Updater
     {
 		/**
-		 * TODO
+		 * Variable holds the currently held piece by the local player.
+		 * It will be passed onto the opponent to update their opponent ghost board
 		 */
     	private Shape newHoldPiece;
-		/**
-		 * TODO
+		
+    	/**
+		 * Variable holds the new next piece that the local player will obtain.
+		 * It will be passed onto the opponent to update their opponent ghost board
 		 */
     	private Shape newNextPiece;
-		/**
-		 * TODO
+		
+    	/**
+		 * Variable holds the current piece that the local player has obtained.
+		 * It will be passed onto the opponent to update their opponent ghost board.
 		 */
     	private Shape newCurPiece;
-		/**
-		 * TODO
+		
+    	/**
+		 * Variable that holds the new updated board of the local player.
+		 * It will be passed onto the opponent to update their opponent ghost board.
 		 */
     	private Tetromino[] newBoard;
 		/**
@@ -998,6 +1005,16 @@ public class Board extends JPanel implements ActionListener {
     	public Updater(String msg)
     	{
     		command = msg;
+    	}
+    	
+    	/**
+    	 * This method returns the string command and is used to check if 
+    	 * the Updater was sending a command such as "Game Over"
+    	 * 
+    	 */
+    	
+    	public String getCommandMessage(){
+    		return command;
     	}
     }
 }

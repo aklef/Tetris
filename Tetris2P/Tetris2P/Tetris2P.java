@@ -1,7 +1,6 @@
 package Tetris2P;
 
 import java.io.*;
-
 import javax.sound.sampled.*;
 import java.awt.AlphaComposite;
 import java.awt.Component;
@@ -421,7 +420,7 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class ToolBar extends JPanel
+	protected class ToolBar extends JPanel implements ActionListener
 	{
 		/**
 		 * The soundButton icon that can displays wether the game is muted and is able to toggle mute
@@ -435,41 +434,95 @@ public class Tetris2P extends JFrame implements Runnable
 		 * Restart button icon that toggles restart on the game
 		 */
 		private final JButton restartButton;
-		
+		/**
+		 * 
+		 */
+		private final ImageIcon soundOn;
+		/**
+		 * 
+		 */
+		private final ImageIcon soundOff;
+		/**
+		 * 
+		 */
+		private final ImageIcon play;
+		/**
+		 * 
+		 */
+		private final ImageIcon pause;
+		/**
+		 * 
+		 */
+		private final ImageIcon restart;
 		
 		/**
 		 * Constructor method to create toolbar of icons
 		 */
 		protected ToolBar()
 		{
-			setLayout(new BorderLayout());
-			
-			//icons declarations
-		    ImageIcon soundOn = new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
-	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
-	        ImageIcon play = new ImageIcon(getClass().getResource("/Icons/play.png"));
-	        ImageIcon pause = new ImageIcon(getClass().getResource("/Icons/pause.png"));
-	        ImageIcon restart = new ImageIcon(getClass().getResource("/Icons/restart.png"));	 
-	       
+	        JPanel left = 	new JPanel( new FlowLayout(FlowLayout.LEFT));
+	        JPanel right = 	new JPanel( new FlowLayout(FlowLayout.RIGHT));
+	        
+	        //icons declarations
+	        soundOn = 	new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
+	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
+	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"));
+	        pause = 	new ImageIcon(getClass().getResource("/Icons/pause.png"));
+	        restart = 	new ImageIcon(getClass().getResource("/Icons/restart.png"));
+	        
 	        // Defaults to the sound being on
-	        soundButton = new JButton(soundOn);
-	        playPauseButton = new JButton(play);
-	        restartButton = new JButton(restart);
+	        soundButton 	= new JButton("", soundOn);
+	        playPauseButton = new JButton("", play);
+	        restartButton 	= new JButton("", restart);
 	        
 	        // Adding the action listeners to the buttons
-	        soundButton.addActionListener(new SoundButtonListener(soundButton, soundOn, soundOff));
-	        playPauseButton.addActionListener(new PlayButtonListener(playPauseButton, play, pause));
-	        restartButton.addActionListener(new RestartButtonListener());
+	        soundButton.addActionListener(this);
+	        playPauseButton.addActionListener(this);
+	        restartButton.addActionListener(this);
 	        
 	        //adding the buttons to the JPanel and displaying to the UI
-	        add(playPauseButton, BorderLayout.EAST);
-	        add(restartButton, BorderLayout.CENTER);
-	        add(soundButton, BorderLayout.WEST);
+	        left.add(playPauseButton);
+	        left.add(restartButton);
+	        left.add(soundButton);
 	        
+	        add(left);
 	        setVisible(true);
 	        setFocusable(false);
 		}
-		
+
+		/**
+		 * 
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			switch (e.getActionCommand())
+			{
+				case "1":
+					soundButton.setIcon(soundOff);
+					toggleMuteGame();
+					break;
+					
+				case "2":
+					soundButton.setIcon(soundOn);
+					toggleMuteGame();
+					break;
+					
+				case "3":
+					playPauseButton.setIcon(pause);
+					localGame.getBoard().pause();
+					break;
+					
+				case "4":
+					playPauseButton.setIcon(play);
+					localGame.getBoard().pause();
+					break;
+					
+				case "5":
+					
+					localGame.getBoard().restart();
+			}
+		}
 		
 		/**
 	     * Gets the play/pause button so the game can be paused/activate from the Board
@@ -685,8 +738,7 @@ public class Tetris2P extends JFrame implements Runnable
 				public void keyPressed(KeyEvent e)
 				{
 					// Command statement switch
-					switch (e.getKeyCode()) 
-					{
+					switch (e.getKeyCode()) {
 						case KeyEvent.VK_ENTER:
 							String msg = getText();
 							tetrisClient.handleMessageFromClientUI(msg);							
