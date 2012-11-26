@@ -309,7 +309,7 @@ public class TetrisServer extends AbstractServer
   }
   
   /**
-   * This method searches the threadlist to find and set a client's opponent.
+   * This method searches the threadlist to find and remove a client's opponent.
    * 
    * @param client the {@code ConnectionToTetrisClient} we're trying to associate an opponent to.
    * @throws NullPointerException if the client could not be given an opponent.
@@ -435,38 +435,20 @@ public class TetrisServer extends AbstractServer
    * @param ConnectionToTetrisclient client is a newly connected client
    */
 
-  protected void clientConnected(ConnectionToTetrisClient client)
+ protected void clientConnected(ConnectionToTetrisClient client)
   {	
 	try
 	{
 		findOpponent(client);
 		
-<<<<<<< HEAD
-		//If there is a client connected that doesn't have an opponent, match him with new connected player
-		if(opponentFound)
-		{
-			
-			clientList.get(opponentIndex).opponentID = clientList.get(indexID).playerID;
-			clientList.get(indexID).opponentID = clientList.get(opponentIndex).playerID;
-			
-			try
-			{
-				client.sendToClient("You have a new opponent!");
-				client.opponent.sendToClient("You have a new opponent!");
-			}
-			catch (IOException e){}
-		}
-=======
 		client.send("You have a new opponent!");
 		client.opponent.send("You have a new opponent!");
 		
 		if(clientList.size() == 1)
 			client.send("Server running!");
->>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
 		else
 			System.out.println("Client " + client.toString() + " connected.");
-	}
-	catch (NullPointerException ex)
+	}	catch (NullPointerException ex)
 	{
 		System.out.println("Could not find an opponent for client "+client.getName()+" at "+client.getInetAddress());
 		ex.printStackTrace();

@@ -25,6 +25,7 @@ import Tetris2P.Tetris.HotBar;
 import Tetris2P.Tetris2P.OutputBox;
 import Tetris2P.Tetris2P.TetrisClient;
 import Tetris2P.Tetris2P.ToolBar;
+import Tetris2P.Tetris2P.ToolBar.*;
 
 /**
  * This class represents an instance on the board where a player interacts with the game and moves pieces.
@@ -108,18 +109,14 @@ public class Board extends JPanel implements ActionListener {
     /**
      * The HUD for the Next and the Hold shapes, and the score(?).
      */
-<<<<<<< HEAD
-    private final HotBar toolBar;
+    private final HotBar hotBar;
     
     /**
      * IconBar used to update the pause icon when paused/muted by keyboard
      */
     private ToolBar iconBar;
-    
-=======
-    private final HotBar hotBar;
->>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
-    /**
+ 
+     /**
      * The current {@code Shape} object being moved on the board.
      */
     private Shape curPiece;
@@ -888,11 +885,13 @@ public class Board extends JPanel implements ActionListener {
                      System.exit(0);
                      break;
                  case 'R': case 'r':
-                     restart();
+                	 iconBar.getRestartButton().doClick(); //toggles game restart
                      break;
                  case 'P': case 'p':
-                	 pause();
-                	 
+                	 iconBar.getPlayPauseButton().doClick(); //toggles the pause icon
+                	 break;
+                 case 'M': case 'm':
+                	 iconBar.getSoundButton().doClick(); //toggles the game audio
                 	 break;
              }
              

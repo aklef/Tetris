@@ -421,59 +421,45 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class ToolBar extends JPanel implements ActionListener
+	protected class ToolBar extends JPanel
 	{
 		/**
-		 * 
+		 * The soundButton icon that can displays wether the game is muted and is able to toggle mute
 		 */
 		private final JButton soundButton;
 		/**
-		 * 
+		 * The play button icon that is able to toggle between pause and play states 
 		 */
 		private final JButton playPauseButton;
 		/**
-		 * 
+		 * Restart button icon that toggles restart on the game
 		 */
 		private final JButton restartButton;
+		
 		
 		/**
 		 * Constructor method to create toolbar of icons
 		 */
 		protected ToolBar()
 		{
-<<<<<<< HEAD
 			setLayout(new BorderLayout());
 			
 			//icons declarations
-		    ImageIcon soundOn = new ImageIcon(getClass().getResource("/Media/Icons/soundOn.png"));
-	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Media/Icons/soundoff.png"));
-	        ImageIcon play = new ImageIcon(getClass().getResource("/Media/Icons/play.png"));
-	        ImageIcon pause = new ImageIcon(getClass().getResource("/Media/Icons/pause.png"));
-	        ImageIcon restart = new ImageIcon(getClass().getResource("/Media/Icons/restart.png"));	 
-=======
-	        JPanel left = new JPanel();
-	        JPanel right = new JPanel();
->>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
-	        
-	        //icons declarations
-	        ImageIcon soundOn = new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
+		    ImageIcon soundOn = new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
 	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
-	        
 	        ImageIcon play = new ImageIcon(getClass().getResource("/Icons/play.png"));
 	        ImageIcon pause = new ImageIcon(getClass().getResource("/Icons/pause.png"));
-	        
 	        ImageIcon restart = new ImageIcon(getClass().getResource("/Icons/restart.png"));	 
-	        
+	       
 	        // Defaults to the sound being on
 	        soundButton = new JButton(soundOn);
-	        
 	        playPauseButton = new JButton(play);
 	        restartButton = new JButton(restart);
 	        
 	        // Adding the action listeners to the buttons
-	        soundButton.addActionListener(this);
-	        playPauseButton.addActionListener(this);
-	        restartButton.addActionListener(this);
+	        soundButton.addActionListener(new SoundButtonListener(soundButton, soundOn, soundOff));
+	        playPauseButton.addActionListener(new PlayButtonListener(playPauseButton, play, pause));
+	        restartButton.addActionListener(new RestartButtonListener());
 	        
 	        //adding the buttons to the JPanel and displaying to the UI
 	        add(playPauseButton, BorderLayout.EAST);
@@ -483,19 +469,41 @@ public class Tetris2P extends JFrame implements Runnable
 	        setVisible(true);
 	        setFocusable(false);
 		}
-
+		
+		
 		/**
+	     * Gets the play/pause button so the game can be paused/activate from the Board
+	     * 
+	     */
+	    public JButton getPlayPauseButton(){
+	    	return playPauseButton;
+	    }
+	    
+	    /**
+	     * Gets the sound button so the sound can be toggled form the Board
+	     * 
+	     */
+	    public JButton getSoundButton(){
+	    	return soundButton;
+	    }
+		
+	    /**
+	     * Gets the restart button so the icon can 
+	     * 
+	     */
+	    public JButton getRestartButton(){
+	    	return restartButton;
+	    }
+	    
+	    
+		/**
+		 * Implements the sound button by toggling mute and changing icon accordingly when clicked 
 		 * 
+		 * @author Andréas K.LeF.
+		 * @author Dmitry Anglinov
+		 *
 		 */
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			
-			
-		}
 		
-		
-<<<<<<< HEAD
 	    private class SoundButtonListener implements ActionListener {
 	    	
 	    	private JButton soundButton;
@@ -573,9 +581,7 @@ public class Tetris2P extends JFrame implements Runnable
 	    		localGame.getBoard().restart();
 	    	}
 	    }
-=======
->>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
-
+	    
 	}
 	
 	//*************************************OUTPUTBOX*************************************//
