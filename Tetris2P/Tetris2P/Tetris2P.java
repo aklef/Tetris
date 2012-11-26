@@ -461,23 +461,43 @@ public class Tetris2P extends JFrame implements Runnable
 		 */
 		protected ToolBar()
 		{
-	        JPanel left = 	new JPanel( new FlowLayout(FlowLayout.LEFT));
+	        setLayout( new FlowLayout(FlowLayout.LEFT));
+			
+			JPanel left = 	new JPanel( new FlowLayout(FlowLayout.LEFT));
 	        JPanel right = 	new JPanel( new FlowLayout(FlowLayout.RIGHT));
 	        
 	        //icons declarations
 	        soundOn = 	new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
 	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
 	        
-	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"));
+	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"), "play");
 	        pause = 	new ImageIcon(getClass().getResource("/Icons/pause.png"));
 	        
 	        restart = 	new ImageIcon(getClass().getResource("/Icons/restart.png"));
 	        
 	        // Defaults to the sound being on
-	        soundButton 	= new JButton("", soundOn);
+	        soundButton 	= new JButton("sound Off", soundOn );
+	        playPauseButton = new JButton("pause", play );
+	        restartButton 	= new JButton("restart", restart );
 	        
-	        playPauseButton = new JButton("", play);
-	        restartButton 	= new JButton("", restart);
+	        // Adding tooltips
+	        soundButton.setToolTipText("sound Off");
+	        playPauseButton.setToolTipText("pause");
+	        restartButton.setToolTipText("restart");
+	        
+	        // Setting backround colors
+	        setBackground(backgroundColor);
+	        left.setBackground(backgroundColor);
+	        right.setBackground(backgroundColor);
+	        
+	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        
+	        // Setting foreground colors
+	        soundButton.setForeground(Color.WHITE);
+	        playPauseButton.setForeground(Color.WHITE);
+	        restartButton.setForeground(Color.WHITE);
 	        
 	        // Adding the action listeners to the buttons
 	        soundButton.addActionListener(this);
@@ -489,8 +509,14 @@ public class Tetris2P extends JFrame implements Runnable
 	        left.add(restartButton);
 	        left.add(soundButton);
 	        
-	        setVisible(true);
+	        add(left);
+	        add(right);
+	        
 	        setFocusable(false);
+	        left.setFocusable(false);
+	        right.setFocusable(false);
+	        
+	        setVisible(true);
 		}
 
 		/**
@@ -499,31 +525,50 @@ public class Tetris2P extends JFrame implements Runnable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			switch (e.getActionCommand())
+			JButton buttonPressed = (JButton) e.getSource();
+			
+			String id = buttonPressed.getText();
+			
+			
+			switch (id)
 			{
-				case "1":
+				case "sound On":
 					soundButton.setIcon(soundOff);
+					soundButton.setText("sound Off");
+					soundButton.setToolTipText("sound Off");
 					toggleMuteGame();
 					break;
 					
-				case "2":
+				case "sound Off":
 					soundButton.setIcon(soundOn);
+					soundButton.setText("sound On");
+					soundButton.setToolTipText("sound On");
 					toggleMuteGame();
 					break;
 					
-				case "3":
+				case "play":
 					playPauseButton.setIcon(pause);
 					localGame.getBoard().pause();
+					playPauseButton.setText("pause");
+					playPauseButton.setToolTipText("pause");
 					break;
 					
-				case "4":
-					playPauseButton.setIcon(play);
+				case "pause":
+					playPauseButton.setIcon(pause);
 					localGame.getBoard().pause();
+					playPauseButton.setText("play");
+					playPauseButton.setToolTipText("play");
 					break;
 					
-				case "5":
-					
+				case "restart":
 					localGame.getBoard().restart();
+					break;
+					
+				case "email":
+					break;
+					
+				case "github":
+					break;
 			}
 		}
 		

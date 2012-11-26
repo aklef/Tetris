@@ -228,7 +228,7 @@ public class Tetris extends JPanel{
 	        private Shape piece;
 
 	        /**
-	         * The {@code Shape} that will be displayed.
+	         * TODO
 	         */
 	        //private TextOverlay overlay;
 
