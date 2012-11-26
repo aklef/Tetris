@@ -484,14 +484,11 @@ public class Tetris2P extends JFrame implements Runnable
 	        left.setBackground(backgroundColor);
 	        right.setBackground(backgroundColor);
 	        
-<<<<<<< HEAD
 	        soundButton.setOpaque(true);
 	        playPauseButton.setOpaque(true);
 	        restartButton.setOpaque(true);
 	        
-=======
 	        //setting button colors
->>>>>>> origin/master
 	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
@@ -514,14 +511,11 @@ public class Tetris2P extends JFrame implements Runnable
 	        add(left);
 	        add(right);
 	        
-<<<<<<< HEAD
-=======
 	        //correcting button look and feel
 	        soundButton.setOpaque(true);
 	        playPauseButton.setOpaque(true);
 	        restartButton.setOpaque(true);
 	        
->>>>>>> origin/master
 	        setFocusable(false);
 	        left.setFocusable(false);
 	        right.setFocusable(false);
@@ -925,14 +919,12 @@ public class Tetris2P extends JFrame implements Runnable
 					try
 					{
 						sendToServer("#"+msg);
-<<<<<<< HEAD
+						
 					}
 					catch (IOException e)
 					{
 						System.out.println
 							("Could not send command to server.");
-=======
->>>>>>> origin/master
 					}
 				break;
 			}
