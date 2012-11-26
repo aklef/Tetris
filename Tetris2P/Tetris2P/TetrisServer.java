@@ -70,7 +70,7 @@ public class TetrisServer extends AbstractServer
 		{
 			try
 			{
-				commandMessage((String)((Updater) msg).getCommandMessage(), (ConnectionToTetrisClient) client);
+				commandMessage(((Updater) msg).getCommandMessage(), (ConnectionToTetrisClient) client);
 			}
 			catch(Exception e) { serverOutput.display("Cannot send command message"); }
 		}
@@ -92,33 +92,8 @@ public class TetrisServer extends AbstractServer
     catch(Exception e)
     {
       serverOutput.display("Could not send message to clients. Terminating server.");
-      quit();
+      //quit();
     }
-  }
-  
-  /**
-   * Receives input from the Server User.
-   * 
-   * @param msg input from the server user.
-   */
-  public void handleMessageFromServerUI (String msg){
-	    try
-	    {
-	        //If the message was a command message, send the instruction for interpretation
-	        if(msg.startsWith("#"))
-	        	commandMessage(msg.substring(1), null);
-	      	else{
-	      		this.sendToAllClients("SERVER MSG: " + msg );
-	      	}
-	    }
-	    catch(Exception e)
-	    {
-	      serverOutput.display("Could not send message to clients. Terminating server.");
-	      System.out.println 
-	      	("Could not send message to clients. Terminating server.");
-	      quit();
-	    }
-	  
   }
 
   /** 
@@ -349,6 +324,8 @@ public class TetrisServer extends AbstractServer
     				
     				try
     				{
+    					String removeUser = "rUser" + clientIndex;
+    					client.send(removeUser); //removing the client from the UI list of connected clients
     					client.send("You no longer have an opponent!");
     					client.opponent.send("You no longer have an opponent!");
     				}
@@ -376,7 +353,7 @@ public class TetrisServer extends AbstractServer
     	
     	// Remove the client's opponent
     	client.opponent = null;
-    	
+		
     	// Removing the user that disconnected from the clientList
     	clientList.remove(clientIndex);
     }
@@ -459,6 +436,12 @@ public class TetrisServer extends AbstractServer
 		//adding client to the client list and checking if it is possible to match them with an opponent
 		ClientNode connectedClient = new ClientNode(client.getId());
 		clientList.add(connectedClient);
+		
+		//adds the new user the list of users in the UI
+		int clientIndex = clientList.indexOf(connectedClient);
+		String addUser = "aUser" + clientIndex;
+		client.send(addUser);
+		
 		findOpponent(client);
 		client.send("You have a new opponent!");
 		client.opponent.send("You have a new opponent!");
@@ -521,21 +504,22 @@ public class TetrisServer extends AbstractServer
     private class ClientNode
     {
     	/**
-    	 * TODO
+    	 * The current client ID
     	 */
     	private Long playerID;
     	/**
-    	 * TODO
+    	 * The ID of the opponent of the current client
     	 */
     	private Long opponentID;
     	 
     	/**
-    	 * 
+    	 * Constructor used to create a default pair of client and opponent
     	 * @param playerID
     	 */
 		public ClientNode(Long playerID)
     	{
     		this.playerID = playerID;
+    		this.opponentID = 0L;
     	}
     }
 }
