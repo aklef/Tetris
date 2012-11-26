@@ -467,11 +467,9 @@ public class Tetris2P extends JFrame implements Runnable
 	        
 	        //icons declarations
 	        soundOn = 	new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
-	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
-	        
+	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));	        
 	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"));
 	        pause = 	new ImageIcon(getClass().getResource("/Icons/pause.png"));
-	        
 	        restart = 	new ImageIcon(getClass().getResource("/Icons/restart.png"));
 	        
 	        // Defaults to the sound being on
@@ -489,14 +487,10 @@ public class Tetris2P extends JFrame implements Runnable
 	        left.setBackground(backgroundColor);
 	        right.setBackground(backgroundColor);
 	        
+	        //setting button colors
 	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
-	        
-	        // Setting foreground colors
-	        soundButton.setForeground(Color.WHITE);
-	        playPauseButton.setForeground(Color.WHITE);
-	        restartButton.setForeground(Color.WHITE);
 	        
 	        // Adding the action listeners to the buttons
 	        soundButton.addActionListener(this);
