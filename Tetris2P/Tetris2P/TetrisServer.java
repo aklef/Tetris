@@ -82,7 +82,7 @@ public class TetrisServer extends AbstractServer
     try
     {
         //If the message was a command message, send the instruction for interpretation
-    	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
+    	if(((String) msg).startsWith("#"))
         	commandMessage(((String) msg).substring(1), (ConnectionToTetrisClient) client);
       	else{
       	    serverOutput.display(("["+ client.getInfo("ID") + "] " + msg));
@@ -105,7 +105,7 @@ public class TetrisServer extends AbstractServer
 	    try
 	    {
 	        //If the message was a command message, send the instruction for interpretation
-	        if(msg.startsWith("#") || msg.startsWith("/"))
+	        if(msg.startsWith("#"))
 	        	commandMessage(msg.substring(1), null);
 	      	else{
 	      		this.sendToAllClients("SERVER MSG: " + msg );

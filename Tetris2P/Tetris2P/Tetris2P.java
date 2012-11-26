@@ -493,9 +493,9 @@ public class Tetris2P extends JFrame implements Runnable
 	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        
 	        // Setting foreground colors
-	        soundButton.setForeground(Color.WHITE);
-	        playPauseButton.setForeground(Color.WHITE);
-	        restartButton.setForeground(Color.WHITE);
+	        soundButton.setForeground(Color.LIGHT_GRAY);
+	        playPauseButton.setForeground(Color.LIGHT_GRAY);
+	        restartButton.setForeground(Color.LIGHT_GRAY);
 	        
 	        // Adding the action listeners to the buttons
 	        soundButton.addActionListener(this);
@@ -510,6 +510,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        add(left);
 	        add(right);
 	        
+	        //correcting button look and feel
 	        soundButton.setOpaque(true);
 	        playPauseButton.setOpaque(true);
 	        restartButton.setOpaque(true);
@@ -803,7 +804,7 @@ public class Tetris2P extends JFrame implements Runnable
     				return;
     			
     			//If the message was a command message, send the instruction for interpretation
-    			if(message.startsWith("#") || message.startsWith("/"))
+    			if(message.startsWith("/"))
     			{
     				commandMessage(message.substring(1));
     			}
@@ -815,7 +816,7 @@ public class Tetris2P extends JFrame implements Runnable
     		catch(IOException e)
     		{
     			clientUI.display("Could not send message to server. Terminating client.");
-    			quit();
+    			//quit();
     		}
 		}
 		
@@ -918,7 +919,7 @@ public class Tetris2P extends JFrame implements Runnable
 						("> Command Not Found. Sending cmd to server.");
 					try
 					{
-						sendToServer("/"+msg);
+						sendToServer("#"+msg);
 					}
 					catch (IOException e) {}
 				break;
