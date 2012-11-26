@@ -25,7 +25,7 @@ public class TetrisServer extends AbstractServer
     /**
      * The default port to listen on.
      */
-    public final static int 			DEFAULT_PORT = 1337;
+    public final static int DEFAULT_PORT = 1337;
     /**
      * It will be used to pair up player and opponent
      */
@@ -64,26 +64,34 @@ public class TetrisServer extends AbstractServer
   {
 	// Object received is an Updater.
 	if (msg instanceof Updater)
-	{
+	{	
+		//sending game command messages to the commandMessage method to be implemented
+		if(((Updater) msg).getCommandMessage() != null)
+		{
+			try
+			{
+				commandMessage((String)((Updater) msg).getCommandMessage(), (ConnectionToTetrisClient) client);
+			}
+			catch(Exception e) { serverOutput.display("Cannot send command message"); }
+		}
+		
 		performUpdate((Updater) msg, (ConnectionToTetrisClient) client);
 		return;
 	}
-	// Continue assuming astring message has been sent to the server
+	// Continue assuming a string message has been sent to the server
     try
     {
         //If the message was a command message, send the instruction for interpretation
     	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
         	commandMessage(((String) msg).substring(1), (ConnectionToTetrisClient) client);
       	else{
-      	    System.out.println
-      	    	("["+ client.getInfo("ID") + "] " + msg);
+      	    serverOutput.display(("["+ client.getInfo("ID") + "] " + msg));
         	this.sendToAllClients(msg);
       	}
     }
     catch(Exception e)
     {
-      System.out.println 
-      	("Could not send message to clients. Terminating server.");
+      serverOutput.display("Could not send message to clients. Terminating server.");
       quit();
     }
   }
@@ -105,6 +113,7 @@ public class TetrisServer extends AbstractServer
 	    }
 	    catch(Exception e)
 	    {
+	      serverOutput.display("Could not send message to clients. Terminating server.");
 	      System.out.println 
 	      	("Could not send message to clients. Terminating server.");
 	      quit();
@@ -144,9 +153,17 @@ public class TetrisServer extends AbstractServer
 	// List of all server-side usable commands
 	
 	switch (instruction) {
-		//*******************************************************************//
-		// Server Control methods
 		
+		//TETRIS COMMAND MESSAGES
+		
+		//informs the opposing player of their victory
+		case "GameOver":
+			client.opponent.send("Congratulations! You have won!");
+			break;
+		
+		//*******************************************************************//
+		// SERVER CONTROL METHODS
+	
 		// Causes the server to quit gracefully.
 		case "quit": case "exit":
 			quit();
@@ -309,7 +326,7 @@ public class TetrisServer extends AbstractServer
   }
   
   /**
-   * This method searches the threadlist to find and remove a client's opponent.
+   * This method searches the threadlist to find and remove the opponent of a disconnecting client as an opponent.
    * 
    * @param client the {@code ConnectionToTetrisClient} we're trying to associate an opponent to.
    * @throws NullPointerException if the client could not be given an opponent.
@@ -439,23 +456,25 @@ public class TetrisServer extends AbstractServer
   {	
 	try
 	{
+		//adding client to the client list and checking if it is possible to match them with an opponent
+		ClientNode connectedClient = new ClientNode(client.getId());
+		clientList.add(connectedClient);
 		findOpponent(client);
-		
 		client.send("You have a new opponent!");
 		client.opponent.send("You have a new opponent!");
 		
 		if(clientList.size() == 1)
 			client.send("Server running!");
 		else
-			System.out.println("Client " + client.toString() + " connected.");
+			serverOutput.display("Client " + client.toString() + " connected.");
 	}	catch (NullPointerException ex)
 	{
-		System.out.println("Could not find an opponent for client "+client.getName()+" at "+client.getInetAddress());
+		serverOutput.display("Could not find an opponent for client "+client.getName()+" at "+client.getInetAddress());
 		ex.printStackTrace();
 	}
 	catch (IOException e)
 	{
-		System.out.println("Could not send message to the opponent of "+client.getName()+" at "+client.getInetAddress());
+		serverOutput.display("Could not send message to the opponent of "+client.getName()+" at "+client.getInetAddress());
 		e.printStackTrace();
 	}
   }
@@ -469,6 +488,8 @@ public class TetrisServer extends AbstractServer
   {
 	try
 	{
+		//removing the current client is an opponent of another client
+		//this method will also disconnect the current client
 		removeOpponent(client);
 		
 	}
@@ -509,7 +530,7 @@ public class TetrisServer extends AbstractServer
     	private Long opponentID;
     	 
     	/**
-    	 * TODO
+    	 * 
     	 * 
     	 * @param playerID
     	 */
