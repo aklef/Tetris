@@ -340,7 +340,7 @@ final public void run()
           
           synchronized(this)
           {
-            clientConnected( new ConnectionToClient(this.clientThreadGroup, clientSocket, this));
+            new ConnectionToClient(this.clientThreadGroup, clientSocket, this);
           }
         }
         catch (InterruptedIOException exception)

@@ -1,6 +1,8 @@
 package Tetris2P;
 
 import java.io.*;
+import java.net.BindException;
+
 import javax.sound.sampled.*;
 
 import java.awt.AWTException;
@@ -1000,15 +1002,18 @@ public class Tetris2P extends JFrame implements Runnable
 		 */
 		public void start()
 		{
-			tetrisServer = new TetrisServer(getPort(), clientUI);
+			//tetrisServer = new TetrisServer(DEFAULT_PORT, clientUI);
+			//TODO Should call the Serverconsole class from the command line
 			
 			try 
 			{
 				tetrisServer.listen(); //Start listening for connections
-				
-				//openConnection();
 			}
-			catch (Exception ex) 
+			catch (BindException e)
+			{
+				clientUI.display("[ERROR] Port is in use", Color.RED);
+			}
+			catch (IOException ex) 
 			{
 				clientUI.display("[ERROR] Could not start server", Color.YELLOW);
 				//System.exit(0);
