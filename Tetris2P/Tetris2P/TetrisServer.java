@@ -509,7 +509,6 @@ public class TetrisServer extends AbstractServer
     	 
     	/**
     	 * 
-    	 * 
     	 * @param playerID
     	 */
 		public ClientNode(Long playerID)
