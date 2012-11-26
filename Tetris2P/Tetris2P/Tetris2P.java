@@ -460,21 +460,39 @@ public class Tetris2P extends JFrame implements Runnable
 		 */
 		protected ToolBar()
 		{
-	        JPanel left = 	new JPanel( new FlowLayout(FlowLayout.LEFT));
+	        setLayout( new FlowLayout(FlowLayout.LEFT));
+			
+			JPanel left = 	new JPanel( new FlowLayout(FlowLayout.LEFT));
 	        JPanel right = 	new JPanel( new FlowLayout(FlowLayout.RIGHT));
 	        
 	        //icons declarations
 	        soundOn = 	new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
 	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
+	        
 	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"));
 	        pause = 	new ImageIcon(getClass().getResource("/Icons/pause.png"));
+	        
 	        restart = 	new ImageIcon(getClass().getResource("/Icons/restart.png"));
 	        
 	        // Defaults to the sound being on
-	        soundButton 	= new JButton("", soundOn);
-	        playPauseButton = new JButton("", play);
-	        restartButton 	= new JButton("", restart);
+	        soundButton 	= new JButton("sound Off", soundOn );
+	        playPauseButton = new JButton("pause", play );
+	        restartButton 	= new JButton("restart", restart );
 	        
+	        // Adding tooltips
+	        soundButton.setToolTipText("sound Off");
+	        playPauseButton.setToolTipText("pause");
+	        restartButton.setToolTipText("restart");
+	        
+	        // Setting backround colors
+	        setBackground(backgroundColor);
+	        left.setBackground(backgroundColor);
+	        right.setBackground(backgroundColor);
+	        
+	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        	        
 	        // Adding the action listeners to the buttons
 	        soundButton.addActionListener(this);
 	        playPauseButton.addActionListener(this);
@@ -486,8 +504,14 @@ public class Tetris2P extends JFrame implements Runnable
 	        left.add(soundButton);
 	        
 	        add(left);
-	        setVisible(true);
+	        add(left);
+	        add(right);
+	        
 	        setFocusable(false);
+	        left.setFocusable(false);
+	        right.setFocusable(false);
+	        
+	        setVisible(true);
 		}
 
 		/**
@@ -496,31 +520,50 @@ public class Tetris2P extends JFrame implements Runnable
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			switch (e.getActionCommand())
+			JButton buttonPressed = (JButton) e.getSource();
+			
+			String id = buttonPressed.getText();
+			
+			
+			switch (id)
 			{
-				case "1":
+				case "sound On":
 					soundButton.setIcon(soundOff);
+					soundButton.setText("sound Off");
+					soundButton.setToolTipText("sound Off");
 					toggleMuteGame();
 					break;
 					
-				case "2":
+				case "sound Off":
 					soundButton.setIcon(soundOn);
+					soundButton.setText("sound On");
+					soundButton.setToolTipText("sound On");
 					toggleMuteGame();
 					break;
 					
-				case "3":
+				case "play":
 					playPauseButton.setIcon(pause);
 					localGame.getBoard().pause();
+					playPauseButton.setText("pause");
+					playPauseButton.setToolTipText("pause");
 					break;
 					
-				case "4":
-					playPauseButton.setIcon(play);
+				case "pause":
+					playPauseButton.setIcon(pause);
 					localGame.getBoard().pause();
+					playPauseButton.setText("play");
+					playPauseButton.setToolTipText("play");
 					break;
 					
-				case "5":
-					
+				case "restart":
 					localGame.getBoard().restart();
+					break;
+					
+				case "email":
+					break;
+					
+				case "github":
+					break;
 			}
 		}
 		
@@ -547,95 +590,6 @@ public class Tetris2P extends JFrame implements Runnable
 	    public JButton getRestartButton(){
 	    	return restartButton;
 	    }
-	    
-	    
-		/**
-		 * Implements the sound button by toggling mute and changing icon accordingly when clicked 
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
-		
-	    private class SoundButtonListener implements ActionListener {
-	    	
-	    	private JButton soundButton;
-	    	private ImageIcon soundOn;
-	    	private ImageIcon soundOff;
-	    	
-	    	public SoundButtonListener(JButton soundButton, ImageIcon soundOnIcon, ImageIcon soundOffIcon)
-	    	{
-	    		this.soundButton = soundButton;
-	    		this.soundOn = soundOnIcon;
-	    		this.soundOff = soundOffIcon;
-	    	}
-
-	        public void actionPerformed(ActionEvent e) {
-	        	if(soundButton.getIcon() == soundOn)
-	        	{
-	        		soundButton.setIcon(soundOff);
-	        		toggleMuteGame();
-	        	}
-	        	else
-	        	{
-	        		soundButton.setIcon(soundOn);
-	        		toggleMuteGame();
-	        	}
-	        }
-	    }
-	    
-		/**
-		 * Implements the functionality of the play/pause toggle button by pausing or playing the game 
-		 * when clicked.
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
-		
-	    private class PlayButtonListener implements ActionListener {
-	    	
-	    	private JButton playButton;
-	    	private ImageIcon play;
-	    	private ImageIcon pause;
-	    	
-	    	public PlayButtonListener(JButton playButton, ImageIcon playIcon, ImageIcon pauseIcon)
-	    	{
-	    		this.playButton = playButton;
-	    		this.play = playIcon;
-	    		this.pause = pauseIcon;
-	    	}
-
-	        public void actionPerformed(ActionEvent e)
-	        {
-	        	if(playButton.getIcon() == play)
-	        	{
-	        		playButton.setIcon(pause);
-	        		localGame.getBoard().pause();
-	        	}
-	        	else
-	        	{
-	        		playButton.setIcon(play);
-	        		localGame.getBoard().pause();
-	        	}
-	        }
-	    }
-	    
-		/**
-		 * Implements the restart functionality for the restart button icon
-		 *
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
-	    private class RestartButtonListener implements ActionListener
-	    {
-	    	public void actionPerformed(ActionEvent e)
-	    	{
-	    		localGame.getBoard().restart();
-	    	}
-	    }
-	    
 	}
 	
 	//*************************************OUTPUTBOX*************************************//
@@ -740,8 +694,11 @@ public class Tetris2P extends JFrame implements Runnable
 					// Command statement switch
 					switch (e.getKeyCode()) {
 						case KeyEvent.VK_ENTER:
+							
 							String msg = getText();
-							tetrisClient.handleMessageFromClientUI(msg);							
+							
+							tetrisClient.handleMessageFromClientUI(msg);
+							
 							setText(null);
 							repaint();
 							break;
@@ -850,8 +807,8 @@ public class Tetris2P extends JFrame implements Runnable
     		}
     		catch(IOException e)
     		{
-    			clientUI.display("Could not send message to server.\nPlease use /start to start the server");
-    			//quit();
+    			clientUI.display("Could not send message to server. Terminating client.");
+    			quit();
     		}
 		}
 		
@@ -1002,7 +959,6 @@ public class Tetris2P extends JFrame implements Runnable
 			try 
 			{
 				tetrisServer.listen(); //Start listening for connections
-				System.out.println("Listening for connections");
 			}
 			catch (Exception ex) 
 			{
