@@ -163,10 +163,10 @@ public class Tetris2P extends JFrame implements Runnable
         }
         
         // Creating instances of elements
-        tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
+        userList	 = new PlayerList();
+        tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox, userList);   
         localGame	 = new Tetris(tetrisClient, outputBox, iconBar);
         opponentGame = new Tetris(outputBox);
-        userList	 = new PlayerList();
         serverInfo	 = new JLabel("TESTING");
         inputBox	 = new InputBox();        
         createAndShowGUI();
@@ -386,9 +386,9 @@ public class Tetris2P extends JFrame implements Runnable
 	        JList list 	 = new JList(userList);
 	        
 	        // XXX Remove! Test addition to the list
-	        for(int i=0; i<10; i++){
-	        	addUserToList("Dingletronic" + i);
-	        }
+//	        for(int i=0; i<10; i++){
+//	        	addUserToList("Dingletronic" + i);
+//	        }
 	        // Attach a ScrollPane to the list to make it scrollable
 	        scrollPane = new JScrollPane();
 	        
@@ -415,7 +415,7 @@ public class Tetris2P extends JFrame implements Runnable
 	     * @param username {@code String} name of player.
 	     */
 	    @SuppressWarnings("unchecked")
-		protected void addUserToList(String username)
+		public void addUserToList(String username)
 	    {
 	    	users.addLast(username); //add to end of list so the new user will be last in the queue to play
 	    	userList.addElement(username); //adds a user to the list GUI
@@ -426,7 +426,7 @@ public class Tetris2P extends JFrame implements Runnable
 	     * 
 	     * @param username {@code String} name of player.
 	     */
-	    protected void removeUserFromList(String username)
+	    public void removeUserFromList(String username)
 	    {
 	    	users.remove(username); //removes the user from the list
 	    	userList.removeElement(username); //adds a user to the list GUI
@@ -521,10 +521,6 @@ public class Tetris2P extends JFrame implements Runnable
 	        setBackground(backgroundColor);
 	        left.setBackground(backgroundColor);
 	        right.setBackground(backgroundColor);
-	        
-	        soundButton.setOpaque(true);
-	        playPauseButton.setOpaque(true);
-	        restartButton.setOpaque(true);
 	        
 	        //setting button colors
 	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
@@ -793,6 +789,11 @@ public class Tetris2P extends JFrame implements Runnable
 	     */
 	    private TetrisServer tetrisServer;
 	    
+	    /**
+	     * Variables that contains instance of users in the game
+	     * 
+	     */
+	    private PlayerList playerList;
 		/**
 		 * Constructs an instance of the Tetris client.
 		 * Initially calls the Abstractclient constructor
@@ -801,10 +802,11 @@ public class Tetris2P extends JFrame implements Runnable
 		 * @param port The port number to connect on.
 		 * @param clientUI The interface type variable.
 		 */
-		protected TetrisClient(String host, int port, ChatIF clientUI)
+		protected TetrisClient(String host, int port, ChatIF clientUI, PlayerList userList)
 		{
 			super(host, port); 
 			this.clientUI = (OutputBox) clientUI;
+			playerList = userList;
 		}
 
 		//Instance methods ************************************************
@@ -825,6 +827,18 @@ public class Tetris2P extends JFrame implements Runnable
 			//If the message was a command message, send the instruction for interpretation
 			if(((String) msg).startsWith("/"))
 				commandMessage(((String) msg).substring(1));
+			//adding a new user into the list of connected users
+			else if(((String) msg).startsWith("aUser")){
+				String newUser = ((String) msg).substring(1); //removes the 'a' that identifies the message as a user addition
+				playerList.addUserToList(newUser);
+			}
+			//removing a user from the list of connected users
+			else if(((String) msg).startsWith("rUser")){ 
+				String newUser = ((String) msg).substring(1); //removes the 'r' that identifies the message as a user deletion
+				playerList.removeUserFromList(newUser);
+			}
+			else
+				clientUI.display("> "+msg.toString(), Color.LIGHT_GRAY);
 			}
 		}
 
@@ -989,7 +1003,7 @@ public class Tetris2P extends JFrame implements Runnable
 		}
 		
 		/**
-		 * TODO
+		 * Hook method called when a client successfully connects to a server
 		 */
 		protected void connectionEstablished()
 		{
