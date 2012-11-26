@@ -235,12 +235,9 @@ public class Tetris2P extends JFrame implements Runnable
         add(bottom, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
-        getContentPane().setPreferredSize(new Dimension(680,573));
+        getContentPane().setPreferredSize(new Dimension(685,573));
         // Necessary
         pack();
-        
-        // Not needed but works fine
-        //revalidate();
         
         // Mute opponent game
         opponentGame.setAudioPlayback(false);
@@ -268,11 +265,11 @@ public class Tetris2P extends JFrame implements Runnable
 		// Makes the window open in the center of the screen.
         setLocationRelativeTo(null);
         
-        // Makes the frame steady
-        //XXX setResizable(false);
-        
         // Shows the window
         setVisible(true);
+        
+        // Makes the frame steady
+        //setResizable(false);
         
 	}
 
@@ -936,8 +933,13 @@ public class Tetris2P extends JFrame implements Runnable
 					try
 					{
 						sendToServer("#"+msg);
+						
 					}
-					catch (IOException e) {}
+					catch (IOException e)
+					{
+						System.out.println
+							("Could not send command to server.");
+					}
 				break;
 			}
 		}

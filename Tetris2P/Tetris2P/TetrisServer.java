@@ -3,10 +3,13 @@ package Tetris2P;
 // "Object Oriented Software Engineering" and is issued under the open-source
 // license found at www.lloseng.com 
 
+import java.awt.Color;
 import java.io.*;
 
 import ocsf.server.*;
 import Tetris2P.Board.Updater;
+import Tetris2P.Tetris2P.OutputBox;
+
 import java.util.LinkedList;
 
 /**
@@ -34,7 +37,7 @@ public class TetrisServer extends AbstractServer
      * The interface type variable.  It allows the implementation of 
      * the display method in the client.
      */
-    private final ChatIF serverOutput;
+    private final OutputBox serverOutput;
     
     
     //*************************************CONSTRUCTOR*************************************//
@@ -48,7 +51,7 @@ public class TetrisServer extends AbstractServer
    {
     	// Calls constructor in parent
     	super(port);
-    	serverOutput = serverText;
+    	serverOutput = (OutputBox) serverText;
    }
 
    //*************************************MESSAGE-HANDLERS*************************************//
@@ -145,13 +148,13 @@ public class TetrisServer extends AbstractServer
 		break;
 		
 		// Causes the server to stop listening for new clients.
-		case "stop":
+		case "stopListening":
 			stopListening();
 			sendToAllClients("WARNING - Server has stopped listening for connections.");
 		break;
 		
 		// Causes the server to start listening for new clients.
-		case "start":
+		case "listen":
 			try 
 			{
 				listen(); //Start listening for connections
@@ -213,9 +216,9 @@ public class TetrisServer extends AbstractServer
 		
 		case "status":
 			if(this.isListening())
-				serverOutput.display("Listening on port: " + getPort());
+				serverOutput.display("Server listening on port: " + getPort(), Color.BLUE);
 			else
-				serverOutput.display("Closed. Current port: " + getPort());
+				serverOutput.display("Server closed. Current port: " + getPort());
 		break;
 		
 		// Ping!
