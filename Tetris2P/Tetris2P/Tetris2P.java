@@ -235,12 +235,9 @@ public class Tetris2P extends JFrame implements Runnable
         add(bottom, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
-        getContentPane().setPreferredSize(new Dimension(680,573));
+        getContentPane().setPreferredSize(new Dimension(685,573));
         // Necessary
         pack();
-        
-        // Not needed but works fine
-        //revalidate();
         
         // Mute opponent game
         opponentGame.setAudioPlayback(false);
@@ -268,11 +265,11 @@ public class Tetris2P extends JFrame implements Runnable
 		// Makes the window open in the center of the screen.
         setLocationRelativeTo(null);
         
-        // Makes the frame steady
-        //XXX setResizable(false);
-        
         // Shows the window
         setVisible(true);
+        
+        // Makes the frame steady
+        //setResizable(false);
         
 	}
 
@@ -489,14 +486,18 @@ public class Tetris2P extends JFrame implements Runnable
 	        left.setBackground(backgroundColor);
 	        right.setBackground(backgroundColor);
 	        
+	        soundButton.setOpaque(true);
+	        playPauseButton.setOpaque(true);
+	        restartButton.setOpaque(true);
+	        
 	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
 	        
 	        // Setting foreground colors
-	        soundButton.setForeground(Color.WHITE);
-	        playPauseButton.setForeground(Color.WHITE);
-	        restartButton.setForeground(Color.WHITE);
+	        soundButton.setForeground(Color.LIGHT_GRAY);
+	        playPauseButton.setForeground(Color.LIGHT_GRAY);
+	        restartButton.setForeground(Color.LIGHT_GRAY);
 	        
 	        // Adding the action listeners to the buttons
 	        soundButton.addActionListener(this);
@@ -510,10 +511,6 @@ public class Tetris2P extends JFrame implements Runnable
 	        
 	        add(left);
 	        add(right);
-	        
-	        soundButton.setOpaque(true);
-	        playPauseButton.setOpaque(true);
-	        restartButton.setOpaque(true);
 	        
 	        setFocusable(false);
 	        left.setFocusable(false);
