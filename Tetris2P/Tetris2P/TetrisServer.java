@@ -411,8 +411,10 @@ public class TetrisServer extends AbstractServer
 		//If there is a client connected that doesn't have an opponent, match him with new connected player
 		if(opponentFound)
 		{
+			
 			clientList.get(opponentIndex).opponentID = clientList.get(indexID).playerID;
 			clientList.get(indexID).opponentID = clientList.get(opponentIndex).playerID;
+			
 			try
 			{
 				client.sendToClient("You have a new opponent!");

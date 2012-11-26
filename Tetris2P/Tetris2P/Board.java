@@ -24,6 +24,7 @@ import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.HotBar;
 import Tetris2P.Tetris2P.OutputBox;
 import Tetris2P.Tetris2P.TetrisClient;
+import Tetris2P.Tetris2P.ToolBar;
 
 /**
  * This class represents an instance on the board where a player interacts with the game and moves pieces.
@@ -108,6 +109,12 @@ public class Board extends JPanel implements ActionListener {
      * The HUD for the Next and the Hold shapes, and the score(?).
      */
     private final HotBar toolBar;
+    
+    /**
+     * IconBar used to update the pause icon when paused/muted by keyboard
+     */
+    private ToolBar iconBar;
+    
     /**
      * The current {@code Shape} object being moved on the board.
      */
@@ -167,7 +174,7 @@ public class Board extends JPanel implements ActionListener {
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
      */    
-    public Board( Tetris parent, OutputBox output )
+    public Board( Tetris parent, OutputBox output)
     {    	
         //Starts playing the soundtrack
         playSoundtrack();
@@ -234,6 +241,17 @@ public class Board extends JPanel implements ActionListener {
     	else
     		tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY);
     }
+    
+    /**
+     * Sets the toolbar (icon bar) so the icons can be accessed from the Board class.
+     * This method is called from the 2nd Tetris constructor
+     * 
+     */
+    public void setIconToolBar(ToolBar iconBar)
+    {
+    	this.iconBar = iconBar;
+    }
+    
     
     /**
      * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
@@ -870,6 +888,7 @@ public class Board extends JPanel implements ActionListener {
                      break;
                  case 'P': case 'p':
                 	 pause();
+                	 
                 	 break;
              }
              

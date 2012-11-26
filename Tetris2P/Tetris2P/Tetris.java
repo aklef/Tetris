@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris2P.OutputBox;
+import Tetris2P.Tetris2P.ToolBar;
 import Tetris2P.Tetris2P.TetrisClient;
 
 /**
@@ -95,10 +96,10 @@ public class Tetris extends JPanel{
 	 * @param tetrisClient this game's parent's client.
 	 * @param outputBox the output area.
 	 */
-	public Tetris(TetrisClient tetrisClient, OutputBox outputBox)
+	public Tetris(TetrisClient tetrisClient, OutputBox outputBox, ToolBar iconBar)
 	{
 		this(outputBox);
-
+		board.setIconToolBar(iconBar);
 		board.setClient(tetrisClient);
 	}
 

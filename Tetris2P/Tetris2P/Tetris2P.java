@@ -91,7 +91,7 @@ public class Tetris2P extends JFrame implements Runnable
     /**
      * Contains icons that perform useful functions such as muting sounds.
      */
-    private final JPanel toolBar;
+    private final ToolBar iconBar;
     /**
      * Static variable representing the background color of the board.
      */
@@ -135,7 +135,8 @@ public class Tetris2P extends JFrame implements Runnable
     {
         // Must create OutputBox before setting L&F to nimbus or bad things happen.
         outputBox	 = new OutputBox();
-        
+        iconBar		 = new ToolBar();
+
         // Sets default UIManager values
         UIManager.put("nimbusBase", Color.BLACK);
         
@@ -157,15 +158,11 @@ public class Tetris2P extends JFrame implements Runnable
         
         // Creating instances of elements
         tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox);
-        
-        localGame	 = new Tetris(tetrisClient, outputBox);
+        localGame	 = new Tetris(tetrisClient, outputBox, iconBar);
         opponentGame = new Tetris(outputBox);
         userList	 = new PlayerList();
         serverInfo	 = new JLabel("TESTING");
-        
-        inputBox	 = new InputBox();
-        toolBar		 = new ToolBar();
-        
+        inputBox	 = new InputBox();        
         createAndShowGUI();
    }
     /** 
@@ -203,7 +200,7 @@ public class Tetris2P extends JFrame implements Runnable
         outputBox.setBackground(backgroundColor.brighter());
         inputBox.setForeground(Color.WHITE);
         
-        toolBar.setBackground(backgroundColor);
+        iconBar.setBackground(backgroundColor);
         
         // Creating spacing
         socialArea.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
@@ -234,7 +231,7 @@ public class Tetris2P extends JFrame implements Runnable
         bottom.add(serverInfo);
         
         // Adding components to frame
-        add(toolBar, BorderLayout.NORTH);
+        add(iconBar, BorderLayout.NORTH);
         add(middle, BorderLayout.CENTER);
         add(bottom, BorderLayout.SOUTH);
         
@@ -435,7 +432,6 @@ public class Tetris2P extends JFrame implements Runnable
 			
 			//icons declarations
 		    ImageIcon soundOn = new ImageIcon(getClass().getResource("/Media/Icons/soundOn.png"));
-		    System.out.println(soundOn.getIconHeight());
 	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Media/Icons/soundoff.png"));
 	        ImageIcon play = new ImageIcon(getClass().getResource("/Media/Icons/play.png"));
 	        ImageIcon pause = new ImageIcon(getClass().getResource("/Media/Icons/pause.png"));
@@ -545,8 +541,6 @@ public class Tetris2P extends JFrame implements Runnable
 	    		localGame.getBoard().restart();
 	    	}
 	    }
-	    
-	    
 
 	}
 	
