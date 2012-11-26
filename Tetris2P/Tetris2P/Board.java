@@ -108,6 +108,7 @@ public class Board extends JPanel implements ActionListener {
     /**
      * The HUD for the Next and the Hold shapes, and the score(?).
      */
+<<<<<<< HEAD
     private final HotBar toolBar;
     
     /**
@@ -115,6 +116,9 @@ public class Board extends JPanel implements ActionListener {
      */
     private ToolBar iconBar;
     
+=======
+    private final HotBar hotBar;
+>>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
     /**
      * The current {@code Shape} object being moved on the board.
      */
@@ -189,7 +193,7 @@ public class Board extends JPanel implements ActionListener {
        //checking if muted
        boardAudio = parent.isAudioPlaybackAllowed();
        
-       toolBar = parent.getToolBar();
+       hotBar = parent.getToolBar();
        this.output = output;
        client = null;
        labelFont = new Font(output.getFont().getName(), Font.ITALIC+Font.BOLD, output.getFont().getSize());
@@ -239,7 +243,7 @@ public class Board extends JPanel implements ActionListener {
     	if(!audioState)
     		tetrisTheme.stop();
     	else
-    		tetrisTheme.loop(tetrisTheme.LOOP_CONTINUOUSLY);
+    		tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
     }
     
     /**
@@ -433,7 +437,7 @@ public class Board extends JPanel implements ActionListener {
         curPiece.setShape(nextPiece.getShape());
         // Generates a new next piece.
         nextPiece.setRandomShape();
-        toolBar.setNextPiece(nextPiece);
+        hotBar.setNextPiece(nextPiece);
         
         // Resets the cursor's position to the top of the board.
         curX = (SQUARES_IN_WIDTH / 2) + 1;
@@ -476,7 +480,7 @@ public class Board extends JPanel implements ActionListener {
         curY = SQUARES_IN_HEIGHT - 1 + curPiece.minY();
         isPieceHeld = true;
         isFallingFinished = false;
-        toolBar.setHoldShape(holdPiece);
+        hotBar.setHoldShape(holdPiece);
         repaint();
     }
     

@@ -421,13 +421,27 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class ToolBar extends JPanel
+	protected class ToolBar extends JPanel implements ActionListener
 	{
+		/**
+		 * 
+		 */
+		private final JButton soundButton;
+		/**
+		 * 
+		 */
+		private final JButton playPauseButton;
+		/**
+		 * 
+		 */
+		private final JButton restartButton;
+		
 		/**
 		 * Constructor method to create toolbar of icons
 		 */
 		protected ToolBar()
 		{
+<<<<<<< HEAD
 			setLayout(new BorderLayout());
 			
 			//icons declarations
@@ -436,34 +450,52 @@ public class Tetris2P extends JFrame implements Runnable
 	        ImageIcon play = new ImageIcon(getClass().getResource("/Media/Icons/play.png"));
 	        ImageIcon pause = new ImageIcon(getClass().getResource("/Media/Icons/pause.png"));
 	        ImageIcon restart = new ImageIcon(getClass().getResource("/Media/Icons/restart.png"));	 
+=======
+	        JPanel left = new JPanel();
+	        JPanel right = new JPanel();
+>>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
 	        
-	        //buttons for user interactivity with icons
-	        JButton soundButton = new JButton(soundOn);
-	        JButton playButton = new JButton(play);
-	        JButton restartButton = new JButton(restart);
+	        //icons declarations
+	        ImageIcon soundOn = new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
+	        ImageIcon soundOff = new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
 	        
-	        //adding the action listeners for the buttons in order to allow events
-	        soundButton.addActionListener(new SoundButtonListener(soundButton, soundOn, soundOff));
-	        playButton.addActionListener(new PlayButtonListener(playButton, play, pause));
-	        restartButton.addActionListener(new RestartButtonListener());
+	        ImageIcon play = new ImageIcon(getClass().getResource("/Icons/play.png"));
+	        ImageIcon pause = new ImageIcon(getClass().getResource("/Icons/pause.png"));
+	        
+	        ImageIcon restart = new ImageIcon(getClass().getResource("/Icons/restart.png"));	 
+	        
+	        // Defaults to the sound being on
+	        soundButton = new JButton(soundOn);
+	        
+	        playPauseButton = new JButton(play);
+	        restartButton = new JButton(restart);
+	        
+	        // Adding the action listeners to the buttons
+	        soundButton.addActionListener(this);
+	        playPauseButton.addActionListener(this);
+	        restartButton.addActionListener(this);
 	        
 	        //adding the buttons to the JPanel and displaying to the UI
-	        add(playButton, BorderLayout.EAST);
+	        add(playPauseButton, BorderLayout.EAST);
 	        add(restartButton, BorderLayout.CENTER);
 	        add(soundButton, BorderLayout.WEST);
-	        setVisible(true);
-	        setFocusable(true);
 	        
+	        setVisible(true);
+	        setFocusable(false);
+		}
+
+		/**
+		 * 
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			
+			
 		}
 		
-		/**
-		 * Implements the functionality of the mute button by muting the game and changing the icon when pressed
-		 * 
-		 * @author Andréas K.LeF.
-		 * @author Dmitry Anglinov
-		 *
-		 */
 		
+<<<<<<< HEAD
 	    private class SoundButtonListener implements ActionListener {
 	    	
 	    	private JButton soundButton;
@@ -541,6 +573,8 @@ public class Tetris2P extends JFrame implements Runnable
 	    		localGame.getBoard().restart();
 	    	}
 	    }
+=======
+>>>>>>> branch 'master' of https://Dmanered@github.com/akleff/Tetris.git
 
 	}
 	
