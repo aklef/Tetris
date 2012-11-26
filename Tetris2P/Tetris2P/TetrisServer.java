@@ -73,7 +73,7 @@ public class TetrisServer extends AbstractServer
 		{
 			try
 			{
-				commandMessage((String)((Updater) msg).getCommandMessage(), (ConnectionToTetrisClient) client);
+				commandMessage(((Updater) msg).getCommandMessage(), (ConnectionToTetrisClient) client);
 			}
 			catch(Exception e) { serverOutput.display("Cannot send command message"); }
 		}
@@ -85,7 +85,7 @@ public class TetrisServer extends AbstractServer
     try
     {
         //If the message was a command message, send the instruction for interpretation
-    	if(((String) msg).startsWith("#") || ((String) msg).startsWith("/"))
+    	if(((String) msg).startsWith("#"))
         	commandMessage(((String) msg).substring(1), (ConnectionToTetrisClient) client);
       	else{
       	    serverOutput.display(("["+ client.getInfo("ID") + "] " + msg));
@@ -97,31 +97,6 @@ public class TetrisServer extends AbstractServer
       serverOutput.display("Could not send message to clients. Terminating server.");
       quit();
     }
-  }
-  
-  /**
-   * Receives input from the Server User.
-   * 
-   * @param msg input from the server user.
-   */
-  public void handleMessageFromServerUI (String msg){
-	    try
-	    {
-	        //If the message was a command message, send the instruction for interpretation
-	        if(msg.startsWith("#") || msg.startsWith("/"))
-	        	commandMessage(msg.substring(1), null);
-	      	else{
-	      		this.sendToAllClients("SERVER MSG: " + msg );
-	      	}
-	    }
-	    catch(Exception e)
-	    {
-	      serverOutput.display("Could not send message to clients. Terminating server.");
-	      System.out.println 
-	      	("Could not send message to clients. Terminating server.");
-	      quit();
-	    }
-	  
   }
 
   /** 

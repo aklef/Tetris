@@ -783,8 +783,6 @@ public class Tetris2P extends JFrame implements Runnable
 			//If the message was a command message, send the instruction for interpretation
 			if(((String) msg).startsWith("/"))
 				commandMessage(((String) msg).substring(1));
-			else
-				clientUI.display("> "+msg.toString(), Color.LIGHT_GRAY);
 			}
 		}
 
@@ -801,7 +799,7 @@ public class Tetris2P extends JFrame implements Runnable
     				return;
     			
     			//If the message was a command message, send the instruction for interpretation
-    			if(message.startsWith("#") || message.startsWith("/"))
+    			if(message.startsWith("/"))
     			{
     				commandMessage(message.substring(1));
     			}
@@ -916,9 +914,13 @@ public class Tetris2P extends JFrame implements Runnable
 						("> Command Not Found. Sending cmd to server.");
 					try
 					{
-						sendToServer("/"+msg);
+						sendToServer("#"+msg);
 					}
-					catch (IOException e) {}
+					catch (IOException e)
+					{
+						System.out.println
+							("Could not send command to server.");
+					}
 				break;
 			}
 		}
