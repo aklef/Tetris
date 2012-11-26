@@ -62,6 +62,8 @@ import Tetris2P.Board.*;
 import 	ocsf.client.*;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.LinkedList;
 
@@ -97,11 +99,11 @@ public class Tetris2P extends JFrame implements Runnable
     /**
      * Contains icons that perform useful functions such as muting sounds.
      */
-    private final ToolBar iconBar;
+    private final ToolBar toolBar;
     /**
      * Static variable representing the background color of the board.
      */
-    private static Color backgroundColor;
+    private final static Color backgroundColor = new Color(16,16,32);
     /**
      * Variable that holds the GUI for the current connected users
      */
@@ -141,8 +143,8 @@ public class Tetris2P extends JFrame implements Runnable
     {
         // Must create OutputBox before setting L&F to nimbus or bad things happen.
         outputBox	 = new OutputBox();
-        iconBar		 = new ToolBar();
-
+        toolBar		 = new ToolBar();
+        
         // Sets default UIManager values
         UIManager.put("nimbusBase", Color.BLACK);
         
@@ -164,11 +166,14 @@ public class Tetris2P extends JFrame implements Runnable
         
         // Creating instances of elements
         userList	 = new PlayerList();
-        tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox, userList);   
-        localGame	 = new Tetris(tetrisClient, outputBox, iconBar);
-        opponentGame = new Tetris(outputBox);
+        tetrisClient = new TetrisClient (DEFAULT_HOST, DEFAULT_PORT, outputBox, userList);
+        
+        localGame	 = new Tetris(outputBox, toolBar,tetrisClient);
+        
+        opponentGame = new Tetris();
         serverInfo	 = new JLabel("TESTING");
-        inputBox	 = new InputBox();        
+        inputBox	 = new InputBox();
+        
         createAndShowGUI();
    }
     /** 
@@ -178,32 +183,9 @@ public class Tetris2P extends JFrame implements Runnable
      */  
     private void createAndShowGUI()
     {
-     TrayIcon trayIcon = null;
-     if (SystemTray.isSupported()) {
-         // get the SystemTray instance
-         SystemTray tray = SystemTray.getSystemTray();
-         // load an image
-         Image image = (new ImageIcon(new File("Media/img.jpg").getAbsolutePath())).getImage();
-         // create a action listener to listen for default action executed on the tray icon
-         ActionListener listener = new ActionListener() {
-             public void actionPerformed(ActionEvent e) {
-                 // execute default action of the application
-                 
-             }
-         };
-         // construct a TrayIcon
-         trayIcon = new TrayIcon(image, "Tetris 2P", null);
-         // set the TrayIcon properties
-         trayIcon.addActionListener(listener);
-         // add the tray image
-         try {
-             tray.add(trayIcon);
-         } catch (AWTException e) {
-             System.err.println(e);
-         }
-     }
-        
-        
+        List<Image> icons = new ArrayList<Image>();
+        icons.add((new ImageIcon(getClass().getResource("/Media/Love_for_Tetris256x256.jpg"))).getImage());
+        setIconImages(icons);
         
         // Panel for the middle area
         JPanel middle		 = new JPanel( new GridLayout(1, 3, 30, 0) );
@@ -213,9 +195,6 @@ public class Tetris2P extends JFrame implements Runnable
         JScrollPane scroll = new JScrollPane (outputBox);
         scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
               scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-              
-        // Default background color
-        backgroundColor = new Color(16,16,32);
         
         // Setting the frame's colors
         getContentPane().setBackground(backgroundColor);
@@ -230,23 +209,23 @@ public class Tetris2P extends JFrame implements Runnable
         
         userList.setBackground(backgroundColor);
         
-        
         outputBox.setBackground(backgroundColor.brighter());
         inputBox.setForeground(Color.WHITE);
         
         serverInfo.setBackground(backgroundColor);
         serverInfo.setForeground(Color.LIGHT_GRAY);
         
-        iconBar.setBackground(backgroundColor);
+        toolBar.setBackground(backgroundColor);
         
-        // Creating spacing
-        socialArea.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        // Creating spacing and Borders
+        outputBox.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        socialArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
         
         serverInfo.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
         inputBox.setPreferredSize(new Dimension(450, 30));
         
         bottom.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
-                
+        
         // Setting components as not focusable
         opponentGame.setFocusable(false);
         userList.setFocusable(false);
@@ -268,7 +247,7 @@ public class Tetris2P extends JFrame implements Runnable
         bottom.add(serverInfo);
         
         // Adding components to frame
-        add(iconBar, BorderLayout.NORTH);
+        add(toolBar, BorderLayout.NORTH);
         add(middle, BorderLayout.CENTER);
         add(bottom, BorderLayout.SOUTH);
         
@@ -385,16 +364,15 @@ public class Tetris2P extends JFrame implements Runnable
 	        userList = new DefaultListModel();
 	        JList list 	 = new JList(userList);
 	        
-	        // XXX Remove! Test addition to the list
-//	        for(int i=0; i<10; i++){
-//	        	addUserToList("Dingletronic" + i);
-//	        }
+	        addUserToList("None");
+	        
 	        // Attach a ScrollPane to the list to make it scrollable
 	        scrollPane = new JScrollPane();
 	        
 	        list.setOpaque(true);
 	        list.setCellRenderer(new CustomCellRenderer());
 	        list.setForeground(Color.WHITE);
+	        list.setBackground(backgroundColor);
 	        
 	        // Adding the list to the scrollable area
 	        scrollPane.getViewport().add(list);
@@ -407,6 +385,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        
 	        add(label, BorderLayout.NORTH);
 	        add(scrollPane, BorderLayout.CENTER);
+	        
 	    }
 
 	    /**
@@ -502,7 +481,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        
 	        //icons declarations
 	        soundOn = 	new ImageIcon(getClass().getResource("/Icons/soundOn.png"));
-	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));	        
+	        soundOff = 	new ImageIcon(getClass().getResource("/Icons/soundoff.png"));
 	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"));
 	        pause = 	new ImageIcon(getClass().getResource("/Icons/pause.png"));
 	        restart = 	new ImageIcon(getClass().getResource("/Icons/restart.png"));
@@ -523,9 +502,9 @@ public class Tetris2P extends JFrame implements Runnable
 	        right.setBackground(backgroundColor);
 	        
 	        //setting button colors
-	        soundButton.setBackground(new Color(16,16,32).brighter().brighter());
-	        playPauseButton.setBackground(new Color(16,16,32).brighter().brighter());
-	        restartButton.setBackground(new Color(16,16,32).brighter().brighter());
+	        soundButton.setBackground(backgroundColor.brighter().brighter());
+	        playPauseButton.setBackground(backgroundColor.brighter().brighter());
+	        restartButton.setBackground(backgroundColor.brighter().brighter());
 	        
 	        // Setting foreground colors
 	        soundButton.setForeground(Color.LIGHT_GRAY);
@@ -550,7 +529,6 @@ public class Tetris2P extends JFrame implements Runnable
 	        playPauseButton.setOpaque(true);
 	        restartButton.setOpaque(true);
 	        
-	        setFocusable(false);
 	        left.setFocusable(false);
 	        right.setFocusable(false);
 	        
@@ -566,7 +544,6 @@ public class Tetris2P extends JFrame implements Runnable
 			JButton buttonPressed = (JButton) e.getSource();
 			
 			String id = buttonPressed.getText();
-			
 			
 			switch (id)
 			{
@@ -660,7 +637,7 @@ public class Tetris2P extends JFrame implements Runnable
 			
 			defaultFont = getFont();
 			
-			setBorder(BorderFactory.createMatteBorder(0, 0, 0, 18, new Color (16,16,32)));
+			setBorder(BorderFactory.createMatteBorder(0, 0, 0, 18, backgroundColor));
 			
 			setFocusable(false);
 		}
@@ -705,7 +682,7 @@ public class Tetris2P extends JFrame implements Runnable
 		 *
 		 * @param message The string to be displayed.
 		 */
-		public void display(String message, Color color)
+		public void display(String message, Color color) throws NullPointerException
 		{
 			display(message, color, defaultFont);
 		}
@@ -1028,11 +1005,13 @@ public class Tetris2P extends JFrame implements Runnable
 			try 
 			{
 				tetrisServer.listen(); //Start listening for connections
+				
+				//openConnection();
 			}
 			catch (Exception ex) 
 			{
-				clientUI.display("ERROR - Could not listen for clients!", Color.YELLOW);
-				System.exit(0);
+				clientUI.display("[ERROR] Could not start server", Color.YELLOW);
+				//System.exit(0);
 			}
 			// connects with default parameters.
 			connect();

@@ -436,6 +436,9 @@ public class TetrisServer extends AbstractServer
   {	
 	try
 	{
+		System.out.println
+			("> CONNECTED TO MOTHAFOCKING SERVER BIATCHES.");
+		
 		//adding client to the client list and checking if it is possible to match them with an opponent
 		ClientNode connectedClient = new ClientNode(client.getId());
 		clientList.add(connectedClient);

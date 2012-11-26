@@ -319,7 +319,6 @@ public void setServerSocket(ServerSocket serverSocket)
    * Runs the listening thread that allows clients to connect.
    * Not to be called.
    */
-  @SuppressWarnings("unused")
 final public void run()
   {
     // call the hook method to notify that the server is starting
@@ -335,13 +334,13 @@ final public void run()
         {
           // Wait here for new connection attempts, or a timeout
           Socket clientSocket = getServerSocket().accept();
-
+          
           // When a client is accepted, create a thread to handle
           // the data exchange, then add it to thread group
-
+          
           synchronized(this)
           {
-            ConnectionToClient c = new ConnectionToClient(this.clientThreadGroup, clientSocket, this);
+            clientConnected( new ConnectionToClient(this.clientThreadGroup, clientSocket, this));
           }
         }
         catch (InterruptedIOException exception)

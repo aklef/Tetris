@@ -1,7 +1,6 @@
 package Tetris2P;
 
 import java.io.*;
-import javax.sound.sampled.*;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -19,13 +18,13 @@ import java.io.IOException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+import javax.sound.sampled.*;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.HotBar;
 import Tetris2P.Tetris2P.OutputBox;
 import Tetris2P.Tetris2P.TetrisClient;
 import Tetris2P.Tetris2P.ToolBar;
-import Tetris2P.Tetris2P.ToolBar.*;
 
 /**
  * This class represents an instance on the board where a player interacts with the game and moves pieces.
@@ -48,7 +47,6 @@ public class Board extends JPanel implements ActionListener {
      * The font used for labels.
      */
     private static Font labelFont;
-
     /**
      * Array containing all the colors that can be used in the game.
      */
@@ -107,15 +105,13 @@ public class Board extends JPanel implements ActionListener {
      */
     private final OutputBox output;
     /**
-     * The HUD for the Next and the Hold shapes, and the score(?).
+     * The HUD for the Next and the Hold shapes, and TODO the score(?).
      */
     private final HotBar hotBar;
-    
     /**
-     * IconBar used to update the pause icon when paused/muted by keyboard
+     * Toolbar that is updated when the game is paused, restarted or muted by keyboard.
      */
-    private ToolBar iconBar;
- 
+    private final ToolBar toolBar;
      /**
      * The current {@code Shape} object being moved on the board.
      */
@@ -160,7 +156,7 @@ public class Board extends JPanel implements ActionListener {
     /**
      * This variable will be true if sound effects can play
      */
-    private boolean boardAudio;
+    private boolean isAudioPlaybackAllowed;
     /**
      * This is a reference to this Board's parent's parent's client.
      */
@@ -175,27 +171,24 @@ public class Board extends JPanel implements ActionListener {
      * Constructor method.
      * @param {@code Tetris} The parent class of this board. 
      */    
-    public Board( Tetris parent, OutputBox output)
-    {    	
-        //Starts playing the soundtrack
-        playSoundtrack();
-       
+    public Board( Tetris parent, OutputBox output, ToolBar toolbar)
+    {
        // Setting the initial piece conditions.
        setFocusable(true);
        curPiece = new Shape();
        nextPiece = new Shape();
        holdPiece = new Shape();
-       holdPiece.setShape(Tetromino.NoShape); //player has no shape held at start
+       holdPiece.setShape(Tetromino.NoShape); // The player has no shape held at start
        
        //checking if muted
-       boardAudio = parent.isAudioPlaybackAllowed();
+       isAudioPlaybackAllowed = parent.isAudioPlaybackAllowed();
        
-       hotBar = parent.getToolBar();
+       //Starts playing the soundtrack
+       playSoundtrack();
+       
+       this.toolBar = toolbar;
+       hotBar = parent.getHotBar();
        this.output = output;
-       client = null;
-       labelFont = new Font(output.getFont().getName(), Font.ITALIC+Font.BOLD, output.getFont().getSize());
-       output.setFont(labelFont);
-       output.setForeground(Color.WHITE);
        
        board = new Tetromino[SQUARES_IN_WIDTH * SQUARES_IN_HEIGHT];
        // Sets the listener for the board to an instance of the TAdapter class.
@@ -226,7 +219,7 @@ public class Board extends JPanel implements ActionListener {
      * 
      */
     public boolean getBoardAudio(){
-    	return boardAudio;
+    	return isAudioPlaybackAllowed;
     }
     
     /**
@@ -234,7 +227,7 @@ public class Board extends JPanel implements ActionListener {
      * 
      */
     public void setBoardAudio(boolean audioState){
-    	boardAudio = audioState;
+    	isAudioPlaybackAllowed = audioState;
     	
     	//turns off the tetris theme if the audio is disabled and turns back on if enabled
     	if(!audioState)
@@ -242,17 +235,6 @@ public class Board extends JPanel implements ActionListener {
     	else
     		tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
     }
-    
-    /**
-     * Sets the toolbar (icon bar) so the icons can be accessed from the Board class.
-     * This method is called from the 2nd Tetris constructor
-     * 
-     */
-    public void setIconToolBar(ToolBar iconBar)
-    {
-    	this.iconBar = iconBar;
-    }
-    
     
     /**
      * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
@@ -302,8 +284,7 @@ public class Board extends JPanel implements ActionListener {
 	 */
 	public void setClient(TetrisClient tetrisClient)
 	{
-		// TODO Auto-generated method stub
-
+		this.client = tetrisClient;
 	}
     
     //*************************************CONTROL*************************************//
@@ -318,7 +299,7 @@ public class Board extends JPanel implements ActionListener {
     {
         if (isPaused)
             return;
-
+        
         isStarted = true;
         isFallingFinished = false;
         isPieceHeld = false;
@@ -326,10 +307,10 @@ public class Board extends JPanel implements ActionListener {
         clearBoard();
         
         //Initializing the timer
-		timer = new Ticker(DELAY, this);
-		timer.setInitialDelay(INITIAL_DELAY);
-
-		myTimer = new Thread(timer);
+        timer = new Ticker(DELAY, this);
+        timer.setInitialDelay(INITIAL_DELAY);
+        
+        myTimer = new Thread(timer);
         
         newPiece();
         myTimer.start();
@@ -343,15 +324,15 @@ public class Board extends JPanel implements ActionListener {
      */
     public void pause()
     {
-        if (!isStarted)
+        if (!isStarted || output==null)
             return;
         
         isPaused = !isPaused;
         timer.setPaused(isPaused);
         if (isPaused) { //pausing the game
-            output.display(" Game [P]aused. ", Color.magenta);
+            display(" Game [P]aused. ", Color.magenta);
         } else { // resuming the game
-            output.display(" "+numLinesRemoved, Color.green);
+            display(" "+numLinesRemoved, Color.green);
         }
         repaint();
     }
@@ -368,11 +349,11 @@ public class Board extends JPanel implements ActionListener {
         isFallingFinished = false;
         isFirstPieceMade = false;
         isPieceHeld = false;
-        boardAudio = true;
+        isAudioPlaybackAllowed = true;
         numLinesRemoved = 0;
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
-        output.display(" Game paused", Color.magenta);
+        display(" Game [P]aused", Color.magenta);
         
         playSoundtrack();
         clearBoard();
@@ -392,29 +373,17 @@ public class Board extends JPanel implements ActionListener {
      */
     public void gameOver()
     {
-        isStarted = false;
-        isFallingFinished = false;
-        isFirstPieceMade = false;
-        isPieceHeld = false;
-        isPaused = true;
-        
-        numLinesRemoved = 0;
-        
-        curPiece.setShape(Tetromino.NoShape);
-        output.display(" Game over. Press [Q]uit [R]estart", Color.ORANGE);
+        display(" Game over. Press [Q]uit [R]estart", Color.ORANGE);
         
         try
-		{
-			client.sendToServer(new Updater("/GameOver"));
-		}
-		catch (IOException e)
-		{
-			output.display(" Could not reach oponent for game over confirmation", Color.RED);
-			client.quit();
-		}
-        
-        timer.setPaused(isPaused);
-        
+        {
+            client.sendToServer(new Updater("/GameOver"));
+        }
+        catch (IOException e)
+        {
+        	display(" Could not reach oponent for game over confirmation", Color.RED);
+        	client.quit();
+        }
         repaint();
         pause();
     }
@@ -610,7 +579,7 @@ public class Board extends JPanel implements ActionListener {
 		//Updating the total number of lines removed by the user
         if (numFullLines > 0) {
             numLinesRemoved += numFullLines;
-            output.setText(String.valueOf(numLinesRemoved));
+            display(String.valueOf(numLinesRemoved));
             isFallingFinished = true;
             isPieceHeld = false;
             curPiece.setShape(Tetromino.NoShape);
@@ -648,7 +617,7 @@ public class Board extends JPanel implements ActionListener {
     	}
     	catch(IOException e)
 		{
-			output.display("Could not send the updater to opponent. Terminating client.");
+			display("Could not send the updater to opponent. Terminating client.");
 		}
     	client.quit();
 	}
@@ -687,11 +656,11 @@ public class Board extends JPanel implements ActionListener {
 			m_paused = pause;
 			if(m_paused) {
 				tetrisTheme.stop();
-				boardAudio = false;
+				isAudioPlaybackAllowed = false;
 			}
 			else {
 				tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
-				boardAudio = true;
+				isAudioPlaybackAllowed = true;
 				synchronized(this) {
 					this.notify();
 				}
@@ -804,7 +773,22 @@ public class Board extends JPanel implements ActionListener {
         
     }
 
+    private void display(String message, Color color, Font font)
+	{
+		if (output!=null)
+			output.display(message, color, font);
+	}
 
+    private void display(String message, Color color)
+	{
+		if (output!=null)
+			output.display(message, color);
+	}
+    private void display(String message)
+	{
+		if (output!=null)
+			output.display(message);
+	}
     //*************************************AUDIO*************************************//
     
     /**
@@ -859,7 +843,8 @@ public class Board extends JPanel implements ActionListener {
     		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetrisSoundtrack.wav"));
     		tetrisTheme = AudioSystem.getClip();
             tetrisTheme.open(music);
-            tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY); 
+            if (isStarted)
+            	tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY); 
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -885,14 +870,15 @@ public class Board extends JPanel implements ActionListener {
                      System.exit(0);
                      break;
                  case 'R': case 'r':
-                	 iconBar.getRestartButton().doClick(); //toggles game restart
+                     toolBar.getRestartButton().doClick(); //toggles game restart
                      break;
                  case 'P': case 'p':
-                	 iconBar.getPlayPauseButton().doClick(); //toggles the pause icon
-                	 break;
+                	 
+                    toolBar.getPlayPauseButton().doClick(); //toggles the pause icon
+                    break;
                  case 'M': case 'm':
-                	 iconBar.getSoundButton().doClick(); //toggles the game audio
-                	 break;
+                    toolBar.getSoundButton().doClick(); //toggles the game audio
+                    break;
              }
              
              // Parses no input if the game is paused.
@@ -906,7 +892,7 @@ public class Board extends JPanel implements ActionListener {
             		 tryMove(curPiece.rotate(), curX, curY);
             		 
             		 //generates sound effect
-                	 if(boardAudio)
+                	 if(isAudioPlaybackAllowed)
                 		 initRotateSound();
             	 }
                  break;
@@ -915,7 +901,7 @@ public class Board extends JPanel implements ActionListener {
             		 tryMove(curPiece, curX - 1, curY);
             		 
             		 //moveSound sound effect       
-            		 if(boardAudio)
+            		 if(isAudioPlaybackAllowed)
             			 initMoveSound();
             	 }
                  break;
@@ -924,7 +910,7 @@ public class Board extends JPanel implements ActionListener {
             		 tryMove(curPiece, curX + 1, curY);
             		 
             		 //generates sound effect
-                	 if(boardAudio)
+                	 if(isAudioPlaybackAllowed)
                 		 initMoveSound();
             	 }
                  break;
@@ -932,7 +918,7 @@ public class Board extends JPanel implements ActionListener {
             	 oneLineDown();
             	 
         		 //generates sound effect
-            	 if(boardAudio)
+            	 if(isAudioPlaybackAllowed)
             		 initMoveSound();
             	 break;
              case KeyEvent.VK_SHIFT: case 'H': case 'h': // hold
@@ -941,7 +927,7 @@ public class Board extends JPanel implements ActionListener {
              case KeyEvent.VK_SPACE: // drops piece to bottom
             	 
         		 //generates sound effect
-            	 if(boardAudio)
+            	 if(isAudioPlaybackAllowed)
             		 initDropSound();
                  dropDown();
                  break;

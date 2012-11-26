@@ -35,12 +35,7 @@ public class Tetris extends JPanel{
      */
     private static int 		BOARD_HEIGHT = 400;
     /**
-     * The output {@code ChatIF} for game statuses.
-     */
-    @SuppressWarnings("unused")
-	private OutputBox 		output;
-    /**
-     * The toolbar object.
+     * The hotbar object.
      */
     private final HotBar 	hotBar;
     /**
@@ -60,8 +55,11 @@ public class Tetris extends JPanel{
     
     /**
      * Constructor for a Tetris game.
+     * 
+     * @param outputBox the output area.
+     * @param toolBar the toolBar where buttons are.
      */
-    public Tetris(OutputBox output)
+    public Tetris(OutputBox output, ToolBar toolBar)
     {
     	backgroundColor = new Color (13,13,13);
     	
@@ -69,11 +67,10 @@ public class Tetris extends JPanel{
     	
     	hotBar = new HotBar();
     	hotBar.setBackground(backgroundColor);
-    	
-    	this.output = output;
         
-        board = new Board(this, output);
+        board = new Board(this, output, toolBar);
         board.setMinimumSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
+        //board.setPreferredSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
         board.setBackground(backgroundColor);
         board.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
@@ -87,20 +84,33 @@ public class Tetris extends JPanel{
         hotBar.holdArea.setPreferredSize(areaDim );
         hotBar.previewNextPieceArea.setPreferredSize(areaDim);
         
-        setPreferredSize(getSize());
+        //setPreferredSize(getSize());
    }
 
     /**
      * Calls the default constructor of this class
      * 
+     * @param outputBox the output area.
+     * @param toolBar the toolBar where buttons are.
 	 * @param tetrisClient this game's parent's client.
-	 * @param outputBox the output area.
 	 */
-	public Tetris(TetrisClient tetrisClient, OutputBox outputBox, ToolBar iconBar)
+	public Tetris(OutputBox outputBox, ToolBar toolBar, TetrisClient tetrisClient)
 	{
-		this(outputBox);
-		board.setIconToolBar(iconBar);
+		this(outputBox, toolBar);
 		board.setClient(tetrisClient);
+	}
+	
+    /**
+     * Calls the default constructor of this class
+     * 
+     * @param outputBox the output area.
+     * @param toolBar the toolBar where buttons are.
+	 * @param tetrisClient this game's parent's client.
+	 * 
+	 */
+	public Tetris()
+	{
+		this(null, null);
 	}
 
     //*************************************SETTER/GETTER*************************************//
@@ -108,7 +118,7 @@ public class Tetris extends JPanel{
 	/**
      * Returns the {@code ToolBar} Object  belonging to this game.
      */
-    protected HotBar getToolBar() {
+    protected HotBar getHotBar() {
        return hotBar;
    }
 
@@ -179,8 +189,8 @@ public class Tetris extends JPanel{
 			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
 			add(previewNextPieceArea, BorderLayout.EAST);
 
-			this.setFocusable(false);
-			this.setVisible(true);
+			setFocusable(false);
+			setVisible(true);
 		}
 
 		/**
