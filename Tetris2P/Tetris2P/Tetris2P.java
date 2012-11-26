@@ -236,7 +236,7 @@ public class Tetris2P extends JFrame implements Runnable
         add(bottom, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
-        getContentPane().setPreferredSize(new Dimension(600,465));
+        getContentPane().setPreferredSize(new Dimension(680,573));
         // Necessary
         pack();
         
@@ -461,7 +461,7 @@ public class Tetris2P extends JFrame implements Runnable
 		 */
 		protected ToolBar()
 		{
-	        setLayout( new FlowLayout(FlowLayout.LEFT));
+	        setLayout( new FlowLayout(FlowLayout.CENTER));
 			
 			JPanel left = 	new JPanel( new FlowLayout(FlowLayout.LEFT));
 	        JPanel right = 	new JPanel( new FlowLayout(FlowLayout.RIGHT));
