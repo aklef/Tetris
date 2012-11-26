@@ -148,7 +148,7 @@ public class Tetris2P extends JFrame implements Runnable
         		{
         			UIManager.setLookAndFeel(info.getClassName());
         			break;
-                    }
+                }
             }
         }
         catch (Exception e)
@@ -553,7 +553,8 @@ public class Tetris2P extends JFrame implements Runnable
 	    		this.pause = pauseIcon;
 	    	}
 
-	        public void actionPerformed(ActionEvent e) {
+	        public void actionPerformed(ActionEvent e)
+	        {
 	        	if(playButton.getIcon() == play)
 	        	{
 	        		playButton.setIcon(pause);
@@ -569,7 +570,7 @@ public class Tetris2P extends JFrame implements Runnable
 	    
 		/**
 		 * Implements the restart functionality for the restart button icon
-		 * 
+		 *
 		 * @author Andréas K.LeF.
 		 * @author Dmitry Anglinov
 		 *
@@ -684,13 +685,11 @@ public class Tetris2P extends JFrame implements Runnable
 				public void keyPressed(KeyEvent e)
 				{
 					// Command statement switch
-					switch (e.getKeyCode()) {
+					switch (e.getKeyCode()) 
+					{
 						case KeyEvent.VK_ENTER:
-							
 							String msg = getText();
-							
-							tetrisClient.handleMessageFromClientUI(msg);
-							
+							tetrisClient.handleMessageFromClientUI(msg);							
 							setText(null);
 							repaint();
 							break;
@@ -799,8 +798,8 @@ public class Tetris2P extends JFrame implements Runnable
     		}
     		catch(IOException e)
     		{
-    			clientUI.display("Could not send message to server. Terminating client.");
-    			quit();
+    			clientUI.display("Could not send message to server.\nPlease use /start to start the server");
+    			//quit();
     		}
 		}
 		
@@ -951,6 +950,7 @@ public class Tetris2P extends JFrame implements Runnable
 			try 
 			{
 				tetrisServer.listen(); //Start listening for connections
+				System.out.println("Listening for connections");
 			}
 			catch (Exception ex) 
 			{

@@ -25,7 +25,7 @@ public class TetrisServer extends AbstractServer
     /**
      * The default port to listen on.
      */
-    public final static int 			DEFAULT_PORT = 1337;
+    public final static int DEFAULT_PORT = 1337;
     /**
      * It will be used to pair up player and opponent
      */
