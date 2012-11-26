@@ -856,7 +856,7 @@ public class Board extends JPanel implements ActionListener {
      */
     public void playSoundtrack(){
         try {
-    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetris_nintendo_8bit.wav"));
+    		AudioInputStream music = AudioSystem.getAudioInputStream(new File("Media/tetrisSoundtrack.wav"));
     		tetrisTheme = AudioSystem.getClip();
             tetrisTheme.open(music);
             tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY); 
