@@ -3,12 +3,10 @@ package Tetris2P;
 // "Object Oriented Software Engineering" and is issued under the open-source
 // license found at www.lloseng.com 
 
-import java.awt.Color;
 import java.io.*;
 
 import ocsf.server.*;
 import Tetris2P.Board.Updater;
-import Tetris2P.Tetris2P.OutputBox;
 
 import java.util.LinkedList;
 
@@ -37,7 +35,7 @@ public class TetrisServer extends AbstractServer
      * The interface type variable.  It allows the implementation of 
      * the display method in the client.
      */
-    private final OutputBox serverOutput;
+    private final ChatIF serverOutput;
     
     
     //*************************************CONSTRUCTOR*************************************//
@@ -51,7 +49,7 @@ public class TetrisServer extends AbstractServer
    {
     	// Calls constructor in parent
     	super(port);
-    	serverOutput = (OutputBox) serverText;
+    	serverOutput = serverText;
    }
 
    //*************************************MESSAGE-HANDLERS*************************************//
@@ -75,7 +73,7 @@ public class TetrisServer extends AbstractServer
 			{
 				commandMessage(((Updater) msg).getCommandMessage(), client);
 			}
-			catch(Exception e) { serverOutput.display("Cannot send command message"); }
+			catch(IOException e) { serverOutput.display("[ERROR] Could not parse client input"); }
 		}
 		
 		performUpdate((Updater) msg, client);
@@ -89,12 +87,13 @@ public class TetrisServer extends AbstractServer
         	commandMessage(((String) msg).substring(1), client);
       	else{
       	    serverOutput.display(("["+ client.getInfo("ID") + "] " + msg));
-        	this.sendToAllClients(msg);
+        	sendToAllClients(msg);
       	}
     }
     catch(Exception e)
     {
-      serverOutput.display("Could not send message to clients. Terminating server.");
+      serverOutput.display("[ERROR] Could not send message to clients.");
+      //serverOutput.display("[CRITICAL] Terminating server.");
       //quit();
     }
   }
@@ -112,15 +111,16 @@ public class TetrisServer extends AbstractServer
 	        if(msg.startsWith("#") || msg.startsWith("/"))
 	        	commandMessage(msg.substring(1), null);
 	      	else{
-	      		this.sendToAllClients("SERVER MSG: " + msg );
+	      		serverOutput.display(msg);
+	      		sendToAllClients("[SERVER MSG] " + msg );
 	      	}
 	    }
-	    catch(Exception e)
+	    catch(IOException e)
 	    {
-	      serverOutput.display("Could not send message to clients. Terminating server.");
-	      System.out.println 
-	      	("Could not send message to clients. Terminating server.");
-	      quit();
+	    	serverOutput.display("[ERROR] Could not parse server input.");
+	    	serverOutput.display("[CRITICAL] Terminating server.");
+	    	
+	    	quit();
 	    }
 	  
   }
@@ -176,7 +176,7 @@ public class TetrisServer extends AbstractServer
 		// Causes the server to stop listening for new clients.
 		case "stopListening":
 			stopListening();
-			sendToAllClients("[WARNING] Server has stopped listening for connections.");
+			sendToAllClients("[INFO] Server has stopped listening for connections.");
 		break;
 		
 		// Causes the server to start listening for new clients.
@@ -187,9 +187,9 @@ public class TetrisServer extends AbstractServer
 			}
 			catch (Exception ex) 
 			{
-				System.out.println("[ERROR] Could not listen for clients!");
+				serverOutput.display("[ERROR] Could not listen for clients!");
 			}
-			sendToAllClients("[WARNING] Server now listening for connections.");
+			sendToAllClients("[INFO] Server now listening for connections.");
 		break;
 		
 		// Causes the server to not only stop listening for new clients,
@@ -205,11 +205,11 @@ public class TetrisServer extends AbstractServer
 		case "setport": case "setPort":
 			if(this.isListening())
 				serverOutput.display
-					("Server running. Close server to set port.");
+					("[INFO] Server is open. Close server to set port.");
 			else{
 				setPort(Integer.parseInt(operand));
 				serverOutput.display
-					("Port set: " + getPort());
+					("[INFO] Port set to "+getPort());
 			}
 		break;
 		
@@ -242,9 +242,9 @@ public class TetrisServer extends AbstractServer
 		
 		case "status":
 			if(this.isListening())
-				serverOutput.display("Server listening on port: " + getPort(), Color.BLUE);
+				serverOutput.display("[INFO] Server open on port: " + getPort());
 			else
-				serverOutput.display("Server closed. Current port: " + getPort());
+				serverOutput.display("[INFO] Server closed. Port set to: " + getPort());
 		break;
 		
 		// Ping!
@@ -261,8 +261,7 @@ public class TetrisServer extends AbstractServer
 		default:
 			if (client == null)
 			{
-				System.out.println
-					("> Command Not Found.");
+				serverOutput.display("> Command Not Found.");
 			}else
 				client.send("Invalid Command.");
 		break;
@@ -282,7 +281,7 @@ public class TetrisServer extends AbstractServer
 		}
 		catch (IOException ex)
 		{
-			System.out.println("Could not send update package to the opponent of "+client.getName()+" at "+client.getInetAddress());
+			serverOutput.display("[CRITICAL] Could not send updater to the opponent of "+client.getName()+" at "+client.getInetAddress());
 			ex.printStackTrace();
 		}
   }
@@ -302,7 +301,7 @@ public class TetrisServer extends AbstractServer
 
 	Thread[] clientThreadList = getClientConnections(); //Obtain a list of connections
 	
-	//obtaining the ClientNode list index of the client
+	// Obtain the index of the client in the ClientNode list 
 	for(int i=0; i<clientList.size(); i++)
 	{
 		if(clientList.get(i).playerID == client.getId())
@@ -324,7 +323,7 @@ public class TetrisServer extends AbstractServer
 			}
 		}
 	} else
-		throw new NullPointerException();
+		throw new NullPointerException("Client has no opponent.");
 	
 	return null;
   }
@@ -353,12 +352,12 @@ public class TetrisServer extends AbstractServer
     				
     				try
     				{
-    					String removeUser = "rUser" + clientIndex;
-    					client.send(removeUser); //removing the client from the UI list of connected clients
     					client.send("You no longer have an opponent!");
     					findOpponent(client).send("You no longer have an opponent!");
     				}
-    				catch (IOException e){}
+    				catch (IOException e){
+    					
+    				}
     			}
     			
     			break;
@@ -394,20 +393,22 @@ public class TetrisServer extends AbstractServer
   {
   	try
   	{
-  		System.out.println
-  			("> CONNECTED TO MOTHAFOCKING SERVER BIATCHES.");
+  		// Creating connection for new client
+  		ClientNode newClient = new ClientNode(client.getId());
   		
-  		//adding client to the client list and checking if it is possible to match them with an opponent
-  		ClientNode connectedClient = new ClientNode(client.getId());
-  		clientList.add(connectedClient);
+  		// Adding client to the client list
+  		clientList.add(newClient);
   		
-  		//adds the new user the list of users in the UI
-  		int clientIndex = clientList.indexOf(connectedClient);
+  		// Adding the new user to the list of users in the UI
+  		int clientIndex = clientList.indexOf(newClient);
+  		// Setting default user information.
   		client.setInfo("ID",  "Player" + clientIndex);
   		
-  		findOpponent(client);
-  		client.send("You have a new opponent!");
+  		newClient.name = (String) client.getInfo("ID");
+  		
+  		// Checking if it is possible to match them with an opponent
   		findOpponent(client).send("You have a new opponent!");
+  		client.send("You have a new opponent!");
   		
   		if(clientList.size() == 1)
   			client.send("Server running!");
@@ -415,13 +416,11 @@ public class TetrisServer extends AbstractServer
   			serverOutput.display("Client " + client.toString() + " connected.");
   	}	catch (NullPointerException ex)
   	{
-  		serverOutput.display("Could not find an opponent for client "+client.getName()+" at "+client.getInetAddress());
-  		ex.printStackTrace();
+  		serverOutput.display("[FAILED] No opponent for client "+client.getName()+" at "+client.getInetAddress());
   	}
   	catch (IOException e)
   	{
-  		serverOutput.display("Could not send message to the opponent of "+client.getName()+" at "+client.getInetAddress());
-  		e.printStackTrace();
+  		serverOutput.display("[FAILED] Send message to opponent of "+client.getName()+" at "+client.getInetAddress());
   	}
   }
     
@@ -441,13 +440,13 @@ public class TetrisServer extends AbstractServer
   	}
   	catch (NullPointerException ex)
   	{
-  		System.out.println("Could not remove opponent for client "+client.getName()+" at "+client.getInetAddress());
+  		serverOutput.display("[ERROR] Could not remove the opponent of client "+client.getInfo("ID")+" at "+client.getInetAddress());
   		ex.printStackTrace();
   	}
   	
   	// Notifying other clients
-  	System.out.println("Client " + client.getInfo("ID") + " disconnected.");
-  	sendToAllClients("Client " + client.getInfo("ID") + " left.");
+  	serverOutput.display("[INFO] Client " + client.getInfo("ID") + " disconnected.");
+  	sendToAllClients("[INFO] Client " + client.getInfo("ID") + " left.");
     }
     
     synchronized protected void clientException(ConnectionToClient client, Throwable exception)
@@ -466,12 +465,12 @@ public class TetrisServer extends AbstractServer
   {
     try
     {
-    	System.out.println("***SERVER GOING OFFLINE***");
+    	serverOutput.display("[CRITICAL] SERVER GOING OFFLINE");
     	close();
     }
     catch(IOException e)
     {
-    	System.out.println("Could not quit server. Aborting.");
+    	serverOutput.display("[CRITICAL] Could not close server gracefully. Terminating.");
     }
     System.exit(0);
   }
@@ -500,7 +499,7 @@ public class TetrisServer extends AbstractServer
    */
   protected void serverStarted()
   {
-    System.out.println("Server listening for connections on port " + getPort());
+    System.out.println("[INFO] Server listening for connections on port " + getPort());
   }
   
   /**
@@ -509,7 +508,7 @@ public class TetrisServer extends AbstractServer
    */
   protected void serverStopped()
   {
-    System.out.println("Server no longer listening for connections.");
+    System.out.println("[INFO] Server no longer listening for connections.");
   }
   
   /**
@@ -529,12 +528,16 @@ public class TetrisServer extends AbstractServer
      * @author Dmitry Anglinov
      * @author Andréas K.LeF.
     */
-    private class ClientNode
+    protected class ClientNode
     {
     	/**
     	 * The current client ID
     	 */
     	private Long playerID;
+    	/**
+    	 * The current client's name
+    	 */
+    	protected String name;
     	/**
     	 * The ID of the opponent of the current client
     	 */
@@ -544,10 +547,18 @@ public class TetrisServer extends AbstractServer
     	 * Constructor used to create a default pair of client and opponent
     	 * @param playerID
     	 */
-		public ClientNode(Long playerID)
+		protected ClientNode(Long playerID)
     	{
     		this.playerID = playerID;
-    		this.opponentID = 0L;
+    		name = "Player"+playerID;
+    		opponentID = 0L;
+    	}
+		
+		protected ClientNode(Long playerID, String playerName)
+    	{
+    		this.playerID = playerID;
+    		name = playerName;
+    		opponentID = 0L;
     	}
     }
 }

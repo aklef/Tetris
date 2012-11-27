@@ -36,16 +36,18 @@ final public static int DEFAULT_PORT = 1337;
 
 public ServerConsole(int port) 
 {
-	  server = new TetrisServer(port, this);
-		try 
-		{
-			server.listen(); //Start listening for connections
-		}
-		catch (Exception ex) 
-		{
-			System.out.println("ERROR - Could not listen for clients!");
-			System.exit(0);
-		}  
+	server = new TetrisServer(port, this);
+	
+	try 
+	{
+		server.listen(); //Start listening for connections
+		display("[INFO] Connected to TetrisServer");
+	}
+	catch (Exception ex) 
+	{
+		display("[ERROR] Could not listen for clients on port: "+port);
+		System.exit(0);
+	}  
 }
 
 /**
@@ -56,8 +58,7 @@ public ServerConsole(int port)
  */
 public void display(String message) 
 {
-	  //System.out.println(message); //printing message to server console
-    server.handleMessageFromServerUI(message); //sending message to server
+	System.out.println(message); //printing message to server console
 }
 
 /**
@@ -79,7 +80,7 @@ public void accept()
 	}
 	catch (Exception ex)
 	{
-		System.out.println("Unexpected error while reading from console!");
+		display("[ERROR] Cannot read from console!");
 	}
 }
 
@@ -97,8 +98,9 @@ public static void main(String[] args)
 	}
 	
 	ServerConsole serverChat = new ServerConsole(port);	
-	System.out.println("ServerConsole connected.");
+	serverChat.display("[INFO] ServerConsole started");
 	serverChat.accept();  //Wait for console data    
+	serverChat.display("[INFO] Accepting console input");
 	}
 	
 }

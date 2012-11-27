@@ -60,6 +60,7 @@ import javax.swing.SwingUtilities;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.HotBar.ShapeArea;
+import Tetris2P.TetrisServer.ClientNode;
 import Tetris2P.Board.*;
 import 	ocsf.client.*;
 
@@ -68,6 +69,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.TreeSet;
 
 /**
  * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
@@ -342,18 +344,17 @@ public class Tetris2P extends JFrame implements Runnable
 	   /**
 	    * GUI componenent that displays list of users
 	    **/
-	    @SuppressWarnings("rawtypes")
-		private final DefaultListModel userList;
+		private final DefaultListModel<String> userList;
 		/**
-		 * LinkedList to hold the list of players
+		 * TreeSet to hold the list of players
 		**/
-	    private final LinkedList<String> users; 
+	    private TreeSet<ClientNode> users;
 	    /**
 		 * {@code JScrollPane} to show the list of players
 		**/
 		private final  JScrollPane scrollPane; 
 		/**
-		 * constructor method for list.
+		 * Constructor method for list.
 		**/
 	    @SuppressWarnings({ "rawtypes", "unchecked" })
 		protected PlayerList()
@@ -362,11 +363,9 @@ public class Tetris2P extends JFrame implements Runnable
 	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 	        
 	        // TODO
-	        users 	 = new LinkedList<String>();
-	        userList = new DefaultListModel();
+	        users 	 = new TreeSet<ClientNode>();
+	        userList = new DefaultListModel<String>();
 	        JList list 	 = new JList(userList);
-	        
-	        addUserToList("None");
 	        
 	        // Attach a ScrollPane to the list to make it scrollable
 	        scrollPane = new JScrollPane();
@@ -387,19 +386,51 @@ public class Tetris2P extends JFrame implements Runnable
 	        
 	        add(label, BorderLayout.NORTH);
 	        add(scrollPane, BorderLayout.CENTER);
-	        
 	    }
 
 	    /**
 	     * Adds the given player's name into the list
 	     * 
-	     * @param username {@code String} name of player.
+	     * @param newUser {@code String} name of player.
 	     */
-	    @SuppressWarnings("unchecked")
-		public void addUserToList(String username)
+		public void addUserToList(ClientNode newUser)
 	    {
-	    	users.addLast(username); //add to end of list so the new user will be last in the queue to play
-	    	userList.addElement(username); //adds a user to the list GUI
+	    	users.add(newUser); //add to end of list so the new user will be last in the queue to play
+	    	userList.addElement(newUser.name); //adds a user to the list GUI
+	    }
+	    
+	    /**
+	     *  Updates the playerlist.
+	     * 
+	     * @param playerList a {@code TreeSet} of {@code ClientNode} of players.
+	     */
+		public void updatePlayerList( TreeSet<ClientNode> playerList)
+	    {
+			users = playerList;
+			
+			// Take one user each time from local list
+			// Remove missing players if found
+			for ( ClientNode node :  users)
+			{
+				// If local player not in new list remove them.
+				if (!playerList.contains(node.name))
+				{
+					users.remove(node);
+					userList.removeElement(node.name);
+				}
+				
+			}
+			// Take one user each time from remote list
+			// Add new players if found 
+			for ( ClientNode node :  playerList)
+			{
+				if (!users.contains(node.name))
+				{
+					users.add(node);
+					userList.addElement(node.name);
+				}
+			}
+			
 	    }
 
 	    /**
@@ -538,7 +569,7 @@ public class Tetris2P extends JFrame implements Runnable
 		}
 
 		/**
-		 * 
+		 * Handles events fired off by buttons presses.
 		 */
 		@Override
 		public void actionPerformed(ActionEvent e)
@@ -807,7 +838,7 @@ public class Tetris2P extends JFrame implements Runnable
 			if(((String) msg).startsWith("/"))
 				commandMessage(((String) msg).substring(1));
 			//adding a new user into the list of connected users
-			else if(((String) msg).startsWith("aUser")){
+			/*else if(((String) msg).startsWith("aUser")){
 				String newUser = ((String) msg).substring(1); //removes the 'a' that identifies the message as a user addition
 				playerList.addUserToList(newUser);
 			}
@@ -815,7 +846,7 @@ public class Tetris2P extends JFrame implements Runnable
 			else if(((String) msg).startsWith("rUser")){ 
 				String newUser = ((String) msg).substring(1); //removes the 'r' that identifies the message as a user deletion
 				playerList.removeUserFromList(newUser);
-			}
+			}*/
 			else
 				clientUI.display("> "+msg.toString(), Color.LIGHT_GRAY);
 			}
@@ -1007,7 +1038,15 @@ public class Tetris2P extends JFrame implements Runnable
 			
 			try 
 			{
-				tetrisServer.listen(); //Start listening for connections
+				String separator = System.getProperty("file.separator");
+				String classpath = System.getProperty("java.class.path");
+				String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+				
+				ProcessBuilder processBuilder = new ProcessBuilder(path, "-cp", classpath, ServerConsole.class.getName());
+				Process process = processBuilder.start();
+				//process.waitFor();
+				
+				//tetrisServer.listen(); //Start listening for connections
 			}
 			catch (BindException e)
 			{
