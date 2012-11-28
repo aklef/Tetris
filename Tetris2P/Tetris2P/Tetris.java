@@ -24,8 +24,8 @@ import Tetris2P.Tetris2P.TetrisClient;
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
  */
-public class Tetris extends JPanel{
-
+public class Tetris extends JPanel
+{
     /**
      * The width of the game.
      */
@@ -189,8 +189,8 @@ public class Tetris extends JPanel{
 			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
 			add(previewNextPieceArea, BorderLayout.EAST);
 
-			setFocusable(false);
-			setVisible(true);
+			//setFocusable(false);
+			//setVisible(true);
 		}
 
 		/**
@@ -250,8 +250,8 @@ public class Tetris extends JPanel{
 	    		piece = new Shape();
 	    		piece.setShape(Tetromino.NoShape);
 
-	    		setFocusable(false);
-	    		setVisible(true);
+	    		//setFocusable(false);
+	    		//setVisible(true);
 	    	}
 
 	    	/**
@@ -316,7 +316,7 @@ public class Tetris extends JPanel{
 		        {
 		            this.overlayText = overlayText;
 
-		            setFocusable(false);
+		            //setFocusable(false);
 		            //setOpaque(false);
 
 		            alpha = 0.75f;

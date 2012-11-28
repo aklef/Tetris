@@ -87,7 +87,7 @@ public class TetrisServer extends AbstractServer
         	commandMessage(((String) msg).substring(1), client);
       	else{
       	    serverOutput.display(("["+ client.getInfo("ID") + "] " + msg));
-        	sendToAllClients(msg);
+        	sendToAllClients("["+client.getInfo("ID")+"] "+msg);
       	}
     }
     catch(Exception e)

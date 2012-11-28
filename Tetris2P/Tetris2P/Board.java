@@ -9,6 +9,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -33,7 +35,7 @@ import Tetris2P.Tetris2P.ToolBar;
  * @author Dmitry Anglinov
  */
 @SuppressWarnings("unused")
-public class Board extends JPanel implements ActionListener {
+public class Board extends JPanel implements ActionListener, MouseListener {
 
     /**
      * The width of the board units of blocks.
@@ -365,7 +367,7 @@ public class Board extends JPanel implements ActionListener {
 		}
 		catch (InterruptedException e){}
         
-        pause();
+        toolBar.getPlayPauseButton().doClick();
     }
     
     /**
@@ -385,7 +387,7 @@ public class Board extends JPanel implements ActionListener {
         	client.quit();
         }
         repaint();
-        pause();
+        toolBar.getPlayPauseButton().doClick();
     }
     
     //*************************************LOGIC*************************************//
@@ -499,8 +501,8 @@ public class Board extends JPanel implements ActionListener {
         if (!isFallingFinished)
             newPiece();
         
-        if (client != null)
-        	sendUpdateToServer();
+        //if (client != null)
+        	//sendUpdateToServer();
         
     }
 
@@ -873,7 +875,6 @@ public class Board extends JPanel implements ActionListener {
                      toolBar.getRestartButton().doClick(); //toggles game restart
                      break;
                  case 'P': case 'p':
-                	 
                     toolBar.getPlayPauseButton().doClick(); //toggles the pause icon
                     break;
                  case 'M': case 'm':
@@ -886,7 +887,8 @@ public class Board extends JPanel implements ActionListener {
                  return;
              
              // Switch on input key value
-             switch (keycode){
+             switch (keycode)
+             {
              case KeyEvent.VK_UP: case 'W': case 'w': // rotate
             	 synchronized(timer) {
             		 tryMove(curPiece.rotate(), curX, curY);
@@ -935,6 +937,29 @@ public class Board extends JPanel implements ActionListener {
          }
      }
     
+    /**
+     * 
+     */
+    public void mouseClicked(MouseEvent e)
+    {
+		requestFocusInWindow();
+    }
+    public void mouseEntered(MouseEvent e)
+    {
+		//requestFocusInWindow();
+    }
+    public void mouseExited(MouseEvent e)
+    {
+		//requestFocusInWindow();
+    }
+    public void mousePressed(MouseEvent e)
+    {
+		//requestFocusInWindow();
+    }
+    public void mouseReleased(MouseEvent e)
+    {
+		//requestFocusInWindow();
+    }
     //*************************************UPDATER*************************************//
     
     /**
