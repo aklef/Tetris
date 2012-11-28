@@ -133,7 +133,11 @@ public class Tetris2P extends JFrame implements Runnable
     /**
      * Boolean variable that determines if the game will make sounds..
      */
-    public boolean isMusicOn = true;
+    private boolean isMusicOn = false;
+    /**
+     * Boolean variable that determines if the game is being played on a server.
+     */
+    private boolean isMultiplayerOn = false;
     /**
      * Music soundtrack for the game
      */
@@ -177,7 +181,7 @@ public class Tetris2P extends JFrame implements Runnable
         localGame	 = new Tetris(outputBox, toolBar, tetrisClient);
         
         opponentGame = new Tetris();
-        serverInfo	 = new JLabel("TESTING");
+        serverInfo	 = new JLabel("Single Player Mode");
         inputBox	 = new InputBox();
         
         createAndShowGUI();
@@ -275,7 +279,7 @@ public class Tetris2P extends JFrame implements Runnable
         add(bottom, BorderLayout.SOUTH);
         
         // ABSOLUTELY REQUIRED - DO NOT FUCK WITH THE NUMBERS
-        getContentPane().setPreferredSize(new Dimension(685,573));
+        getContentPane().setPreferredSize(new Dimension(668,573));
         // Necessary
         pack();
         
@@ -531,6 +535,14 @@ public class Tetris2P extends JFrame implements Runnable
 		 * 
 		 */
 		private final ImageIcon restart;
+	    /**
+	     * Label that displays game status information.
+	     */
+	    private final JLabel gameStatus;
+	    /**
+	     * Label that displays te number of lines removed druing this game.
+	     */
+	    private final JLabel linesRemoved;
 		
 		/**
 		 * Constructor method to create toolbar of icons
@@ -548,6 +560,16 @@ public class Tetris2P extends JFrame implements Runnable
 	        play = 		new ImageIcon(getClass().getResource("/Icons/play.png"));
 	        pause = 	new ImageIcon(getClass().getResource("/Icons/pause.png"));
 	        restart = 	new ImageIcon(getClass().getResource("/Icons/restart.png"));
+	        
+	        // Labels
+	        gameStatus	 = new JLabel("");
+	        linesRemoved = new JLabel("Lines Removed: 0");
+	        
+	        linesRemoved.setForeground(Color.green);
+            
+	        gameStatus.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
+	        linesRemoved.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
+	        left.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
 	        
 	        // Defaults to the sound being on
 	        soundButton 	= new JButton("Sound Off", soundOff );
@@ -585,17 +607,22 @@ public class Tetris2P extends JFrame implements Runnable
 	        restartButton.addActionListener(this);
 	        
 	        //adding the buttons to the JPanel and displaying to the UI
-	        left.add(playPauseButton);
-	        left.add(restartButton);
-	        left.add(soundButton);
+	        left.add(linesRemoved);
+	        left.add(gameStatus);
+	        
+	        right.add(playPauseButton);
+	        right.add(restartButton);
+	        right.add(soundButton);
 	        
 	        add(left);
 	        add(right);
 	        
 	        // Disabling button auto-focus
+	        linesRemoved.setFocusable(false);
 	        playPauseButton.setFocusable(false);
 	        soundButton.setFocusable(false);
 	        restartButton.setFocusable(false);
+	        gameStatus.setFocusable(false);
 		}
 
 		/**
@@ -667,11 +694,24 @@ public class Tetris2P extends JFrame implements Runnable
 	    }
 		
 	    /**
-	     * Gets the restart button so the icon can 
+	     * Gets the restart button.
 	     * 
 	     */
 	    public JButton getRestartButton(){
 	    	return restartButton;
+	    }
+	    /**
+	     * @return the game status label.
+	     */
+	    public JLabel getStatusLabel(){
+	    	return gameStatus;
+	    }
+		
+	    /**
+	     * @return the Lines removed label.
+	     */
+	    public JLabel getLinesRemLabel(){
+	    	return linesRemoved;
 	    }
 	}
 	
@@ -848,6 +888,9 @@ public class Tetris2P extends JFrame implements Runnable
 	     * 
 	     */
 	    private PlayerList playerList;
+	    
+	    //****************************CONSTRUCTOR****************************//
+	    
 		/**
 		 * Constructs an instance of the Tetris client.
 		 * Initially calls the Abstractclient constructor
@@ -863,7 +906,7 @@ public class Tetris2P extends JFrame implements Runnable
 			playerList = userList;
 		}
 
-		//Instance methods ************************************************
+		//****************************MESSAGES****************************//
 		  
 		/**
 		 * This method handles all data that comes in from the server.
@@ -977,17 +1020,17 @@ public class Tetris2P extends JFrame implements Runnable
 				// Control methods
 				
 				//Terminates the client
-				case ("start"):
-					start();
-				break;
-				//Terminates the client
 				case ("exit"): case ("quit"):
 					quit();
 				break;
 				
 				//The client won the match.
-				case ("GameOver"):
-					matchWon();
+				case ("GameWon"):
+					matchOver(true, operand);
+				break;
+				//The client lost the match.
+				case ("GameLost"):
+					matchOver(false, operand);
 				break;
 				//*******************************************************************//
 				// Setter methods
@@ -1041,12 +1084,16 @@ public class Tetris2P extends JFrame implements Runnable
 			}
 		}
 		
+		//****************************CONNECTIONS****************************//
+		
 		/**
 		 * Method informs the user server has been terminated and closes the client
 		 */
 		protected void connectionClosed(){
 			clientUI.display("Disconnected from server. Terminating client.", Color.RED);
 			serverInfo.setText("");
+			isMultiplayerOn = false;
+			localGame.getBoard().setMultiplayerEnabled(isMultiplayerOn);
 		}
 		
 		/**
@@ -1063,8 +1110,12 @@ public class Tetris2P extends JFrame implements Runnable
 		protected void connectionEstablished()
 		{
 			clientUI.display("Connected to server.");
-			serverInfo.setText(getHost()+" : "+getPort());
+			serverInfo.setText("Multiplayer @ "+getHost()+" : "+getPort());
+			isMultiplayerOn = true;
+			localGame.getBoard().setMultiplayerEnabled(isMultiplayerOn);
 		}
+		
+		//****************************GETTER/SETTER****************************//
 		
 		/**
 		 * Returns the chat interface of the TetrisClient
@@ -1073,31 +1124,8 @@ public class Tetris2P extends JFrame implements Runnable
 		public ChatIF getClientUI(){
 			return clientUI;
 		}
-
-		/**
-		 * This method starts the server.
-		 */
-		public void start()
-		{
-			//tetrisServer = new TetrisServer(DEFAULT_PORT, clientUI);
-			//TODO Should call the Serverconsole class from the command line
-			/*
-			try 
-			{
-				//tetrisServer.listen(); //Start listening for connections
-			}
-			catch (BindException e)
-			{
-				clientUI.display("[ERROR] Port is in use", Color.RED);
-			}
-			catch (IOException ex) 
-			{
-				clientUI.display("[ERROR] Could not start server", Color.YELLOW);
-				//System.exit(0);
-			}*/
-			// connects with default parameters.
-			connect();
-		}
+		
+		//********************************CONTROL********************************//
 		
 		/**
 		 * This method terminates the client.
@@ -1114,10 +1142,17 @@ public class Tetris2P extends JFrame implements Runnable
 		
 		/**
 		 * Resets this player's opponent ghost board and display a win message.
+		 * 
+		 * @param playerWon is {@code true} if this player won the match.
+		 * @param opponent this player's opponent.
 		 */
-		private void matchWon()
+		private void matchOver(boolean playerWon, String opponent)
 		{
-			clientUI.display("You won!", Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
+			if (playerWon)
+				clientUI.display("You won!", Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
+			else
+				clientUI.display("You lost to "+opponent, Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
+			
 			localGame.getBoard().restart();
 			opponentGame.getBoard().restart();
 		}

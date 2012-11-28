@@ -67,11 +67,15 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      */
 	private static int	INITIAL_DELAY = 700;
     /**
+     * The Initial delay before starting to generate game ticks in miliseconds.
+     */
+	private static int	PIECE_DROPPED_LOCK_DELAY = 150;
+    /**
      * The delay between game ticks in miliseconds.
      */
 	private static int	DELAY = 600;
     /**
-     * The {@code Timer} object used to generate game ticks.
+     * The {@code Ticker} Thread that generates board update events.
      */
     private Ticker timer;
     /**
@@ -131,10 +135,6 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      * falling shape cycle
      */
     private boolean isPieceHeld;
-    /** 
-     * The timer thread that generates board update events.
-     */
-    private Thread myTimer;
     /**
      * Array of {@code Tetrominoes} that encodes all the Tetrominoes on the board into a single array.
      */
@@ -160,9 +160,17 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      */
     private boolean isAudioPlaybackAllowed;
     /**
+     * Boolean variable that determines if the board must update a server.
+     */
+    private boolean isMultiplayerEnabled;
+    /**
      * This is a reference to this Board's parent's parent's client.
      */
     private TetrisClient client;
+    /**
+     * The length of the current game of tetris, minus game pauses.
+     */
+    private long game_duration;
 
     /**
      * Instance of the tetris client that allows updates to the server
@@ -223,7 +231,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     public boolean getBoardAudio(){
     	return isAudioPlaybackAllowed;
     }
-    
+
     /**
      * Setting board audio
      * 
@@ -237,23 +245,25 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     	else
     		tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
     }
-    
+
     /**
-     * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
+     * Used to output on the client's UI.
+     * 
+     * @param tetrisClient this board's parent's client instance.
      */
-    public synchronized void actionPerformed(ActionEvent e)
+    protected void setClient(TetrisClient tetrisClient)
     {
-    	if (isFallingFinished)
-        { // current piece in its final spot
-            isFallingFinished = false; // reset falling
-            isPieceHeld = false; // reset swap priviledge
-            newPiece();
-        }
-        else 
-        {// current piece still falling
-        	oneLineDown();
-        }
-    	repaint();
+        this.client = tetrisClient;
+    }
+
+    /**
+     * Toggle the board's server updates.
+     * 
+     * @param b the value of {@code isMultiplayerEnabled} for this board.
+     */
+    protected void setMultiplayerEnabled(boolean b)
+    {
+        isMultiplayerEnabled = b;
     }
 
     /**
@@ -281,16 +291,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     }
     
 
-	/**
-	 * @param tetrisClient
-	 */
-	public void setClient(TetrisClient tetrisClient)
-	{
-		this.client = tetrisClient;
-	}
-    
     //*************************************CONTROL*************************************//
-    
 
     /**
      * Public method used to start the timer for this board.
@@ -304,6 +305,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         
         isStarted = true;
         isFallingFinished = false;
+        isMultiplayerEnabled = false;
         isPieceHeld = false;
         numLinesRemoved = 0;
         clearBoard();
@@ -312,10 +314,8 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         timer = new Ticker(DELAY, this);
         timer.setInitialDelay(INITIAL_DELAY);
         
-        myTimer = new Thread(timer);
-        
         newPiece();
-        myTimer.start();
+        timer.start();
         pause();
     }
 
@@ -332,9 +332,10 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         isPaused = !isPaused;
         timer.setPaused(isPaused);
         if (isPaused) { //pausing the game
-            display(" Game [P]aused. ", Color.magenta);
+        	toolBar.getStatusLabel().setForeground(Color.magenta);
+            toolBar.getStatusLabel().setText(" Game [P]aused. ");
         } else { // resuming the game
-            display(" "+numLinesRemoved, Color.green);
+            
         }
         repaint();
     }
@@ -355,7 +356,8 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         numLinesRemoved = 0;
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
-        display(" Game [P]aused", Color.magenta);
+        toolBar.getStatusLabel().setForeground(Color.magenta);
+        toolBar.getStatusLabel().setText(" Game [P]aused. ");
         
         playSoundtrack();
         clearBoard();
@@ -363,7 +365,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         repaint();
         try
 		{
-			Thread.sleep(300);
+			Thread.sleep(100);
 		}
 		catch (InterruptedException e){}
         
@@ -375,7 +377,8 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      */
     public void gameOver()
     {
-        display(" Game over. Press [Q]uit [R]estart", Color.ORANGE);
+        toolBar.getStatusLabel().setForeground(Color.ORANGE);
+        toolBar.getStatusLabel().setText(" Game over. Press [Q]uit [R]estart");
         
         try
         {
@@ -485,7 +488,8 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     {
         try
 		{
-			Thread.sleep(100);
+			// Delay before processing piece dropped.
+        	Thread.sleep(PIECE_DROPPED_LOCK_DELAY);
 		}
 		catch (InterruptedException e){}
     	
@@ -500,9 +504,9 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         
         if (!isFallingFinished)
             newPiece();
-        
-        //if (client != null)
-        	//sendUpdateToServer();
+        if (isMultiplayerEnabled)
+        	
+        	sendUpdateToServer();
         
     }
 
@@ -581,7 +585,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 		//Updating the total number of lines removed by the user
         if (numFullLines > 0) {
             numLinesRemoved += numFullLines;
-            display(String.valueOf(numLinesRemoved));
+            toolBar.getLinesRemLabel().setText("Lines Removed: "+String.valueOf(numLinesRemoved));
             isFallingFinished = true;
             isPieceHeld = false;
             curPiece.setShape(Tetromino.NoShape);
@@ -589,6 +593,25 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         }
      }
 
+    
+    /**
+     * Receives a game tick update event from the {@code Timer} class every {@code timer} miliseconds.
+     */
+    public synchronized void actionPerformed(ActionEvent e)
+    {
+    	if (isFallingFinished)
+        { // current piece in its final spot
+            isFallingFinished = false; // reset falling
+            isPieceHeld = false; // reset swap priviledge
+            newPiece();
+        }
+        else 
+        {// current piece still falling
+        	oneLineDown();
+        }
+    	repaint();
+    }
+    
     //*************************************SERVER-LOGIC*************************************//
     
     /**
@@ -619,9 +642,9 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     	}
     	catch(IOException e)
 		{
-			display("Could not send the updater to opponent. Terminating client.");
+			display("[ERROR] Could not send the updater to opponent. Terminating client.", Color.RED);
 		}
-    	client.quit();
+    	//client.quit();
 	}
     
     //*************************************TICKER*************************************//
@@ -656,13 +679,13 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 		}
 		public void setPaused(boolean pause) { 
 			m_paused = pause;
-			if(m_paused) {
-				tetrisTheme.stop();
-				isAudioPlaybackAllowed = false;
+			if(m_paused && isAudioPlaybackAllowed) {
+				if(isAudioPlaybackAllowed)
+					tetrisTheme.stop();
 			}
 			else {
-				tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
-				isAudioPlaybackAllowed = true;
+				if(isAudioPlaybackAllowed)
+					tetrisTheme.loop(Clip.LOOP_CONTINUOUSLY);
 				synchronized(this) {
 					this.notify();
 				}
@@ -774,18 +797,34 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         g.drawLine(x + squareWidth() - 1, y + squareHeight() - 1, x + squareWidth() - 1, y + 1);
         
     }
-
+    
+    /**
+     * 
+     * @param message
+     * @param color
+     * @param font
+     */
     private void display(String message, Color color, Font font)
 	{
 		if (output!=null)
 			output.display(message, color, font);
 	}
-
+    
+    /**
+     * 
+     * @param message
+     * @param color
+     */
     private void display(String message, Color color)
 	{
 		if (output!=null)
 			output.display(message, color);
 	}
+    
+    /**
+     * 
+     * @param message
+     */
     private void display(String message)
 	{
 		if (output!=null)

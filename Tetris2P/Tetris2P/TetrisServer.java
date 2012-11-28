@@ -65,7 +65,7 @@ public class TetrisServer extends AbstractServer
   {
 	// Object received is an Updater.
 	if (msg instanceof Updater)
-	{	
+	{
 		//sending game command messages to the commandMessage method to be implemented
 		if(((Updater) msg).getCommandMessage() != null)
 		{
@@ -158,7 +158,8 @@ public class TetrisServer extends AbstractServer
 	
 	switch (instruction) {
 		
-		//TETRIS COMMAND MESSAGES
+		//*******************************************************************//
+		// MULTIPLAYER TETRIS COMMAND MESSAGES
 		
 		//informs the opposing player of their victory
 		case "GameOver":
@@ -433,16 +434,20 @@ public class TetrisServer extends AbstractServer
     {
   	try
   	{
-  		//removing the current client is an opponent of another client
-  		//this method will also disconnect the current client
+  		findOpponent(client).send("");
+  		// Current client is an opponent of another client
+  		// will also disconnect the current client
   		removeOpponent(client);
   		
   	}
   	catch (NullPointerException ex)
   	{
   		serverOutput.display("[ERROR] Could not remove the opponent of client "+client.getInfo("ID")+" at "+client.getInetAddress());
-  		ex.printStackTrace();
   	}
+	catch (IOException e)
+	{
+		serverOutput.display("[ERROR] Could not send removal notification the opponent of client "+client.getInfo("ID")+" at "+client.getInetAddress());
+	}
   	
   	// Notifying other clients
   	serverOutput.display("[INFO] Client " + client.getInfo("ID") + " disconnected.");
@@ -451,8 +456,9 @@ public class TetrisServer extends AbstractServer
     
     synchronized protected void clientException(ConnectionToClient client, Throwable exception)
     {
-  	
-  	  clientDisconnected(client);
+    	serverOutput.display("[ERROR] Connection with client "+client.getInfo("ID")+" at "+client.getInetAddress()+" terminated unexpectedly.");
+    	
+    	clientDisconnected(client);
     }
     
   //*************************************CONTROL*************************************//
