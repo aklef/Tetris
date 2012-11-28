@@ -567,8 +567,8 @@ public class Tetris2P extends JFrame implements Runnable
 	        
 	        linesRemoved.setForeground(Color.green);
             
-	        gameStatus.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
-	        linesRemoved.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
+	        //gameStatus.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
+	        //linesRemoved.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
 	        left.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
 	        
 	        // Defaults to the sound being on

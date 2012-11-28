@@ -335,7 +335,8 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         	toolBar.getStatusLabel().setForeground(Color.magenta);
             toolBar.getStatusLabel().setText(" Game [P]aused. ");
         } else { // resuming the game
-            
+        	toolBar.getStatusLabel().setForeground(Color.green);
+            toolBar.getStatusLabel().setText(" Playing. ");
         }
         repaint();
     }
@@ -351,15 +352,16 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         isStarted = true;
         isFallingFinished = false;
         isFirstPieceMade = false;
-        isPieceHeld = false;
-        isAudioPlaybackAllowed = true;
+        //isAudioPlaybackAllowed = false;
+        isPieceHeld = false; 
         numLinesRemoved = 0;
+        toolBar.getLinesRemLabel().setText("Lines Removed: "+String.valueOf(numLinesRemoved));
         holdPiece.setShape(Tetromino.NoShape);
         nextPiece.setShape(Tetromino.NoShape);
         toolBar.getStatusLabel().setForeground(Color.magenta);
         toolBar.getStatusLabel().setText(" Game [P]aused. ");
         
-        playSoundtrack();
+        //playSoundtrack();
         clearBoard();
         newPiece();
         repaint();
@@ -377,19 +379,30 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      */
     public void gameOver()
     {
+    	isStarted = false;
+        isFallingFinished = false;
+        isFirstPieceMade = false;
+        isPieceHeld = false;
+        isPaused = true;
+        curPiece.setShape(Tetromino.NoShape);
         toolBar.getStatusLabel().setForeground(Color.ORANGE);
         toolBar.getStatusLabel().setText(" Game over. Press [Q]uit [R]estart");
-        
-        try
-        {
-            client.sendToServer(new Updater("/GameOver"));
-        }
-        catch (IOException e)
-        {
-        	display(" Could not reach oponent for game over confirmation", Color.RED);
-        	client.quit();
-        }
+        timer.setPaused(isPaused);
         repaint();
+        //pause();
+        
+        if(isMultiplayerEnabled)
+        {
+        	try
+            {
+                client.sendToServer(new Updater("/GameOver"));
+            }
+            catch (IOException e)
+            {
+            	display(" Could not reach oponent for game over confirmation", Color.RED);
+            	client.quit();
+            }
+        }
         toolBar.getPlayPauseButton().doClick();
     }
     
@@ -412,13 +425,11 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         
         // Resets the cursor's position to the top of the board.
         curX = (SQUARES_IN_WIDTH / 2) + 1;
-        // XXX WHYYYYYYY
+        // Hi.
         curY = SQUARES_IN_HEIGHT - 1 + curPiece.minY();
-        // XXX Determines if the game is over.
-        boolean isGameOver = !tryMove(curPiece, curX, curY);
-        if (isGameOver) {
+        // Determines if the game is over.
+        if (!tryMove(curPiece, curX, curY))
         	gameOver();
-        }
     }
 
     
@@ -473,41 +484,45 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      * Method that tries to lower the current piece by one line.
      * If it cannot then the piece is in its final location.
      */
-    private synchronized void oneLineDown()
+    private void oneLineDown()
     {
-        // attempts to lower the piece
-    	if (!tryMove(curPiece, curX, curY - 1))
-    		// if cannot lower piece
-            pieceDropped();
+    	synchronized (timer)
+    	{
+    		// attempts to lower the piece
+    		if (!tryMove(curPiece, curX, curY - 1))
+        		// if cannot lower piece
+                pieceDropped();
+    	}
     }
 
     /**
      * Method called when a shape is in its final location.
      */
-    private synchronized void pieceDropped()
+    private void pieceDropped()
     {
-        try
-		{
-			// Delay before processing piece dropped.
-        	Thread.sleep(PIECE_DROPPED_LOCK_DELAY);
-		}
-		catch (InterruptedException e){}
-    	
-    	for (int i = 0; i < 4; ++i) {
-            int x = curX + curPiece.x(i);
-            int y = curY - curPiece.y(i);
-            board[(y * SQUARES_IN_WIDTH) + x] = curPiece.getShape();
-        }
-        
-        removeFullLines();
-        isPieceHeld = false;
-        
-        if (!isFallingFinished)
-            newPiece();
-        if (isMultiplayerEnabled)
+    	synchronized (timer)
+    	{
+        	try
+    		{
+    			// Delay before processing piece dropped.
+            	Thread.sleep(PIECE_DROPPED_LOCK_DELAY);
+    		}
+    		catch (InterruptedException e){}
         	
-        	sendUpdateToServer();
-        
+        	for (int i = 0; i < 4; ++i) {
+                int x = curX + curPiece.x(i);
+                int y = curY - curPiece.y(i);
+                board[(y * SQUARES_IN_WIDTH) + x] = curPiece.getShape();
+            }
+            
+            removeFullLines();
+            isPieceHeld = false;
+            
+            if (!isFallingFinished)
+                newPiece();
+            if (isMultiplayerEnabled)
+            	sendUpdateToServer();
+    	}
     }
 
     /**
@@ -532,24 +547,26 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      * @param newY The desired Y position
      * @return true If move operation is succesful
      */
-    private synchronized boolean tryMove(Shape newPiece, int newX, int newY)
+    private boolean tryMove(Shape newPiece, int newX, int newY)
     {
-    	for (int i = 0; i < 4; ++i)
+    	synchronized(timer)
     	{
-            int x = newX + newPiece.x(i);
-            int y = newY - newPiece.y(i);
-            // if the x value is out of range return
-            if (x < 0 || x >= SQUARES_IN_WIDTH || y < 0 || y >= SQUARES_IN_HEIGHT || shapeAt(x, y) != Tetromino.NoShape)
-                return false;
-        }
-        
-        curPiece = newPiece;
-        curX = newX;
-        curY = newY;
-        repaint();
-        
-        return true;
-    
+    		for (int i = 0; i < 4; ++i)
+        	{
+                int x = newX + newPiece.x(i);
+                int y = newY - newPiece.y(i);
+                // if the x value is out of range return
+                if (x < 0 || x >= SQUARES_IN_WIDTH || y < 0 || y >= SQUARES_IN_HEIGHT || shapeAt(x, y) != Tetromino.NoShape)
+                    return false;
+            }
+            
+            curPiece = newPiece;
+            curX = newX;
+            curY = newY;
+            repaint();
+            
+            return true;
+    	}
     }
 
     /**
@@ -679,7 +696,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 		}
 		public void setPaused(boolean pause) { 
 			m_paused = pause;
-			if(m_paused && isAudioPlaybackAllowed) {
+			if(m_paused) {
 				if(isAudioPlaybackAllowed)
 					tetrisTheme.stop();
 			}
