@@ -521,7 +521,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
             if (!isFallingFinished)
                 newPiece();
             if (isMultiplayerEnabled)
-            	sendUpdateToServer();
+            	sendUpdateToServer(new Updater());
     	}
     }
 
@@ -647,15 +647,15 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     }
     
     /**
-     * This method will send this {@code Board}'s game information to the server so 
-     * the "opponent board" of the opposing player can be updated.
+     * This method will send this player's {@code Board} game information to the server so 
+     * that his opponent's "opponent board" can be updated.
      */
-    private void sendUpdateToServer()
+    private void sendUpdateToServer(Object obj)
     {
     	//Copying the current state of the game and passing it to the server
     	try
     	{
-    		client.sendToServer(new Updater());
+    		client.sendToServer(obj);
     	}
     	catch(IOException e)
 		{

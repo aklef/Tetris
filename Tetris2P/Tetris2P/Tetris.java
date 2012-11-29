@@ -51,6 +51,7 @@ public class Tetris extends JPanel
      */
     private boolean 		isAudioPlaybackAllowed;
 
+
     //*************************************CONSTRUCTORS*************************************//
     
     /**

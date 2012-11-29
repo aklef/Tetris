@@ -61,33 +61,45 @@ public class TetrisServer extends AbstractServer
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient (Object msg, ConnectionToClient client)
+  public void handleMessageFromClient (Object obj, ConnectionToClient client)
   {
 	// Object received is an Updater.
-	if (msg instanceof Updater)
+	if ( obj instanceof Updater)
 	{
-		//sending game command messages to the commandMessage method to be implemented
-		if(((Updater) msg).getCommandMessage() != null)
+		Updater update = (Updater) obj;
+		String command = update.getCommandMessage();
+		
+		if ( command != "")
 		{
 			try
 			{
-				commandMessage(((Updater) msg).getCommandMessage(), client);
+				tetrisCommandMessage(command, client);
+			}
+			catch (IOException e) { serverOutput.display("[ERROR] Could not parse command message."); }
+		}
+		else
+		{// Send game command messages to be executed
+			try
+			{
+				commandMessage(update.getCommandMessage(), client);
 			}
 			catch(IOException e) { serverOutput.display("[ERROR] Could not parse client input"); }
 		}
 		
-		performUpdate((Updater) msg, client);
+		performUpdate(update, client);
 		return;
 	}
+	else 
 	// Continue assuming a string message has been sent to the server
     try
     {
-        //If the message was a command message, send the instruction for interpretation
-    	if(((String) msg).startsWith("#"))
-        	commandMessage(((String) msg).substring(1), client);
+    	String command = (String) obj;
+    	//If the message was a command message, send the instruction for interpretation
+    	if(command.startsWith("#"))
+        	commandMessage(command.substring(1), client);
       	else{
-      	    serverOutput.display(("["+ client.getInfo("ID") + "] " + msg));
-        	sendToAllClients("["+client.getInfo("ID")+"] "+msg);
+      	    serverOutput.display(("["+ client.getInfo("ID") + "] " + command));
+        	sendToAllClients("["+client.getInfo("ID")+"] "+command);
       	}
     }
     catch(Exception e)
@@ -124,6 +136,56 @@ public class TetrisServer extends AbstractServer
 	    }
 	  
   }
+  /**
+	 * This method will determine the type of command that was sent by the server
+	 * @param message The message from the server.
+	 */
+	@SuppressWarnings("unused")
+	public void tetrisCommandMessage( String msg, ConnectionToClient client)  throws IOException
+	{
+		//initialize local variables
+		String message[]   = msg.split(" ");
+		String instruction = "";
+		String operand     = "";
+		
+		boolean hasWhiteSpace = false;
+		
+		//Find if multipart message
+		if ( message.length != 1) hasWhiteSpace = true;
+		
+		//If there is a white space, we must load the instruction with its operand
+		if(hasWhiteSpace) 
+		{
+			instruction = message[0];
+			operand 	= message[1];
+		}
+		else //If there is no white space, then there is no operand and only load the instruction
+		instruction = message[0];
+		
+		// ****************************************************************************************//
+		// List of all client-side usable commands
+		
+		switch (instruction.toLowerCase())
+		{
+			//*******************************************************************//
+			// Control methods
+			
+			//The client won the match.
+			case ("gameWon"):
+				findOpponent(client).send("");
+			break;
+			
+			//The client lost the match.
+			case ("gameLost"):
+				findOpponent(client).send("");
+			break;
+			
+			//The match can start.
+			case ("gameReady"):
+				findOpponent(client).send("");
+			break;
+		}
+	}
   
   /** 
     * This method will determine the type of command that is received by the server admin.
@@ -131,7 +193,7 @@ public class TetrisServer extends AbstractServer
     * @param msg The {@code String} message from the UI.
     * @param client The {@code ConnectionToclient} that this message came from.
     */ 
-  private void commandMessage(String msg , ConnectionToClient client) throws IOException
+  private void commandMessage(String msg, ConnectionToClient client) throws IOException
   {
 	//initialize local variables
 	String message[]   = msg.split(" ");
@@ -562,7 +624,11 @@ public class TetrisServer extends AbstractServer
     	 * The ID of the opponent of the current client
     	 */
     	private Long opponentID;
-    	 
+    	/**
+    	 * The reafy state the current client
+    	 */
+    	private boolean reafy = false;
+    	
     	/**
     	 * Constructor used to create a default pair of client and opponent
     	 * @param playerID

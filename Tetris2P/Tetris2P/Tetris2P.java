@@ -10,7 +10,6 @@ import java.awt.AlphaComposite;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -42,29 +41,27 @@ import javax.swing.text.StyleContext;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
-
-import javax.swing.JList;
-import javax.swing.DefaultListModel;
-
-import javax.swing.JTextField;
-import javax.swing.JTextArea;
-import javax.swing.JButton;
-import javax.swing.ImageIcon;
-import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.HotBar.ShapeArea;
 import Tetris2P.TetrisServer.ClientNode;
 import Tetris2P.Board.*;
-import 	ocsf.client.*;
+import ocsf.client.*;
 
 
 import java.util.ArrayList;
@@ -137,6 +134,10 @@ public class Tetris2P extends JFrame implements Runnable
      * Boolean variable that determines if the game is being played on a server.
      */
     private boolean isMultiplayerOn = false;
+    /**
+     * If the client is ready in multiplayer.
+     */
+    private boolean isMultiplayerReady = false;
     /**
      * Music soundtrack for the game
      */
@@ -937,7 +938,11 @@ public class Tetris2P extends JFrame implements Runnable
     			//If the message was a command message, send the instruction for interpretation
     			if (message.startsWith("/"))
     			{
-    				commandMessage(message.substring(1));
+    				try
+					{
+						commandMessage(message.substring(1));
+					}
+					catch (IOException e) { clientUI.display("[ERROR] Could not parse command message.", Color.LIGHT_GRAY); }
     			}
     			else if (message.startsWith("[INFO]"))
     			{
@@ -974,10 +979,9 @@ public class Tetris2P extends JFrame implements Runnable
     			clientUI.display("Could not send message \"", Color.LIGHT_GRAY);
     			clientUI.display("&&"+message);
     			clientUI.display("&&\" to server.", Color.LIGHT_GRAY);
+    			
     			if (tetrisServer == null)
-    			{
     				clientUI.display("[WARNING] No server. Chat disabled.", Color.YELLOW);
-    			}
     		}
 		}
 		
@@ -1025,8 +1029,16 @@ public class Tetris2P extends JFrame implements Runnable
 				break;
 				
 				//The match can start.
-				case ("gameReady"):
-					matchOver(false, operand);
+				case ("ready"): case ("reafy"):
+					if (isMultiplayerOn && isMultiplayerReady)
+						toolBar.playPauseButton.doClick();
+					else 
+					{
+						clientUI.display("[INFO] Opponent ready! Do ", Color.BLUE);
+						clientUI.display("&&/ready", Color.GREEN);
+						clientUI.display("&& to start", Color.BLUE);
+						toolBar.getStatusLabel().setText("Do /ready to start!");
+					}
 				break;
 			}
 		}
@@ -1034,8 +1046,9 @@ public class Tetris2P extends JFrame implements Runnable
 		/**
 		 * This method will determine the type of command that was inputed by the user
 		 * @param message The message from the UI.
+		 * @throws IOException 
 		 */
-		public void commandMessage( String msg )
+		public void commandMessage( String msg ) throws IOException
 		{
 			//initialize local variables
 			String message[]   = msg.split(" ");
@@ -1076,6 +1089,17 @@ public class Tetris2P extends JFrame implements Runnable
 				
 				//*******************************************************************//
 				// Control methods
+				
+				//The player is ready.
+				case ("ready"): case ("reafy"):
+					if (isMultiplayerOn)
+					{
+						isMultiplayerReady = true;
+						sendToServer(localGame.getBoard().new Updater("reafy"));
+						toolBar.getStatusLabel().setText("Waiting for opponent to be ready!");
+						clientUI.display("[INFO] You are ready! Waiting for opponent to be ready.", Color.BLUE);
+					}
+				break;
 				
 				//Terminates the client
 				case ("exit"): case ("quit"):
@@ -1206,6 +1230,7 @@ public class Tetris2P extends JFrame implements Runnable
 			else
 				clientUI.display("You lost to "+opponent, Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
 			
+			isMultiplayerReady = false;
 			localGame.getBoard().restart();
 			opponentGame.getBoard().restart();
 		}
