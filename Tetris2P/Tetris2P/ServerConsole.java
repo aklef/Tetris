@@ -86,6 +86,14 @@ public void accept()
 	}
 }
 
+/**
+ * @return instance of TetrisServer
+ */
+public TetrisServer getTetrisServer(){
+	return server;
+}
+
+
 public static void main(String[] args) 
 {
 	int port = 0;

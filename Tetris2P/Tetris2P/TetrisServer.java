@@ -629,5 +629,11 @@ public class TetrisServer extends AbstractServer implements Serializable
   {
     System.out.println("Server closed.");
   }
+
+  /************************************* GETTER / SETTER*******************************************/
+  
+  public ArrayList getClientList(){
+	  return clientList;
+  }
   
 }

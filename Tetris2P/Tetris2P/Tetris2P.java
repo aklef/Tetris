@@ -155,23 +155,23 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
         toolBar		 = new ToolBar();
         
         // Sets default UIManager values
-        UIManager.put("nimbusBase", Color.BLACK);
+//        UIManager.put("nimbusBase", Color.BLACK);
         
-        try// Attemps to set the Nimbus L&F
-        {
-        	for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
-        	{
-        		if ("Nimbus".equals(info.getName()))
-        		{
-        			UIManager.setLookAndFeel(info.getClassName());
-        			break;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-        	// If Nimbus is not available, the GUI can be set to another look and feel.
-        }
+//        try// Attemps to set the Nimbus L&F
+//        {
+//        	for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
+//        	{
+//        		if ("Nimbus".equals(info.getName()))
+//        		{
+//        			UIManager.setLookAndFeel(info.getClassName());
+//        			break;
+//                }
+//            }
+//        }
+//        catch (Exception e)
+//        {
+//        	// If Nimbus is not available, the GUI can be set to another look and feel.
+//        }
         
         // Creating instances of elements
         userList	 = new PlayerList();
@@ -299,7 +299,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
      * Main method of the multiplayer Tetris game.
      */
     public static void main(String[] args) {
-    	new Tetris2P();
+    	Tetris2P Game = new Tetris2P();
     }
 
     /**
@@ -879,7 +879,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class TetrisClient extends AbstractClient implements Serializable
+	public class TetrisClient extends AbstractClient implements Serializable
 	{
 		/**
 		 * The interface type variable.  It allows the implementation of 
@@ -908,7 +908,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 		 * @param port The port number to connect on.
 		 * @param clientUI The interface type variable.
 		 */
-		protected TetrisClient(String host, int port, ChatIF clientUI, PlayerList userList)
+		public TetrisClient(String host, int port, ChatIF clientUI, PlayerList userList)
 		{
 			super(host, port); 
 			this.clientUI = (OutputBox) clientUI;
