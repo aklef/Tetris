@@ -224,7 +224,6 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
     }
     
     //*************************************SETTER/GETTER*************************************//
-    
     /**
      * Setting board audio
      * 
@@ -293,6 +292,13 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
     	return board[(y * SQUARES_IN_WIDTH) + x];
     }
     
+    /**
+     * @return holdPiece
+     */
+    
+    public Shape getHoldPiece(){
+    	return holdPiece;
+    }
 
     //*************************************CONTROL*************************************//
 

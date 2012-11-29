@@ -18,7 +18,7 @@ public class Shape implements Serializable{
      * The Tetromino enum holds markers for the 8 pieces used in the Tetris game, 
      * including the empty shape.
      */
-	protected enum Tetromino { NoShape, ZShape, SShape, LineShape, TShape, SquareShape, LShape, MirroredLShape };
+	public enum Tetromino { NoShape, ZShape, SShape, LineShape, TShape, SquareShape, LShape, MirroredLShape };
     /**
      * The {@code Tetromino} shape this piece has.
      */
@@ -50,7 +50,7 @@ public class Shape implements Serializable{
     /**
      * Defines a shape
      */
-    protected void setShape(Tetromino shape) {
+    public void setShape(Tetromino shape) {
     	
     	// Defining the matrix for all possible Tetris pieces
     	// is 8x4x2
@@ -108,7 +108,7 @@ public class Shape implements Serializable{
     /**
      * Returns the shape
      */
-    protected Tetromino getShape()
+    public Tetromino getShape()
     {
     	return pieceShape;
     }

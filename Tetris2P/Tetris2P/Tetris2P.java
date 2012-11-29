@@ -359,6 +359,30 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
        return backgroundColor;
    }
 
+    /**
+     * Returns local Tetris game
+     * 
+     */
+    public Tetris getLocalGame(){
+    	return localGame;
+    }
+    
+    /**
+     * Returns the opponent Tetris game
+     * 
+     */
+    public Tetris getOpponentGame(){
+    	return opponentGame;
+    }
+    /**
+     * 
+     * @return instance of Toolar
+     */
+    
+    public ToolBar getToolBar(){
+    	return toolBar;
+    }
+    
     //*************************************PLAYERLIST*************************************//
 
 	/**
@@ -512,7 +536,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class ToolBar extends JPanel implements ActionListener, Serializable
+	public class ToolBar extends JPanel implements ActionListener, Serializable
 	{
 		/**
 		 * The soundButton icon that can displays wether the game is muted and is able to toggle mute

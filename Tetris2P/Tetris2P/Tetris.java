@@ -120,14 +120,14 @@ public class Tetris extends JPanel implements Serializable
 	/**
      * Returns the {@code ToolBar} Object  belonging to this game.
      */
-    protected HotBar getHotBar() {
+    public HotBar getHotBar() {
        return hotBar;
    }
 
     /**
      * Returns the {@code Board} Object belonging to this game.
      */
-    protected Board getBoard() {
+    public Board getBoard() {
        return board;
    }
 
@@ -144,12 +144,12 @@ public class Tetris extends JPanel implements Serializable
      * 
      * @param audioState True if audio playback is allowed, false otherwise.
      */
-    protected void setAudioPlayback(boolean audioState) {
+    public void setAudioPlayback(boolean audioState) {
     	isAudioPlaybackAllowed = audioState;
     	board.setBoardAudio(audioState);
    }
     
-    protected boolean isAudioPlaybackAllowed(){
+    public boolean isAudioPlaybackAllowed(){
     	return isAudioPlaybackAllowed;
     }
 
