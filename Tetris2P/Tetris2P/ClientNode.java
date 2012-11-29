@@ -16,7 +16,7 @@ public class ClientNode
 	/**
 	 * The current client's name
 	 */
-	protected String name;
+	private String name;
 	/**
 	 * The ID of the opponent of the current client
 	 */
@@ -43,6 +43,22 @@ public class ClientNode
 	{
 		this(playerID);
 		this.name = playerName;
+	}
+	
+	/**
+	 * @return the name
+	 */
+	public String getName()
+	{
+		return name;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name)
+	{
+		this.name = name;
 	}
 
 	/**

@@ -381,7 +381,7 @@ public class Tetris2P extends JFrame implements Runnable
 		/**
 		 * ArrayList to hold the list of players
 		**/
-	    private ArrayList<ClientNode> users;
+	    private ArrayList<String> users;
 	    /**
 		 * {@code JScrollPane} to show the list of players
 		**/
@@ -396,7 +396,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 	        
 	        // TODO
-	        users 	 = new ArrayList<ClientNode>();
+	        users 	 = new ArrayList<String>();
 	        userList = new DefaultListModel<String>();
 	        JList list 	 = new JList(userList);
 	        
@@ -428,39 +428,44 @@ public class Tetris2P extends JFrame implements Runnable
 	     */
 		private void addUserToList(ClientNode newUser)
 	    {
-	    	users.add(newUser); //add to end of list so the new user will be last in the queue to play
-	    	userList.addElement(newUser.name); //adds a user to the list GUI
+	    	users.add(newUser.getName()); //add to end of list so the new user will be last in the queue to play
+	    	userList.addElement(newUser.getName()); //adds a user to the list GUI
 	    }
 	    
 	    /**
 	     *  Updates the playerlist.
 	     * 
-	     * @param playerList a {@code ArrayList} of {@code ClientNode} of players.
+	     * @param obj a {@code ArrayList} of {@code ClientNode} of players.
 	     */
-		private void updatePlayerList( ArrayList<ClientNode> playerList)
+		private void updatePlayerList( String[] playerList)
 	    {
-			users = playerList;
+			ArrayList<String> users = new ArrayList<String>();
+			
+			for(String name : playerList)
+			{
+				users.add(name);
+			}
 			
 			// Take one user each time from local list
 			// Remove missing players if found
-			for ( ClientNode node :  users)
+			for ( String node :  users)
 			{
 				// If local player not in new list remove them.
-				if (!playerList.contains(node.name))
+				if (!users.contains(node))
 				{
 					users.remove(node);
-					userList.removeElement(node.name);
+					userList.removeElement(node);
 				}
 				
 			}
 			// Take one user each time from remote list
 			// Add new players if found 
-			for ( ClientNode node :  playerList)
+			for ( String node :  users)
 			{
-				if (!users.contains(node.name))
+				if (!users.contains(node))
 				{
 					users.add(node);
-					userList.addElement(node.name);
+					userList.addElement(node);
 				}
 			}
 			repaint();
@@ -910,7 +915,6 @@ public class Tetris2P extends JFrame implements Runnable
 		 *
 		 * @param obj The message from the server.
 		 */
-		@SuppressWarnings("unchecked")
 		public void handleMessageFromServer(Object obj) 
 		{
 			if ( obj instanceof Updater)
@@ -925,9 +929,9 @@ public class Tetris2P extends JFrame implements Runnable
 				else // Updater should update the opponent's board
 					opponentGame.getBoard().updateBoard(update);
 			}
-			else if ( obj instanceof ArrayList)
+			else if ( obj instanceof String[])
 			{ //the list of clients was sent from the server to update it locally
-				playerList.updatePlayerList( (ArrayList<ClientNode>) obj );
+				playerList.updatePlayerList( (String[]) obj );
 			}
 			else
 			{

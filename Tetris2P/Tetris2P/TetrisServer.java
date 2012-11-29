@@ -331,24 +331,6 @@ public class TetrisServer extends AbstractServer
 		break;
 	}
   }
-
-  /** 
-   * This method will send an update package to a given client's opponent.
-   * 
-   * @param client The {@code ConnectionToclient} that this message originated from.
-   * @param update The {@code Updater} object to be sent to the given client's opponent.
-   */ 
-  private void performUpdate(Updater update, ConnectionToClient client){
-		try
-		{
-			findOpponent(client).send(update);
-		}
-		catch (IOException ex)
-		{
-			serverOutput.display("[CRITICAL] Could not send updater to the opponent of "+client.getInfo("ID")+" at "+client.getInetAddress());
-			ex.printStackTrace();
-		}
-  }
   
   //*************************************GAME-LOGIC*************************************//
 
@@ -366,21 +348,13 @@ public class TetrisServer extends AbstractServer
   	// Adding client to the client list
   	clientList.add(newClient);
   	
-  	try
-	{
-  		sendToAllClients(clientList);
-	}
-	catch (IOException ex)
-	{
-		serverOutput.display("[FAILED] Could not send clientList to client "+client.getInfo("ID"));
-		ex.printStackTrace();
-	}
+  	playerListUpdate();
   	
   	// console output
   	serverOutput.display("[INFO] Client " + client.toString() + " connected.");
   	
   	// Setting default user information.
-  	client.setInfo("ID", newClient.name);
+  	client.setInfo("ID", newClient.getName());
   	
   	// Checking if it is possible to match them with an opponent
   	try
@@ -431,7 +405,7 @@ public class TetrisServer extends AbstractServer
 	}
 	catch (IOException e)
 	{
-		serverOutput.display("[ERROR] Could not send confirmation of removal for client "+client.getInfo("ID"));
+		serverOutput.display("[INFO] No clients to send confirmation of removal to");
 	}
   }
   
@@ -536,6 +510,48 @@ public class TetrisServer extends AbstractServer
     	}
     }
     
+
+    /** 
+     * This method will send an update package to a given client's opponent.
+     * 
+     * @param client The {@code ConnectionToclient} that this message originated from.
+     * @param update The {@code Updater} object to be sent to the given client's opponent.
+     */ 
+    private void performUpdate(Updater update, ConnectionToClient client){
+  		try
+  		{
+  			findOpponent(client).send(update);
+  		}
+  		catch (IOException ex)
+  		{
+  			serverOutput.display("[CRITICAL] Could not send updater to the opponent of "+client.getInfo("ID")+" at "+client.getInetAddress());
+  			ex.printStackTrace();
+  		}
+    }
+    
+
+    /** 
+     * This method will send an update package to all  clients' player lists.
+     */ 
+    private void playerListUpdate()
+    {
+  		String[] playerList = new String[clientList.size()];
+  		
+  		for (int i=0; i<clientList.size(); i++)
+  		{
+  			playerList[i] = clientList.get(i).getName();
+  		}
+  		
+  	  	try
+  		{
+  	  		sendToAllClients(playerList);
+  		}
+  		catch (IOException ex)
+  		{
+  			
+  			ex.printStackTrace();
+  		}
+    }
   //*************************************CONTROL*************************************//
   
   
