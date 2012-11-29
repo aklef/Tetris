@@ -1040,7 +1040,7 @@ public class Tetris2P extends JFrame implements Runnable
 					if(this.isConnected())
 						disconnect();
 					setHost(operand);
-					clientUI.display("The host has been set to: " + getHost(), Color.RED);
+					clientUI.display("Host set: " + getHost(), Color.YELLOW);
 					connect();
 				break;
 				
@@ -1049,7 +1049,7 @@ public class Tetris2P extends JFrame implements Runnable
 					if(this.isConnected())
 						disconnect();
 					setPort(Integer.parseInt(operand));
-					clientUI.display("Port set: " + getPort());
+					clientUI.display("Port set: " + getPort(), Color.YELLOW);
 				break;
 				
 				//*******************************************************************//
