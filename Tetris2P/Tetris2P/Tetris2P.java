@@ -377,7 +377,7 @@ public class Tetris2P extends JFrame implements Runnable
 	   /**
 	    * GUI componenent that displays list of users
 	    **/
-		private final DefaultListModel<String> userList;
+		private DefaultListModel<String> userList;
 		/**
 		 * ArrayList to hold the list of players
 		**/
@@ -473,14 +473,18 @@ public class Tetris2P extends JFrame implements Runnable
 	    /**
 	     * Removes the given player's name from the list
 	     * 
-	     * @param username {@code String} name of player.
 	     */
-	    public void removeUserFromList(String username)
+	    protected void clearList()
 	    {
-	    	users.remove(username); //removes the user from the list
-	    	userList.removeElement(username); //adds a user to the list GUI
+	    	users 	 = new ArrayList<String>(); //removes the user from the list
+	        userList = new DefaultListModel<String>();
 	    }
 	    
+	    /**
+	     * TODO
+	     * 
+	     * @author Andréas K.LeF.
+	     */
 	    private class CustomCellRenderer extends DefaultListCellRenderer
 	    {
 	        @SuppressWarnings("rawtypes")
@@ -1168,6 +1172,7 @@ public class Tetris2P extends JFrame implements Runnable
 			serverInfo.setText("");
 			isMultiplayerOn = false;
 			localGame.getBoard().setMultiplayerEnabled(isMultiplayerOn);
+			playerList.clearList();
 		}
 		
 		/**

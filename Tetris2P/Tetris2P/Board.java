@@ -69,7 +69,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     /**
      * The Initial delay before starting to generate game ticks in miliseconds.
      */
-	private static int	PIECE_DROPPED_LOCK_DELAY = 150;
+	private static int	PIECE_DROPPED_LOCK_DELAY = 0;
     /**
      * The delay between game ticks in miliseconds.
      */
@@ -352,7 +352,6 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         isStarted = true;
         isFallingFinished = false;
         isFirstPieceMade = false;
-        //isAudioPlaybackAllowed = false;
         isPieceHeld = false; 
         numLinesRemoved = 0;
         toolBar.getLinesRemLabel().setText("Lines Removed: "+String.valueOf(numLinesRemoved));
@@ -361,7 +360,6 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         toolBar.getStatusLabel().setForeground(Color.magenta);
         toolBar.getStatusLabel().setText(" Game [P]aused. ");
         
-        //playSoundtrack();
         clearBoard();
         newPiece();
         repaint();
@@ -484,45 +482,39 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      * Method that tries to lower the current piece by one line.
      * If it cannot then the piece is in its final location.
      */
-    private void oneLineDown()
+    private synchronized void oneLineDown()
     {
-    	synchronized (timer)
-    	{
-    		// attempts to lower the piece
-    		if (!tryMove(curPiece, curX, curY - 1))
-        		// if cannot lower piece
-                pieceDropped();
-    	}
+		// attempts to lower the piece
+		if (!tryMove(curPiece, curX, curY - 1))
+    		// if cannot lower piece
+            pieceDropped();
     }
 
     /**
      * Method called when a shape is in its final location.
      */
-    private void pieceDropped()
+    private synchronized void pieceDropped()
     {
-    	synchronized (timer)
-    	{
-        	try
-    		{
-    			// Delay before processing piece dropped.
-            	Thread.sleep(PIECE_DROPPED_LOCK_DELAY);
-    		}
-    		catch (InterruptedException e){}
-        	
-        	for (int i = 0; i < 4; ++i) {
-                int x = curX + curPiece.x(i);
-                int y = curY - curPiece.y(i);
-                board[(y * SQUARES_IN_WIDTH) + x] = curPiece.getShape();
-            }
-            
-            removeFullLines();
-            isPieceHeld = false;
-            
-            if (!isFallingFinished)
-                newPiece();
-            if (isMultiplayerEnabled)
-            	sendUpdateToServer(new Updater());
-    	}
+    	try
+		{
+			// Delay before processing piece dropped.
+        	Thread.sleep(PIECE_DROPPED_LOCK_DELAY);
+		}
+    	
+		catch (InterruptedException e){}
+    	for (int i = 0; i < 4; ++i) {
+            int x = curX + curPiece.x(i);
+            int y = curY - curPiece.y(i);
+            board[(y * SQUARES_IN_WIDTH) + x] = curPiece.getShape();
+        }
+        
+        removeFullLines();
+        isPieceHeld = false;
+        
+        if (!isFallingFinished)
+            newPiece();
+        if (isMultiplayerEnabled)
+        	sendUpdateToServer(new Updater());
     }
 
     /**
@@ -547,26 +539,23 @@ public class Board extends JPanel implements ActionListener, MouseListener {
      * @param newY The desired Y position
      * @return true If move operation is succesful
      */
-    private boolean tryMove(Shape newPiece, int newX, int newY)
+    private synchronized boolean tryMove(Shape newPiece, int newX, int newY)
     {
-    	synchronized(timer)
+		for (int i = 0; i < 4; ++i)
     	{
-    		for (int i = 0; i < 4; ++i)
-        	{
-                int x = newX + newPiece.x(i);
-                int y = newY - newPiece.y(i);
-                // if the x value is out of range return
-                if (x < 0 || x >= SQUARES_IN_WIDTH || y < 0 || y >= SQUARES_IN_HEIGHT || shapeAt(x, y) != Tetromino.NoShape)
-                    return false;
-            }
-            
-            curPiece = newPiece;
-            curX = newX;
-            curY = newY;
-            repaint();
-            
-            return true;
-    	}
+            int x = newX + newPiece.x(i);
+            int y = newY - newPiece.y(i);
+            // if the x value is out of range return
+            if (x < 0 || x >= SQUARES_IN_WIDTH || y < 0 || y >= SQUARES_IN_HEIGHT || shapeAt(x, y) != Tetromino.NoShape)
+                return false;
+        }
+        
+        curPiece = newPiece;
+        curX = newX;
+        curY = newY;
+        repaint();
+        
+        return true;
     }
 
     /**
