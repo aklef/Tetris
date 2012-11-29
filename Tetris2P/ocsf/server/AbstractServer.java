@@ -186,18 +186,15 @@ public abstract class AbstractServer implements Runnable
    * sending the message to a particular client is ignored.
    *
    * @param msg   Object The message to be sent
+   * @throws IOException 
    */
-  public void sendToAllClients(Object msg)
+  public void sendToAllClients(Object msg) throws IOException
   {
     Thread[] clientThreadList = getClientConnections();
 
     for (int i=0; i<clientThreadList.length; i++)
     {
-      try
-      {
-        ((ConnectionToClient)clientThreadList[i]).send(msg);
-      }
-      catch (Exception ex) {}
+      ((ConnectionToClient)clientThreadList[i]).send(msg);
     }
   }
 

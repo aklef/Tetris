@@ -1032,26 +1032,23 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 		 * It will be passed onto the opponent to update their opponent ghost board
 		 */
     	private Shape newHoldPiece;
-		
     	/**
 		 * Variable holds the new next piece that the local player will obtain.
 		 * It will be passed onto the opponent to update their opponent ghost board
 		 */
     	private Shape newNextPiece;
-		
     	/**
 		 * Variable holds the current piece that the local player has obtained.
 		 * It will be passed onto the opponent to update their opponent ghost board.
 		 */
     	private Shape newCurPiece;
-		
     	/**
 		 * Variable that holds the new updated board of the local player.
 		 * It will be passed onto the opponent to update their opponent ghost board.
 		 */
     	private Tetromino[] newBoard;
 		/**
-		 * TODO
+		 * If set, represents a command sent by the server to a specific player.
 		 */
     	private String command;
     	
@@ -1069,6 +1066,10 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     		newBoard = board;
     	}
     	
+    	/**
+    	 * Alternate constructor to only pass string commands to clients.
+    	 * @param msg the command to be sent.
+    	 */
     	public Updater(String msg)
     	{
     		command = msg;
@@ -1079,7 +1080,6 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     	 * the Updater was sending a command such as "Game Over"
     	 * 
     	 */
-    	
     	public String getCommandMessage(){
     		return command;
     	}

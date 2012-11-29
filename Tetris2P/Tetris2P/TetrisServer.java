@@ -282,12 +282,109 @@ public class TetrisServer extends AbstractServer
 		}
 		catch (IOException ex)
 		{
-			serverOutput.display("[CRITICAL] Could not send updater to the opponent of "+client.getName()+" at "+client.getInetAddress());
+			serverOutput.display("[CRITICAL] Could not send updater to the opponent of "+client.getInfo("ID")+" at "+client.getInetAddress());
 			ex.printStackTrace();
 		}
   }
   
   //*************************************GAME-LOGIC*************************************//
+
+  /**
+   * This method attempts to match a newly connected client to an already connected client.
+   * 
+   * @param ConnectionToclient client is a newly connected client
+   */
+
+ protected void clientConnected(ConnectionToClient client)
+{
+  	// Creating connection for new client
+  	ClientNode newClient = new ClientNode(client.getId());
+  	
+  	// Adding client to the client list
+  	clientList.add(newClient);
+  	
+  	try
+	{
+  		sendToAllClients(clientList);
+	}
+	catch (IOException e1)
+	{
+		serverOutput.display("[FAILED] Could not send clientList to client "+client.getInfo("ID"));
+	}
+  	
+  	// console output
+  	serverOutput.display("[INFO] Client " + client.toString() + " connected.");
+  	
+  	// Setting default user information.
+  	client.setInfo("ID", newClient.name);
+  	
+  	// Checking if it is possible to match them with an opponent
+  	try
+  	{
+  		ConnectionToClient opponent = findOpponent(client);
+  		
+  		opponent.send("You have a new opponent!");
+  		opponent.send("/ready");
+  		client.send("You have a new opponent!");
+  		client.send("/ready");
+  		
+  		serverOutput.display("[INFO] Client " + client.toString() + " has the opponent "+opponent.toString());
+  	}
+  	catch (NullPointerException ex) // catching 
+    {
+		serverOutput.display("[FAILED] No opponent for client "+client.getInfo("ID")+" at "+client.getInetAddress());
+		try
+  		{
+  			client.send("[INFO] Sorry, no opponent found.");
+  		}
+    		catch (IOException e) // catching 
+  		{
+  			serverOutput.display("[FAILED] Send message to opponent of "+client.getInfo("ID")+" at "+client.getInetAddress());
+  		}
+    }
+  	catch (IOException e) // catching 
+	{
+		serverOutput.display("[FAILED] Send message to opponent of "+client.getInfo("ID")+" at "+client.getInetAddress());
+	}
+}
+  
+  /**
+   * This method removes a client from the list of connected clients and updates the status of the client's opponent
+   * @param ConnectionToclient client is a client about to be disconnected
+   */
+  synchronized protected void clientDisconnected( ConnectionToClient client )
+  {
+	try
+	{
+		findOpponent(client).send("/gameWon "+client.getInfo("ID"));
+		// Current client is an opponent of another client
+		// will also disconnect the current client
+		removeAsOpponent(client);
+		
+		// Notifying other clients
+		serverOutput.display("[INFO] Client " + client.getInfo("ID") + " disconnected.");
+		sendToAllClients("[INFO] Client " + client.getInfo("ID") + " left.");
+		
+	}
+	catch (NullPointerException ex)
+	{
+		serverOutput.display("[ERROR] Could not send /gameWon message the opponent of client "+client.getInfo("ID")+" at "+client.getInetAddress());
+	}
+	catch (IOException e)
+	{
+		serverOutput.display("[ERROR] Could not send confirmation of removal of client "+client.getInfo("ID"));
+	}
+  }
+  
+  /**
+   * Fired off when a client unexpectedly quits the server.
+   */
+  synchronized protected void clientException(ConnectionToClient client, Throwable exception)
+  {
+  	serverOutput.display("[ERROR] Connection with client "+client.getInfo("ID")+" at "+client.getInetAddress()+" terminated abruptly.");
+  	
+  	clientDisconnected(client);
+  }
   
   /**
    * This method searches the threadlist to find and set a client's opponent.
@@ -298,30 +395,30 @@ public class TetrisServer extends AbstractServer
   private ConnectionToClient findOpponent( ConnectionToClient client) throws NullPointerException
   {
 	Long opponentIndex = -1L; // Default value for a long
-
-	Thread[] clientThreadList = getClientConnections(); //Obtain a list of connections
-	ConnectionToClient opponent = null;
 	
-	// Iterate through all clients connected in the list
-	for(int i=0; i<clientList.size(); i++)
-	{
+	for( ClientNode opponentNode : clientList )
+	{// Iterate through all clients connected in the list
+		
 		// If listClient different from clientConnected and that client has himself as opponent
-		if(clientList.get(i).playerID != client.getId() && clientList.get(i).playerID == clientList.get(i).opponentID)
+		if( opponentNode.playerID != client.getId() && opponentNode.playerID == opponentNode.opponentID)
 		{
-			opponentIndex = client.getId();
-			clientList.get(i).opponentID = opponentIndex;
-			break;
+			// Sets the client's opponent's opponent as himself
+			opponentIndex = opponentNode.opponentID = client.getId();
+	    	break;
 		}
 	}
+	
+	Thread[] 			clientThreadList 	= getClientConnections(); //Obtain a list of connections
+	ConnectionToClient 	opponent 			= null;
 	
 	// Iterate through the connectiontoclients array
 	if(opponentIndex != -1L)
 	{
-		for (int i=0; i<clientThreadList.length; i++)
+		for(Thread clientThread : clientThreadList)
 		{
-			if((clientThreadList[i]).getId() == opponentIndex)
+			if(clientThread.getId() == opponentIndex)
 			{
-				opponent = (ConnectionToClient) clientThreadList[i];
+				opponent = (ConnectionToClient) clientThread;
 				break;
 			}
 		}
@@ -333,140 +430,49 @@ public class TetrisServer extends AbstractServer
   }
   
   /**
-   * This method searches the threadlist to find and remove the opponent of a disconnecting client as an opponent.
+   * This method is only called when a client disconnects. It removes that client as other clients' opponent.
    * 
-   * @param client the {@code ConnectionToClient} we're trying to associate an opponent to.
-   * @throws NullPointerException if the client could not be given an opponent.
+   * @param client the {@code ConnectionToClient} we're trying to remove as other clients' opponent.
    */
-    private void removeOpponent( ConnectionToClient client)
+    private void removeAsOpponent( ConnectionToClient client)
+    
     {
-    	int clientIndex = 0;
-    	int opponentIndex = 0;
-    	Long opponentID = 0L; // Default value for a long
+    	Long clientID = -1L;
     	
-    	for(int i=0; i<clientList.size(); i++)
+    	// Find the client in the list
+    	for( ClientNode clientNode : clientList )
     	{
-    		if(clientList.get(i).playerID == client.getId())
-    		{
-    			//obtaining the ClientNode list index of the client to be disconnected 
-    			clientIndex = i;
-				opponentID = clientList.get(clientIndex).opponentID;
-				
-				try
-				{
-					client.send("You no longer have an opponent!");
-					findOpponent(client).send("You no longer have an opponent!");
-				}
-				catch (IOException e){
-					
-				}
+    		clientID = clientNode.playerID;// Try to match ID's
+    		
+    		if( clientID == client.getId())
+    		{// If the node in the list and the client leaving are matched
     			
-    			
-    			break;
+    			for( ClientNode opponentNode : clientList )
+    			{// Find the client's opponent
+    	    		
+    				if( opponentNode.opponentID == clientID)
+    	    		{
+    	    			// Sets the client's opponent's opponent as himself
+    					opponentNode.opponentID = opponentNode.playerID;
+    	    			
+    	    			try
+    	    			{
+    	    				client.send("[INFO] You no longer have an opponent!");
+    	    				findOpponent(client).send("[INFO] You no longer have an opponent!");
+    	    			}
+    	    			catch (IOException e)
+    	    			{
+    	    				serverOutput.display("[IDIOT] The client in removeAsOpponent has already been disconnected.");
+    	    			}
+    	    			
+    	    	    	// Removing the user that disconnected from the clientList
+    	    	    	clientList.remove(clientNode);
+    	    	    	
+    	    	    	break;
+    	    		}
+    	    	}
     		}
-    		
     	}
-    	
-    	if(opponentID != 0L)
-    	{
-    		//obtaining the ID of the opponent and setting them to have no opponent
-    		for(int i=0; i<clientList.size(); i++)
-    		{
-    			if(clientList.get(i).playerID == opponentID)
-    			{
-    				opponentIndex = clientList.indexOf(i);
-    				clientList.get(opponentIndex).opponentID = null;
-    				break;
-    			}
-    		}
-    	}
-		
-    	// Removing the user that disconnected from the clientList
-    	clientList.remove(clientIndex);
-    }
-  
-
-    /**
-     * This method attempts to match a newly connected client to a client already connected so they can play Tetris
-     * @param ConnectionToclient client is a newly connected client
-     */
-
-   protected void clientConnected(ConnectionToClient client)
-  {
-    	// Creating connection for new client
-    	ClientNode newClient = new ClientNode(client.getId());
-    	
-    	// Adding client to the client list
-    	clientList.add(newClient);
-    	
-    	// console output
-    	serverOutput.display("[INFO] Client " + client.toString() + " connected.");
-    	
-    	// Setting default user information.
-    	client.setInfo("ID", newClient.name);
-    	
-    	// Checking if it is possible to match them with an opponent
-    	try
-    	{
-    		ConnectionToClient opponent = findOpponent(client);
-    		
-    		opponent.send("You have a new opponent!");
-    		client.send("You have a new opponent!");
-    		
-    		serverOutput.display("[INFO] Client " + client.toString() + " has the opponent "+opponent.toString());
-    	}
-    	catch (NullPointerException ex) // catching 
-      	{
-      		serverOutput.display("[FAILED] No opponent for client "+client.getName()+" at "+client.getInetAddress());
-      		try
-    		{
-    			client.send("[INFO] Sorry, no opponent found.");
-    		}
-      		catch (IOException e) // catching 
-    		{
-    			serverOutput.display("[FAILED] Send message to opponent of "+client.getName()+" at "+client.getInetAddress());
-    		}
-      	}
-    	catch (IOException e) // catching 
-		{
-			serverOutput.display("[FAILED] Send message to opponent of "+client.getName()+" at "+client.getInetAddress());
-		}
-  }
-    
-    /**
-     * This method removes a client from the list of connected clients and updates the status of the client's opponent
-     * @param ConnectionToclient client is a client about to be disconnected
-     */
-    
-    synchronized protected void clientDisconnected( ConnectionToClient client)
-    {
-  	try
-  	{
-  		findOpponent(client).send("");
-  		// Current client is an opponent of another client
-  		// will also disconnect the current client
-  		removeOpponent(client);
-  		
-  	}
-  	catch (NullPointerException ex)
-  	{
-  		serverOutput.display("[ERROR] Could not remove the opponent of client "+client.getInfo("ID")+" at "+client.getInetAddress());
-  	}
-	catch (IOException e)
-	{
-		serverOutput.display("[ERROR] Could not send removal notification the opponent of client "+client.getInfo("ID")+" at "+client.getInetAddress());
-	}
-  	
-  	// Notifying other clients
-  	serverOutput.display("[INFO] Client " + client.getInfo("ID") + " disconnected.");
-  	sendToAllClients("[INFO] Client " + client.getInfo("ID") + " left.");
-    }
-    
-    synchronized protected void clientException(ConnectionToClient client, Throwable exception)
-    {
-    	serverOutput.display("[ERROR] Connection with client "+client.getInfo("ID")+" at "+client.getInetAddress()+" terminated unexpectedly.");
-    	
-    	clientDisconnected(client);
     }
     
   //*************************************CONTROL*************************************//
@@ -564,15 +570,20 @@ public class TetrisServer extends AbstractServer
 		protected ClientNode(Long playerID)
     	{
     		this.playerID = playerID;
-    		name = "Player"+playerID;
-    		opponentID = playerID;
+    		this.name = "Player"+playerID;
+    		this.opponentID = playerID;
     	}
 		
+		/**
+		 * Alternate constructor that allows to specify player name on creation.
+		 * 
+		 * @param playerID this player's ID
+		 * @param playerName custom player name
+		 */
 		protected ClientNode(Long playerID, String playerName)
     	{
-    		this.playerID = playerID;
-    		name = playerName;
-    		opponentID = 0L;
+    		this(playerID);
+    		this.name = playerName;
     	}
     }
 }

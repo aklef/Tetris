@@ -71,7 +71,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.LinkedList;
-import java.util.TreeSet;
 
 /**
  * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
@@ -380,9 +379,9 @@ public class Tetris2P extends JFrame implements Runnable
 	    **/
 		private final DefaultListModel<String> userList;
 		/**
-		 * TreeSet to hold the list of players
+		 * LinkedList to hold the list of players
 		**/
-	    private TreeSet<ClientNode> users;
+	    private LinkedList<ClientNode> users;
 	    /**
 		 * {@code JScrollPane} to show the list of players
 		**/
@@ -397,7 +396,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 	        
 	        // TODO
-	        users 	 = new TreeSet<ClientNode>();
+	        users 	 = new LinkedList<ClientNode>();
 	        userList = new DefaultListModel<String>();
 	        JList list 	 = new JList(userList);
 	        
@@ -427,7 +426,7 @@ public class Tetris2P extends JFrame implements Runnable
 	     * 
 	     * @param newUser {@code String} name of player.
 	     */
-		public void addUserToList(ClientNode newUser)
+		private void addUserToList(ClientNode newUser)
 	    {
 	    	users.add(newUser); //add to end of list so the new user will be last in the queue to play
 	    	userList.addElement(newUser.name); //adds a user to the list GUI
@@ -436,9 +435,9 @@ public class Tetris2P extends JFrame implements Runnable
 	    /**
 	     *  Updates the playerlist.
 	     * 
-	     * @param playerList a {@code TreeSet} of {@code ClientNode} of players.
+	     * @param playerList a {@code LinkedList} of {@code ClientNode} of players.
 	     */
-		public void updatePlayerList( TreeSet<ClientNode> playerList)
+		private void updatePlayerList( LinkedList<ClientNode> playerList)
 	    {
 			users = playerList;
 			
@@ -911,31 +910,32 @@ public class Tetris2P extends JFrame implements Runnable
 		/**
 		 * This method handles all data that comes in from the server.
 		 *
-		 * @param msg The message from the server.
+		 * @param obj The message from the server.
 		 */
-		public void handleMessageFromServer(Object msg) 
+		@SuppressWarnings("unchecked")
+		public void handleMessageFromServer(Object obj) 
 		{
-			if ( msg instanceof Updater)
+			if ( obj instanceof Updater)
 			{ //the updater was sent from the server to update the board of the opponent
-				opponentGame.getBoard().updateBoard((Updater)msg);
+				opponentGame.getBoard().updateBoard( (Updater) obj );
+			}
+			else if ( obj instanceof LinkedList)
+			{ //the list of clients was sent from the server to update it locally
+				playerList.updatePlayerList( (LinkedList<ClientNode>) obj );
 			}
 			else
 			{
-			//If the message was a command message, send the instruction for interpretation
-			if(((String) msg).startsWith("/"))
-				commandMessage(((String) msg).substring(1));
-			//adding a new user into the list of connected users
-			/*else if(((String) msg).startsWith("aUser")){
-				String newUser = ((String) msg).substring(1); //removes the 'a' that identifies the message as a user addition
-				playerList.addUserToList(newUser);
-			}
-			//removing a user from the list of connected users
-			else if(((String) msg).startsWith("rUser")){ 
-				String newUser = ((String) msg).substring(1); //removes the 'r' that identifies the message as a user deletion
-				playerList.removeUserFromList(newUser);
-			}*/
-			else
-				clientUI.display(msg.toString(), Color.WHITE);
+				String message = (String) obj;
+    			//If the message was a command message, send the instruction for interpretation
+    			if (message.startsWith("/"))
+    			{
+    				commandMessage(message.substring(1));
+    			}
+    			else if (message.startsWith("[INFO]"))
+    			{
+    				clientUI.display(obj.toString(), Color.LIGHT_GRAY);
+    			}
+    			
 			}
 		}
 
@@ -971,6 +971,58 @@ public class Tetris2P extends JFrame implements Runnable
     				clientUI.display("[WARNING] No server. Chat disabled.", Color.YELLOW);
     			}
     		}
+		}
+		
+		/**
+		 * This method will determine the type of command that was inputed by the user
+		 * @param message The message from the UI.
+		 */
+		public void serverCommandMessage( Updater updateCmd )
+		{
+			String msg = updateCmd.getCommandMessage();
+			
+			//initialize local variables
+			String message[]   = msg.split(" ");
+			String instruction = "";
+			String operand     = "";
+			
+			boolean hasWhiteSpace = false;
+			
+			//Find if multipart message
+			if ( message.length != 1) hasWhiteSpace = true;
+			
+			//If there is a white space, we must load the instruction with its operand
+			if(hasWhiteSpace) 
+			{
+				instruction = message[0];
+				operand 	= message[1];
+			}
+			else //If there is no white space, then there is no operand and only load the instruction
+			instruction = message[0];
+			
+			// ****************************************************************************************//
+			// List of all client-side usable commands
+			
+			switch (instruction.toLowerCase())
+			{
+				//*******************************************************************//
+				// Control methods
+				
+				//The client won the match.
+				case ("gameWon"):
+					matchOver(true, operand);
+				break;
+				
+				//The client lost the match.
+				case ("gameLost"):
+					matchOver(false, operand);
+				break;
+				
+				//The match can start.
+				case ("gameReady"):
+					matchOver(false, operand);
+				break;
+			}
 		}
 		
 		/**
@@ -1024,14 +1076,6 @@ public class Tetris2P extends JFrame implements Runnable
 					quit();
 				break;
 				
-				//The client won the match.
-				case ("GameWon"):
-					matchOver(true, operand);
-				break;
-				//The client lost the match.
-				case ("GameLost"):
-					matchOver(false, operand);
-				break;
 				//*******************************************************************//
 				// Setter methods
 				
