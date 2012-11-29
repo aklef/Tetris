@@ -916,8 +916,16 @@ public class Tetris2P extends JFrame implements Runnable
 		public void handleMessageFromServer(Object obj) 
 		{
 			if ( obj instanceof Updater)
-			{ //the updater was sent from the server to update the board of the opponent
-				opponentGame.getBoard().updateBoard( (Updater) obj );
+			{ 
+				Updater update = (Updater) obj;
+				
+				String command = update.getCommandMessage();
+				
+				if ( command != "")// Updater is a command
+					serverCommandMessage(command);
+				
+				else // Updater should update the opponent's board
+					opponentGame.getBoard().updateBoard(update);
 			}
 			else if ( obj instanceof LinkedList)
 			{ //the list of clients was sent from the server to update it locally
@@ -974,13 +982,11 @@ public class Tetris2P extends JFrame implements Runnable
 		}
 		
 		/**
-		 * This method will determine the type of command that was inputed by the user
-		 * @param message The message from the UI.
+		 * This method will determine the type of command that was sent by the server
+		 * @param message The message from the server.
 		 */
-		public void serverCommandMessage( Updater updateCmd )
+		public void serverCommandMessage( String msg )
 		{
-			String msg = updateCmd.getCommandMessage();
-			
 			//initialize local variables
 			String message[]   = msg.split(" ");
 			String instruction = "";
