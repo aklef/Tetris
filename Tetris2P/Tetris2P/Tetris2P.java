@@ -467,7 +467,7 @@ public class Tetris2P extends JFrame implements Runnable
 					userList.removeElement(node);
 				}
 			}
-			repaint();
+			
 	    }
 
 	    /**
@@ -476,8 +476,7 @@ public class Tetris2P extends JFrame implements Runnable
 	     */
 	    protected void clearList()
 	    {
-	    	users 	 = new ArrayList<String>(); //removes the user from the list
-	        userList = new DefaultListModel<String>();
+	    	updatePlayerList(new String[users.size()]);
 	    }
 	    
 	    /**
@@ -1168,11 +1167,12 @@ public class Tetris2P extends JFrame implements Runnable
 		 * Method informs the user server has been terminated and closes the client
 		 */
 		protected void connectionClosed(){
-			clientUI.display("Disconnected from server. Terminating client.", Color.RED);
+			clientUI.display("Disconnected from server.", Color.ORANGE);
 			serverInfo.setText("");
 			isMultiplayerOn = false;
 			localGame.getBoard().setMultiplayerEnabled(isMultiplayerOn);
 			playerList.clearList();
+			repaint();
 		}
 		
 		/**

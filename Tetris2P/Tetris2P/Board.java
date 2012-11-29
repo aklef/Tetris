@@ -370,6 +370,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 		catch (InterruptedException e){}
         
         toolBar.getPlayPauseButton().doClick();
+        toolBar.getPlayPauseButton().doClick();
     }
     
     /**
@@ -387,7 +388,6 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         toolBar.getStatusLabel().setText(" Game over. Press [Q]uit [R]estart");
         timer.setPaused(isPaused);
         repaint();
-        //pause();
         
         if(isMultiplayerEnabled)
         {
