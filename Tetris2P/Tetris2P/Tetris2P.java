@@ -439,33 +439,32 @@ public class Tetris2P extends JFrame implements Runnable
 	     */
 		private void updatePlayerList( String[] playerList)
 	    {
-			ArrayList<String> users = new ArrayList<String>();
+			ArrayList<String> players = new ArrayList<String>();
 			
 			for(String name : playerList)
 			{
-				users.add(name);
+				players.add(name);
 			}
 			
 			// Take one user each time from local list
 			// Remove missing players if found
-			for ( String node :  users)
+			for ( String node :  players)
 			{
 				// If local player not in new list remove them.
 				if (!users.contains(node))
 				{
-					users.remove(node);
-					userList.removeElement(node);
+					users.add(node);
+					userList.addElement(node);
 				}
-				
 			}
 			// Take one user each time from remote list
 			// Add new players if found 
-			for ( String node :  users)
+			for ( String node :  players)
 			{
 				if (!users.contains(node))
 				{
-					users.add(node);
-					userList.addElement(node);
+					users.remove(node);
+					userList.removeElement(node);
 				}
 			}
 			repaint();

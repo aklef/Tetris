@@ -416,7 +416,7 @@ public class TetrisServer extends AbstractServer
   {
   	serverOutput.display("[ERROR] Connection with client "+client.getInfo("ID")+" at "+client.getInetAddress()+" terminated abruptly.");
   	
-  	exception.printStackTrace();
+  	//exception.printStackTrace();
   	
   	clientDisconnected(client);
   }
