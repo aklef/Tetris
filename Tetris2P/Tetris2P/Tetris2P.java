@@ -935,7 +935,7 @@ public class Tetris2P extends JFrame implements Runnable
 				playerList.removeUserFromList(newUser);
 			}*/
 			else
-				clientUI.display("> "+msg.toString(), Color.LIGHT_GRAY);
+				clientUI.display(msg.toString(), Color.WHITE);
 			}
 		}
 
@@ -1102,6 +1102,9 @@ public class Tetris2P extends JFrame implements Runnable
 		protected void connectionException(Exception exception)
 		{
 			clientUI.display("Server closed. Abnormal termination of connection.", Color.ORANGE);
+			serverInfo.setText("");
+			isMultiplayerOn = false;
+			localGame.getBoard().setMultiplayerEnabled(isMultiplayerOn);
 		}
 		
 		/**
