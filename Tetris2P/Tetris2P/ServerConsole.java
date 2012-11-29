@@ -4,6 +4,8 @@
 package Tetris2P;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.Serializable;
+
 import Tetris2P.ChatIF;
 
 /**
@@ -11,7 +13,7 @@ import Tetris2P.ChatIF;
  * @author Dmitry Anglinov
  */
 
-public class ServerConsole implements ChatIF{ 
+public class ServerConsole implements Serializable, ChatIF{ 
 
 //Class variables *************************************************
 /**
@@ -75,7 +77,7 @@ public void accept()
 		while (true)
 		{
 			message = fromConsole.readLine();
-			this.display(message); //sending message to be printed
+			server.handleMessageFromServerUI(message); //sending message to be printed
 		}
 	}
 	catch (Exception ex)

@@ -77,7 +77,7 @@ import java.util.Queue;
  * @author Dmitry Anglinov
  */
 @SuppressWarnings("unused")
-public class Tetris2P extends JFrame implements Runnable
+public class Tetris2P extends JFrame implements Runnable, Serializable
 {
     /**
      * Instance of a tetris game mapped to the local player.
@@ -367,7 +367,7 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class PlayerList extends JPanel
+	protected class PlayerList extends JPanel implements Serializable
 	{
 		
 	   /**
@@ -385,7 +385,8 @@ public class Tetris2P extends JFrame implements Runnable
 	    /**
 		 * {@code JScrollPane} to show the list of players
 		**/
-		private final  JScrollPane scrollPane; 
+		private JScrollPane scrollPane; 
+		private JList<String> list; 
 		/**
 		 * Constructor method for list.
 		**/
@@ -398,7 +399,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        // TODO
 	        users 	 = new ArrayList<String>();
 	        userList = new DefaultListModel<String>();
-	        JList list 	 = new JList(userList);
+	        list 	 = new JList(userList);
 	        
 	        // Attach a ScrollPane to the list to make it scrollable
 	        scrollPane = new JScrollPane();
@@ -476,7 +477,11 @@ public class Tetris2P extends JFrame implements Runnable
 	     */
 	    protected void clearList()
 	    {
-	    	updatePlayerList(new String[users.size()]);
+	    	users 	 = new ArrayList<String>();
+	        userList = new DefaultListModel<String>();
+	        list.setListData(new String[0]);
+	        
+	        repaint();
 	    }
 	    
 	    /**
@@ -484,7 +489,7 @@ public class Tetris2P extends JFrame implements Runnable
 	     * 
 	     * @author Andréas K.LeF.
 	     */
-	    private class CustomCellRenderer extends DefaultListCellRenderer
+	    private class CustomCellRenderer extends DefaultListCellRenderer implements Serializable
 	    {
 	        @SuppressWarnings("rawtypes")
 			public Component getListCellRendererComponent( JList list, Object value, int index, boolean isSelected, boolean cellHasFocus )
@@ -507,7 +512,7 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class ToolBar extends JPanel implements ActionListener
+	protected class ToolBar extends JPanel implements ActionListener, Serializable
 	{
 		/**
 		 * The soundButton icon that can displays wether the game is muted and is able to toggle mute
@@ -730,7 +735,7 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class OutputBox extends JTextPane implements ChatIF
+	protected class OutputBox extends JTextPane implements Serializable, ChatIF
 	{
 		/**
 		 * Default font
@@ -820,7 +825,7 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	private class InputBox extends JTextField
+	private class InputBox extends JTextField implements Serializable
 	{
 		/**
 		 * Constructor method.
@@ -874,7 +879,7 @@ public class Tetris2P extends JFrame implements Runnable
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	protected class TetrisClient extends AbstractClient
+	protected class TetrisClient extends AbstractClient implements Serializable
 	{
 		/**
 		 * The interface type variable.  It allows the implementation of 
@@ -925,9 +930,16 @@ public class Tetris2P extends JFrame implements Runnable
 				
 				String command = update.getCommandMessage();
 				
-				if ( command != "")// Updater is a command
-					serverCommandMessage(command);
-				
+				if ( command != "")
+					try
+					{
+						serverCommandMessage(command);
+					}
+					catch (IOException e)
+					{
+						clientUI.display("[ERROR] Could not parse server command message.", Color.LIGHT_GRAY);
+						e.printStackTrace();
+					}
 				else // Updater should update the opponent's board
 					opponentGame.getBoard().updateBoard(update);
 			}
@@ -949,9 +961,16 @@ public class Tetris2P extends JFrame implements Runnable
     			}
     			else if (message.startsWith("[INFO]"))
     			{
-    				clientUI.display(obj.toString(), Color.LIGHT_GRAY);
+    				clientUI.display(message, Color.LIGHT_GRAY);
     			}
-    			
+    			else if (message.startsWith("[SERVER MSG]"))
+    			{
+    				clientUI.display(message, Color.CYAN);
+    			}
+    			else 
+    			{
+    				clientUI.display(message, Color.WHITE);
+    			}
 			}
 		}
 
@@ -992,7 +1011,7 @@ public class Tetris2P extends JFrame implements Runnable
 		 * This method will determine the type of command that was sent by the server
 		 * @param message The message from the server.
 		 */
-		public void serverCommandMessage( String msg )
+		public void serverCommandMessage( String msg ) throws IOException
 		{
 			//initialize local variables
 			String message[]   = msg.split(" ");
@@ -1033,15 +1052,23 @@ public class Tetris2P extends JFrame implements Runnable
 				
 				//The match can start.
 				case ("ready"): case ("reafy"):
-					if (isMultiplayerOn && isMultiplayerReady)
-						toolBar.playPauseButton.doClick();
-					else 
-					{
-						clientUI.display("[INFO] Opponent ready! Do ", Color.BLUE);
+    				// Other person has told us they are ready.
+    				if (isMultiplayerOn && isMultiplayerReady)
+    				{
+    					toolBar.playPauseButton.doClick();
+    					clientUI.display("[INFO] Match started.", Color.CYAN);
+    				}
+    				else if (isMultiplayerOn && !isMultiplayerReady)
+    				{
+    					isMultiplayerReady = true;
+    					
+    					clientUI.display("[INFO] Opponent ready! Do ", Color.CYAN);
 						clientUI.display("&&/ready", Color.GREEN);
-						clientUI.display("&& to start", Color.BLUE);
+						clientUI.display("&& to start", Color.CYAN);
+						toolBar.getStatusLabel().setForeground(Color.ORANGE);
 						toolBar.getStatusLabel().setText("Do /ready to start!");
-					}
+						repaint();
+    				}
 				break;
 			}
 		}
@@ -1095,12 +1122,26 @@ public class Tetris2P extends JFrame implements Runnable
 				
 				//The player is ready.
 				case ("ready"): case ("reafy"):
-					if (isMultiplayerOn)
+					// Other person has told us they are ready.
+					if (isMultiplayerOn && isMultiplayerReady)
+					{
+						// Tell other player we are ready
+						Updater cmd = new Updater("reafy");
+						sendToServer(cmd);
+						
+						toolBar.playPauseButton.doClick();
+    					clientUI.display("[INFO] Match started.", Color.CYAN);
+					}
+					else if (isMultiplayerOn && !isMultiplayerReady)
 					{
 						isMultiplayerReady = true;
-						sendToServer(localGame.getBoard().new Updater("reafy"));
+						
+						Updater cmd = new Updater("reafy");
+						sendToServer(cmd);
+						
+						toolBar.getStatusLabel().setForeground(Color.ORANGE);
 						toolBar.getStatusLabel().setText("Waiting for opponent to be ready!");
-						clientUI.display("[INFO] You are ready! Waiting for opponent to be ready.", Color.BLUE);
+						clientUI.display("[INFO] You are ready!", Color.CYAN);
 					}
 				break;
 				

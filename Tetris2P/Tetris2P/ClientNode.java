@@ -1,5 +1,7 @@
 package Tetris2P;
 
+import java.io.Serializable;
+
 
 /**
  * This will group clients into a player and their respective opponent ID
@@ -7,7 +9,7 @@ package Tetris2P;
  * @author Dmitry Anglinov
  * @author Andréas K.LeF.
 */
-public class ClientNode
+public class ClientNode implements Serializable
 {
 	/**
 	 * The current client ID
@@ -72,10 +74,9 @@ public class ClientNode
 	/**
 	 * @param opponentID the opponentID to set
 	 */
-	public Long setOpponentID(Long opponentID)
+	public void setOpponentID(Long opponentID)
 	{
 		this.opponentID = opponentID;
-		return opponentID;
 	}
 
 	/**

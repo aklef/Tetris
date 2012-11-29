@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.io.Serializable;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -24,7 +25,7 @@ import Tetris2P.Tetris2P.TetrisClient;
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
  */
-public class Tetris extends JPanel
+public class Tetris extends JPanel implements Serializable
 {
     /**
      * The width of the game.
@@ -160,7 +161,7 @@ public class Tetris extends JPanel
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	public class HotBar extends JPanel
+	public class HotBar extends JPanel implements Serializable
 	{
 	    /**
 	     * The {@code ShapeArea} to show piece on hold.
@@ -189,9 +190,6 @@ public class Tetris extends JPanel
 			previewNextPieceArea.setBackground(backgroundColor);
 			previewNextPieceArea.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
 			add(previewNextPieceArea, BorderLayout.EAST);
-
-			//setFocusable(false);
-			//setVisible(true);
 		}
 
 		/**
@@ -231,7 +229,7 @@ public class Tetris extends JPanel
 	     * @author Andréas K.LeF.
 	     * @author Dmitry Anglinov
 	     */
-		protected class ShapeArea extends JPanel
+		protected class ShapeArea extends JPanel implements Serializable
 	    {
 	    	/**
 	         * The {@code Shape} that will be displayed.
@@ -295,7 +293,7 @@ public class Tetris extends JPanel
 	         * @author Andréas K.LeF.
 	         * @author Dmitry Anglinov
 	         */
-			private class TextOverlay extends JComponent
+			private class TextOverlay extends JComponent implements Serializable
 	        {
 	            /**
 		         * The overlay text.

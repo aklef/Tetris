@@ -35,7 +35,7 @@ import Tetris2P.Tetris2P.ToolBar;
  * @author Dmitry Anglinov
  */
 @SuppressWarnings("unused")
-public class Board extends JPanel implements ActionListener, MouseListener {
+public class Board extends JPanel implements ActionListener, MouseListener, Serializable {
 
     /**
      * The width of the board units of blocks.
@@ -514,7 +514,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
         if (!isFallingFinished)
             newPiece();
         if (isMultiplayerEnabled)
-        	sendUpdateToServer(new Updater());
+        	sendUpdateToServer(new Updater(holdPiece, nextPiece, curPiece, board));
     }
 
     /**
@@ -661,7 +661,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
 	 */
-	private class Ticker extends Thread {
+	private class Ticker extends Thread implements Serializable {
 
 
 		private int m_delay;
@@ -906,7 +906,7 @@ public class Board extends JPanel implements ActionListener, MouseListener {
 	 * @author Andréas K.LeF.
 	 * @author Dmitry Anglinov
      */
-    protected class TAdapter extends KeyAdapter {
+    protected class TAdapter extends KeyAdapter implements Serializable{
          public void keyPressed(KeyEvent e)
          {
              int keycode = e.getKeyCode();
@@ -1004,73 +1004,5 @@ public class Board extends JPanel implements ActionListener, MouseListener {
     public void mouseReleased(MouseEvent e)
     {
 		//requestFocusInWindow();
-    }
-    //*************************************UPDATER*************************************//
-    
-    /**
-     * This class contains variables used to update the board of the opponent Tetris game.
-     * The updater is updated every time dropPiece is called
-     * 
-	 * @author Andréas K.LeF.
-	 * @author Dmitry Anglinov
-     */
-    public class Updater
-    {
-		/**
-		 * Variable holds the currently held piece by the local player.
-		 * It will be passed onto the opponent to update their opponent ghost board
-		 */
-    	private Shape newHoldPiece;
-    	/**
-		 * Variable holds the new next piece that the local player will obtain.
-		 * It will be passed onto the opponent to update their opponent ghost board
-		 */
-    	private Shape newNextPiece;
-    	/**
-		 * Variable holds the current piece that the local player has obtained.
-		 * It will be passed onto the opponent to update their opponent ghost board.
-		 */
-    	private Shape newCurPiece;
-    	/**
-		 * Variable that holds the new updated board of the local player.
-		 * It will be passed onto the opponent to update their opponent ghost board.
-		 */
-    	private Tetromino[] newBoard;
-		/**
-		 * If set, represents a command sent by the server to a specific player.
-		 */
-    	private String command;
-    	
-    	/**
-    	 * This constructor updates the local clients game with the new input after a piece has been dropped.
-    	 * This information will be passed onto the opponent to update the opponents "ghost" board.
-    	 * The inputs are taken from board since Updater is a nested class.
-    	 * 
-    	 */
-    	public Updater()
-    	{
-    		newHoldPiece = holdPiece;
-    		newNextPiece = nextPiece;
-    		newCurPiece = curPiece;
-    		newBoard = board;
-    	}
-    	
-    	/**
-    	 * Alternate constructor to only pass string commands to clients.
-    	 * @param msg the command to be sent.
-    	 */
-    	public Updater(String msg)
-    	{
-    		command = msg;
-    	}
-    	
-    	/**
-    	 * This method returns the string command and is used to check if 
-    	 * the Updater was sending a command such as "Game Over"
-    	 * 
-    	 */
-    	public String getCommandMessage(){
-    		return command;
-    	}
     }
 }

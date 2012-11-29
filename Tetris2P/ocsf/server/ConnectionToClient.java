@@ -25,7 +25,7 @@ import java.util.HashMap;
  * @author Paul Holden
  * @version February 2001 (2.12)
  */
-public class ConnectionToClient extends Thread {
+public class ConnectionToClient extends Thread implements Serializable{
 	// INSTANCE VARIABLES ***********************************************
 
 	/**
@@ -120,7 +120,8 @@ public class ConnectionToClient extends Thread {
 		if (clientSocket == null || output == null)
 			throw new SocketException("Output socket is null.");
 
-		output.writeObject(msg);
+		output.writeUnshared(msg);
+		//output.flush();
 	}
 
 	/**

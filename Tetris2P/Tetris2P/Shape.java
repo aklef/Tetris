@@ -1,6 +1,7 @@
 package Tetris2P;
 
 import java.util.Random;
+import java.io.Serializable;
 import java.lang.Math;
 
 /**
@@ -12,7 +13,7 @@ import java.lang.Math;
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
  */
-public class Shape {
+public class Shape implements Serializable{
     /**
      * The Tetromino enum holds markers for the 8 pieces used in the Tetris game, 
      * including the empty shape.

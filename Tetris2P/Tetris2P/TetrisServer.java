@@ -6,7 +6,6 @@ package Tetris2P;
 import java.io.*;
 
 import ocsf.server.*;
-import Tetris2P.Board.Updater;
 
 import java.util.ArrayList;
 
@@ -20,7 +19,7 @@ import java.util.ArrayList;
  * @author Paul Holden
  * @version July 2000
  */
-public class TetrisServer extends AbstractServer 
+public class TetrisServer extends AbstractServer implements Serializable
 {
   
     /**
@@ -118,13 +117,15 @@ public class TetrisServer extends AbstractServer
    * @param msg input from the server user.
    */
   public void handleMessageFromServerUI (String msg){
+	  	if (msg.equals(""))
+	  		return;
 	    try
 	    {
 	        //If the message was a command message, send the instruction for interpretation
 	        if(msg.startsWith("#") || msg.startsWith("/"))
 	        	commandMessage(msg.substring(1), null);
 	      	else{
-	      		serverOutput.display(msg);
+	      		serverOutput.display(">"+msg);
 	      		sendToAllClients("[SERVER MSG] " + msg );
 	      	}
 	    }
@@ -141,7 +142,6 @@ public class TetrisServer extends AbstractServer
 	 * This method will determine the type of command that was sent by the server
 	 * @param message The message from the server.
 	 */
-	@SuppressWarnings("unused")
 	public void tetrisCommandMessage( String msg, ConnectionToClient client)  throws IOException
 	{
 		//initialize local variables
@@ -173,17 +173,17 @@ public class TetrisServer extends AbstractServer
 			
 			//The client won the match.
 			case ("gameWon"):
-				findOpponent(client).send("");
+				findOpponent(client).send("gameWon"+operand);
 			break;
 			
 			//The client lost the match.
 			case ("gameLost"):
-				findOpponent(client).send("");
+				findOpponent(client).send("gameLost"+operand);
 			break;
 			
 			//The match can start.
-			case ("gameReady"):
-				findOpponent(client).send("");
+			case ("ready"):
+				findOpponent(client).send("/ready");
 			break;
 		}
 	}
@@ -362,9 +362,7 @@ public class TetrisServer extends AbstractServer
   		ConnectionToClient opponent = findOpponent(client);
   		
   		opponent.send("You have a new opponent!");
-  		opponent.send("/ready");
   		client.send("You have a new opponent!");
-  		client.send("/ready");
   		
   		serverOutput.display("[INFO] Client " + client.toString() + " has the opponent "+opponent.toString());
   	}
@@ -373,7 +371,7 @@ public class TetrisServer extends AbstractServer
 		serverOutput.display("[FAILED] No opponent for client "+client.getInfo("ID")+" at "+client.getInetAddress());
 		try
   		{
-  			client.send("[INFO] Sorry, no opponent found.");
+  			client.send("[INFO] No opponent found.");
   		}
     		catch (IOException e) // catching 
   		{
@@ -429,39 +427,54 @@ public class TetrisServer extends AbstractServer
    */
   private ConnectionToClient findOpponent( ConnectionToClient client) throws NullPointerException
   {
-	Long opponentIndex = -1L; // Default value for a long
+	Long opponentId = -1L; // Default value for a long
 	
-	for( ClientNode opponentNode : clientList )
+	ClientNode clientNode = new ClientNode(-999L);;
+	
+	for( ClientNode node : clientList )
 	{// Iterate through all clients connected in the list
 		
 		// If listClient different from clientConnected and that client has himself as opponent
-		if( opponentNode.getPlayerID() != client.getId() && opponentNode.getPlayerID() == opponentNode.getOpponentID())
+		if( node.getPlayerID() == client.getId())
 		{
-			// Sets the client's opponent's opponent as himself
-			opponentIndex = opponentNode.setOpponentID(client.getId());
+			clientNode = node; // find client node
 	    	break;
 		}
 	}
-	
-	Thread[] 			clientThreadList 	= getClientConnections(); //Obtain a list of connections
-	ConnectionToClient 	opponent 			= null;
+	if (clientNode.getOpponentID() == clientNode.getPlayerID())
+	{
+    	for( ClientNode possibleOpponentNode : clientList )
+    	{// Iterate through all clients connected in the list
+    		
+    		// If listClient different from clientConnected and that client has himself as opponent
+    		if( possibleOpponentNode.getPlayerID() != clientNode.getPlayerID() && possibleOpponentNode.getPlayerID() == possibleOpponentNode.getOpponentID())
+    		{
+    			// Sets the client's opponent's opponent as himself
+    			opponentId = possibleOpponentNode.getPlayerID();
+    			possibleOpponentNode.setOpponentID(client.getId());
+    			clientNode.setOpponentID(opponentId);
+    	    	break;
+    		}
+    	}
+	}
+	else
+		opponentId = clientNode.getOpponentID();
 	
 	// Iterate through the connectiontoclients array
-	if(opponentIndex != -1L)
+	if(opponentId != -1L)
 	{
-		for(Thread clientThread : clientThreadList)
+		for(Thread clientThread : getClientConnections())// list of connections
 		{
-			if(clientThread.getId() == opponentIndex)
+			if(clientThread.getId() == opponentId)
 			{
-				opponent = (ConnectionToClient) clientThread;
-				break;
+				return (ConnectionToClient) clientThread;
 			}
 		}
 	}
 	else
 		throw new NullPointerException("Client has no opponent.");
 	
-	return opponent;
+	return null;
   }
   
   /**
@@ -492,7 +505,7 @@ public class TetrisServer extends AbstractServer
     	    			
     	    			try
     	    			{
-    	    				client.send("[INFO] You no longer have an opponent!");
+    	    				//client.send("[INFO] You no longer have an opponent!");
     	    				findOpponent(client).send("[INFO] You no longer have an opponent!");
     	    			}
     	    			catch (IOException e)
