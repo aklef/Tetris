@@ -121,7 +121,6 @@ public class ConnectionToClient extends Thread implements Serializable{
 			throw new SocketException("Output socket is null.");
 
 		output.writeUnshared(msg);
-		//output.flush();
 	}
 
 	/**

@@ -69,25 +69,19 @@ public class TetrisServer extends AbstractServer implements Serializable
 		Updater update = (Updater) obj;
 		String command = update.getCommandMessage();
 		
-		if ( command != "")
+		if ( command != null)
 		{
 			try
-			{
+			{// Send game command messages to be executed
 				tetrisCommandMessage(command, client);
 			}
 			catch (IOException e) { serverOutput.display("[ERROR] Could not parse command message."); }
 		}
 		else
-		{// Send game command messages to be executed
-			try
-			{
-				commandMessage(update.getCommandMessage(), client);
-			}
-			catch(IOException e) { serverOutput.display("[ERROR] Could not parse client input"); }
+		{
+			performUpdate(update, client);
+			return;
 		}
-		
-		performUpdate(update, client);
-		return;
 	}
 	else 
 	// Continue assuming a string message has been sent to the server
@@ -144,6 +138,9 @@ public class TetrisServer extends AbstractServer implements Serializable
 	 */
 	public void tetrisCommandMessage( String msg, ConnectionToClient client)  throws IOException
 	{
+		if (msg.equals(""))
+			return;
+		
 		//initialize local variables
 		String message[]   = msg.split(" ");
 		String instruction = "";
@@ -196,6 +193,9 @@ public class TetrisServer extends AbstractServer implements Serializable
     */ 
   private void commandMessage(String msg, ConnectionToClient client) throws IOException
   {
+	  if (msg.equals(""))
+			return;
+	  
 	//initialize local variables
 	String message[]   = msg.split(" ");
 	String instruction = "";
@@ -535,7 +535,7 @@ public class TetrisServer extends AbstractServer implements Serializable
   		{
   			findOpponent(client).send(update);
   		}
-  		catch (IOException ex)
+  		catch (Exception ex)
   		{
   			serverOutput.display("[CRITICAL] Could not send updater to the opponent of "+client.getInfo("ID")+" at "+client.getInetAddress());
   			ex.printStackTrace();

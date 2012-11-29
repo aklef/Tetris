@@ -192,6 +192,7 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
        
        //checking if muted
        isAudioPlaybackAllowed = parent.isAudioPlaybackAllowed();
+       isMultiplayerEnabled = false;
        
        //Starts playing the soundtrack
        playSoundtrack();
@@ -264,6 +265,8 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
     protected void setMultiplayerEnabled(boolean b)
     {
         isMultiplayerEnabled = b;
+        //if (isMultiplayerEnabled) crashes the game
+        	//sendUpdateToServer(new Updater(holdPiece, nextPiece, curPiece, board));
     }
 
     /**
@@ -646,7 +649,7 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
     	{
     		client.sendToServer(obj);
     	}
-    	catch(IOException e)
+    	catch(Exception e)
 		{
 			display("[ERROR] Could not send the updater to opponent. Terminating client.", Color.RED);
 		}

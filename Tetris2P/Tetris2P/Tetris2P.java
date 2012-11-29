@@ -1013,6 +1013,9 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 		 */
 		public void serverCommandMessage( String msg ) throws IOException
 		{
+			if (msg.equals(""))
+				return;
+			
 			//initialize local variables
 			String message[]   = msg.split(" ");
 			String instruction = "";
@@ -1061,6 +1064,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
     				else if (isMultiplayerOn && !isMultiplayerReady)
     				{
     					isMultiplayerReady = true;
+    					localGame.getBoard().setMultiplayerEnabled(isMultiplayerReady);
     					
     					clientUI.display("[INFO] Opponent ready! Do ", Color.CYAN);
 						clientUI.display("&&/ready", Color.GREEN);
@@ -1080,6 +1084,9 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 		 */
 		public void commandMessage( String msg ) throws IOException
 		{
+			if (msg.equals(""))
+				return;
+			
 			//initialize local variables
 			String message[]   = msg.split(" ");
 			String instruction = "";
@@ -1135,6 +1142,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 					else if (isMultiplayerOn && !isMultiplayerReady)
 					{
 						isMultiplayerReady = true;
+						localGame.getBoard().setMultiplayerEnabled(isMultiplayerReady);
 						
 						Updater cmd = new Updater("reafy");
 						sendToServer(cmd);
