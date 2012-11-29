@@ -59,7 +59,7 @@ import javax.swing.SwingUtilities;
 
 import Tetris2P.Shape.Tetromino;
 import Tetris2P.Tetris.HotBar.ShapeArea;
-import Tetris2P.TetrisServer.ClientNode;
+import Tetris2P.ClientNode;
 import Tetris2P.Board.*;
 import ocsf.client.*;
 
@@ -67,7 +67,6 @@ import ocsf.client.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.LinkedList;
 
 /**
  * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
@@ -380,9 +379,9 @@ public class Tetris2P extends JFrame implements Runnable
 	    **/
 		private final DefaultListModel<String> userList;
 		/**
-		 * LinkedList to hold the list of players
+		 * ArrayList to hold the list of players
 		**/
-	    private LinkedList<ClientNode> users;
+	    private ArrayList<ClientNode> users;
 	    /**
 		 * {@code JScrollPane} to show the list of players
 		**/
@@ -397,7 +396,7 @@ public class Tetris2P extends JFrame implements Runnable
 	        setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 	        
 	        // TODO
-	        users 	 = new LinkedList<ClientNode>();
+	        users 	 = new ArrayList<ClientNode>();
 	        userList = new DefaultListModel<String>();
 	        JList list 	 = new JList(userList);
 	        
@@ -436,9 +435,9 @@ public class Tetris2P extends JFrame implements Runnable
 	    /**
 	     *  Updates the playerlist.
 	     * 
-	     * @param playerList a {@code LinkedList} of {@code ClientNode} of players.
+	     * @param playerList a {@code ArrayList} of {@code ClientNode} of players.
 	     */
-		private void updatePlayerList( LinkedList<ClientNode> playerList)
+		private void updatePlayerList( ArrayList<ClientNode> playerList)
 	    {
 			users = playerList;
 			
@@ -839,8 +838,6 @@ public class Tetris2P extends JFrame implements Runnable
 							setText(null);
 							repaint();
 							break;
-						default:
-							
 					}
 				}
 			};
@@ -928,9 +925,9 @@ public class Tetris2P extends JFrame implements Runnable
 				else // Updater should update the opponent's board
 					opponentGame.getBoard().updateBoard(update);
 			}
-			else if ( obj instanceof LinkedList)
+			else if ( obj instanceof ArrayList)
 			{ //the list of clients was sent from the server to update it locally
-				playerList.updatePlayerList( (LinkedList<ClientNode>) obj );
+				playerList.updatePlayerList( (ArrayList<ClientNode>) obj );
 			}
 			else
 			{
