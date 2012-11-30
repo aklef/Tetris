@@ -398,19 +398,19 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
         timer.setPaused(isPaused);
         repaint();
         
-        if(isMultiplayerEnabled)
-        {
-        	try
-            {
-                client.sendToServer(new Updater("/GameOver"));
-            }
-            catch (IOException e)
-            {
-            	display(" Could not reach oponent for game over confirmation", Color.RED);
-            	client.quit();
-            }
-        }
-        toolBar.getPlayPauseButton().doClick();
+//        if(isMultiplayerEnabled)
+//        {
+//        	try
+//            {
+//                client.sendToServer(new Updater("/GameOver"));
+//            }
+//            catch (IOException e)
+//            {
+//            	display(" Could not reach oponent for game over confirmation", Color.RED);
+//            	client.quit();
+//            }
+//        }
+//        toolBar.getPlayPauseButton().doClick();
     }
     
     //*************************************LOGIC*************************************//

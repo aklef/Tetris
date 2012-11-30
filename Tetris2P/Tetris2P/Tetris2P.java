@@ -155,23 +155,23 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
         toolBar		 = new ToolBar();
         
         // Sets default UIManager values
-//        UIManager.put("nimbusBase", Color.BLACK);
+        UIManager.put("nimbusBase", Color.BLACK);
         
-//        try// Attemps to set the Nimbus L&F
-//        {
-//        	for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
-//        	{
-//        		if ("Nimbus".equals(info.getName()))
-//        		{
-//        			UIManager.setLookAndFeel(info.getClassName());
-//        			break;
-//                }
-//            }
-//        }
-//        catch (Exception e)
-//        {
-//        	// If Nimbus is not available, the GUI can be set to another look and feel.
-//        }
+        try// Attemps to set the Nimbus L&F
+        {
+        	for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
+        	{
+        		if ("Nimbus".equals(info.getName()))
+        		{
+        			UIManager.setLookAndFeel(info.getClassName());
+        			break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+        	// If Nimbus is not available, the GUI can be set to another look and feel.
+        }
         
         // Creating instances of elements
         userList	 = new PlayerList();
@@ -193,7 +193,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
     private void createAndShowGUI()
     {
         List<Image> icons = new ArrayList<Image>();
-        icons.add((new ImageIcon(getClass().getResource("/Media/Love_for_Tetris256x256.jpg"))).getImage());
+ //       icons.add((new ImageIcon(getClass().getResource("/Media/Love_for_Tetris256x256.jpg"))).getImage());
         setIconImages(icons);
         
         // Panel for the middle area
