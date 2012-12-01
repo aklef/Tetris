@@ -164,4 +164,13 @@ public class Shape implements Serializable{
         }
         return result;
     }
+    
+	/**
+	 * Returns a {@code String} representation of this {@code Shape}.
+	 */
+	@Override
+	public String toString()
+	{
+		return "[SHAPE] "+pieceShape.toString();
+	}
 }

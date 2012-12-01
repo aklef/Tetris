@@ -17,6 +17,7 @@ import Tetris2P.Tetris2P;
  * @author Andréas K.LeF.
  *
  */
+@SuppressWarnings("unused")
 public class TetrisServerTest {
 
 	/**

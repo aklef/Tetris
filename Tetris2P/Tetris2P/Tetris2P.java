@@ -65,8 +65,10 @@ import ocsf.client.*;
 
 
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.List;
 import java.util.Queue;
+import java.util.Stack;
 
 /**
  * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
@@ -136,7 +138,11 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
     /**
      * If the client is ready in multiplayer.
      */
-    private boolean isMultiplayerReady = false;
+    private boolean isPlayerReady = false;
+    /**
+     * Boolean variable that determines if the game is being played on a server.
+     */
+    private boolean isOpponentReady = false;
     /**
      * Music soundtrack for the game
      */
@@ -551,23 +557,23 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 		 */
 		private final JButton restartButton;
 		/**
-		 * 
+		 * The icon for when sound is enabed.
 		 */
 		private final ImageIcon soundOn;
 		/**
-		 * 
+		 * The icon for when sound is disabled.
 		 */
 		private final ImageIcon soundOff;
 		/**
-		 * 
+		 * The icon for when the game is being played.
 		 */
 		private final ImageIcon play;
 		/**
-		 * 
+		 * The icon for when the game is paused.
 		 */
 		private final ImageIcon pause;
 		/**
-		 * 
+		 * The icon for the restart button.
 		 */
 		private final ImageIcon restart;
 	    /**
@@ -852,6 +858,11 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 	private class InputBox extends JTextField implements Serializable
 	{
 		/**
+		 * Holds a history of commands
+		 */
+		private Stack<String> commandsHistory;
+		
+		/**
 		 * Constructor method.
 		 */
 		private InputBox()
@@ -859,6 +870,8 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 			super(); 
 			setBackground(backgroundColor);
 			setPreferredSize(new Dimension(450, 30));
+			
+			commandsHistory = new Stack<String>();
 			
 			KeyAdapter keyListener = new KeyAdapter() {
 				public void keyPressed(KeyEvent e)
@@ -869,9 +882,32 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 							
 							String msg = getText();
 							
+							commandsHistory.push(msg);
+							
 							tetrisClient.handleMessageFromClientUI(msg);
 							
 							setText(null);
+							repaint();
+							break;
+						case KeyEvent.VK_UP:
+							
+							try
+							{
+								msg = commandsHistory.pop();
+							}
+							catch(EmptyStackException ex)
+							{
+								msg = "";
+							}
+							
+							setText(msg);
+							repaint();
+							break;
+						case KeyEvent.VK_DOWN:
+							
+							msg = "";
+							
+							setText(msg);
 							repaint();
 							break;
 					}
@@ -909,12 +945,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 		 * The interface type variable.  It allows the implementation of 
 		 * the display method in the client.
 		 */
-		OutputBox clientUI; 
-		
-	    /**
-	     * Local server for the multiplayer Tetris game.
-	     */
-	    private TetrisServer tetrisServer;
+		OutputBox clientUI;
 	    
 	    /**
 	     * Variables that contains instance of users in the game
@@ -1023,11 +1054,16 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
     		catch(IOException e)
     		{
     			clientUI.display("Could not send message \"", Color.LIGHT_GRAY);
-    			clientUI.display("&&"+message);
+    			clientUI.display("&&"+message, Color.GREEN);
     			clientUI.display("&&\" to server.", Color.LIGHT_GRAY);
     			
-    			if (tetrisServer == null)
-    				clientUI.display("[WARNING] No server. Chat disabled.", Color.YELLOW);
+    			if (!isConnected())
+    			{
+    				clientUI.display("[WARNING] No server connection.", Color.YELLOW);
+    				clientUI.display("[INFO] Do ");
+    				clientUI.display("&&/connect", Color.CYAN);
+    				clientUI.display("&& to enabe chat.");
+    			}
     		}
 		}
 		
@@ -1079,23 +1115,30 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 				
 				//The match can start.
 				case ("ready"): case ("reafy"):
-    				// Other person has told us they are ready.
-    				if (isMultiplayerOn && isMultiplayerReady)
+					if (!isMultiplayerOn)
+						break;
+				
+        			// First case client not yet marked as ready, opponent not marked as ready
+        			if ( !isPlayerReady && !isOpponentReady )
     				{
-    					toolBar.playPauseButton.doClick();
-    					clientUI.display("[INFO] Match started.", Color.CYAN);
-    				}
-    				else if (isMultiplayerOn && !isMultiplayerReady)
-    				{
-    					isMultiplayerReady = true;
-    					localGame.getBoard().setMultiplayerEnabled(isMultiplayerReady);
+        				isOpponentReady = true;
     					
     					clientUI.display("[INFO] Opponent ready! Do ", Color.CYAN);
 						clientUI.display("&&/ready", Color.GREEN);
 						clientUI.display("&& to start", Color.CYAN);
+						
 						toolBar.getStatusLabel().setForeground(Color.ORANGE);
 						toolBar.getStatusLabel().setText("Do /ready to start!");
+						
 						repaint();
+    				}
+        			// Second case client ready but opponent not ready
+    				else if (isPlayerReady && !isOpponentReady)
+    				{
+    					isOpponentReady = true;
+    					
+						toolBar.playPauseButton.doClick();
+    					clientUI.display("[INFO] Match started.", Color.CYAN);
     				}
 				break;
 			}
@@ -1151,29 +1194,53 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 				//*******************************************************************//
 				// Control methods
 				
-				//The player is ready.
+				//Input from client UI has two cases: when the opponent is ready, or when he isnt.
+				
 				case ("ready"): case ("reafy"):
 					// Other person has told us they are ready.
-					if (isMultiplayerOn && isMultiplayerReady)
+					if (!isMultiplayerOn)
+						break;
+				
+					// First case client not yet marked as ready, opponent not marked as ready
+					if ( !isPlayerReady && !isOpponentReady )
 					{
-						// Tell other player we are ready
-						Updater cmd = new Updater("reafy");
-						sendToServer(cmd);
+						isPlayerReady = true;
 						
-						toolBar.playPauseButton.doClick();
-    					clientUI.display("[INFO] Match started.", Color.CYAN);
-					}
-					else if (isMultiplayerOn && !isMultiplayerReady)
-					{
-						isMultiplayerReady = true;
-						localGame.getBoard().setMultiplayerEnabled(isMultiplayerReady);
-						
-						Updater cmd = new Updater("reafy");
-						sendToServer(cmd);
+						Updater cmd = new Updater("ready");
+						try
+						{
+							sendToServer(cmd);
+						}
+						catch (IOException ex)
+						{
+							System.out.println(cmd);
+							ex.printStackTrace();
+						}
 						
 						toolBar.getStatusLabel().setForeground(Color.ORANGE);
 						toolBar.getStatusLabel().setText("Waiting for opponent to be ready!");
 						clientUI.display("[INFO] You are ready!", Color.CYAN);
+					}
+					// Second case client not ready but opponent ready
+					else if (!isPlayerReady && isOpponentReady)
+					{
+						isPlayerReady = true;
+						localGame.getBoard().setMultiplayerEnabled(isPlayerReady);
+						
+						// Tell other player we are ready
+						Updater cmd = new Updater("ready");
+						try
+						{
+							sendToServer(cmd);
+						}
+						catch (IOException ex)
+						{
+							System.out.println(cmd);
+							ex.printStackTrace();
+						}
+						
+						toolBar.playPauseButton.doClick();
+    					clientUI.display("[INFO] Match started.", Color.CYAN);
 					}
 				break;
 				
@@ -1266,6 +1333,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 		{
 			clientUI.display("Connected to server.");
 			serverInfo.setText("Multiplayer @ "+getHost()+" : "+getPort());
+			
 			isMultiplayerOn = true;
 			localGame.getBoard().setMultiplayerEnabled(isMultiplayerOn);
 		}
@@ -1308,7 +1376,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 			else
 				clientUI.display("You lost to "+opponent, Color.BLUE, new Font("Malgun Gothic", Font.BOLD, 16));
 			
-			isMultiplayerReady = false;
+			isPlayerReady = false;
 			localGame.getBoard().restart();
 			opponentGame.getBoard().restart();
 		}

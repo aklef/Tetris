@@ -18,6 +18,7 @@ import org.junit.Test;
  * @author Andréas K.LeF.
  *
  */
+@SuppressWarnings("unused")
 public class BoardTest {
 
 	/**

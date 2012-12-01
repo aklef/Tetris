@@ -992,26 +992,18 @@ public class Board extends JPanel implements ActionListener, MouseListener, Seri
      }
     
     /**
-     * 
+     * Mouse event when the mouse is clicked.
      */
     public void mouseClicked(MouseEvent e)
     {
 		requestFocusInWindow();
     }
-    public void mouseEntered(MouseEvent e)
-    {
-		//requestFocusInWindow();
-    }
-    public void mouseExited(MouseEvent e)
-    {
-		//requestFocusInWindow();
-    }
-    public void mousePressed(MouseEvent e)
-    {
-		//requestFocusInWindow();
-    }
-    public void mouseReleased(MouseEvent e)
-    {
-		//requestFocusInWindow();
-    }
+    public void mouseEntered(MouseEvent e){}
+    
+    public void mouseExited(MouseEvent e){}
+    
+    public void mousePressed(MouseEvent e){}
+    
+    public void mouseReleased(MouseEvent e){}
+    
 }

@@ -9,6 +9,8 @@ import ocsf.server.*;
 
 import java.util.ArrayList;
 
+import Tetris2P.Shape.Tetromino;
+
 /**
  * This class overrides some of the methods in the abstract 
  * superclass in order to give more functionality to the server.
@@ -19,6 +21,7 @@ import java.util.ArrayList;
  * @author Paul Holden
  * @version July 2000
  */
+@SuppressWarnings("unused")
 public class TetrisServer extends AbstractServer implements Serializable
 {
   
@@ -83,7 +86,6 @@ public class TetrisServer extends AbstractServer implements Serializable
 			return;
 		}
 	}
-	else 
 	// Continue assuming a string message has been sent to the server
     try
     {
@@ -396,6 +398,9 @@ public class TetrisServer extends AbstractServer implements Serializable
 		// will also disconnect the current client
 		removeAsOpponent(client);
 		
+		//Update playerlist
+		playerListUpdate();
+		
 		// Notifying other clients
 		serverOutput.display("[INFO] Client " + client.getInfo("ID") + " disconnected.");
 		sendToAllClients("[INFO] Client " + client.getInfo("ID") + " left.");
@@ -616,6 +621,7 @@ public class TetrisServer extends AbstractServer implements Serializable
    * This method overrides the one in the superclass.  Called
    * when the server stops listening for connections.
    */
+  
   protected void serverStopped()
   {
     System.out.println("[INFO] Server no longer listening for connections.");
@@ -632,7 +638,7 @@ public class TetrisServer extends AbstractServer implements Serializable
 
   /************************************* GETTER / SETTER*******************************************/
   
-  public ArrayList getClientList(){
+  public ArrayList<ClientNode> getClientList(){
 	  return clientList;
   }
   

@@ -67,7 +67,17 @@ import Tetris2P.Shape.Tetromino;
     	 * the Updater was sending a command such as "Game Over"
     	 * 
     	 */
-    	protected String getCommandMessage(){
+    	public String getCommandMessage()
+    	{
     		return command;
+    	}
+    	
+    	/**
+    	 * Returns a {@code String} representation of this {@code Updater}.
+    	 */
+    	@Override
+    	public String toString()
+    	{
+    		return "[UPDATER]: [CMD]: "+ command + newHoldPiece + newNextPiece + newCurPiece + " [board] "+ newBoard.toString();
     	}
     }

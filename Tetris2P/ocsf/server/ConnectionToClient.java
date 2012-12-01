@@ -8,6 +8,8 @@ import java.io.*;
 import java.net.*;
 import java.util.HashMap;
 
+import Tetris2P.Updater;
+
 
 /**
  * An instance of this class is created by the server when a client connects. It
@@ -94,6 +96,7 @@ public class ConnectionToClient extends Thread implements Serializable{
 			input = new ObjectInputStream(clientSocket.getInputStream());
 			output = new ObjectOutputStream(clientSocket.getOutputStream());
 		} catch (IOException ex) {
+			ex.printStackTrace();
 			try {
 				closeAll();
 			} catch (Exception exc) {
@@ -111,16 +114,43 @@ public class ConnectionToClient extends Thread implements Serializable{
 	/**
 	 * Sends an object to the client.
 	 * 
-	 * @param msg
+	 * @param obj
 	 *            the message to be sent.
 	 * @exception IOException
 	 *                if an I/O error occur when sending the message.
 	 */
-	final public void send(Object msg) throws IOException {
+	final public void send(Object obj) throws IOException
+	{
 		if (clientSocket == null || output == null)
 			throw new SocketException("Output socket is null.");
+		try
+		{
+			
+			output.writeObject(obj);
+			
+		}
+		catch (IOException ex)
+		{
+			ex.printStackTrace();
+			try {
+				closeAll();
+			}
+			catch (Exception ex1)
+			{
+				ex1.printStackTrace();
+			}
 
-		output.writeUnshared(msg);
+			throw ex; // Rethrow the exception.
+		}
+		try
+		{
+			output.flush();
+		}
+		catch (IOException ex)
+		{
+			ex.printStackTrace();
+			throw ex; // Rethrow the exception.
+		}
 	}
 
 	/**
@@ -214,13 +244,26 @@ public class ConnectionToClient extends Thread implements Serializable{
 				// This block waits until it reads a message from the client
 				// and then sends it for handling by the server
 				msg = input.readObject();
+				
+				if ( msg instanceof Updater)
+				{
+					Updater update = (Updater) msg;
+					System.out.println("Updater command: "+update.getCommandMessage());
+				}
+				
+				System.out.println("Connectiontoclient.run() readObject"+msg.getClass());
+				System.out.println(msg.toString());
+				
 				server.receiveMessageFromClient(msg, this);
 			}
 		} catch (Exception exception) {
+			exception.printStackTrace();
+			
 			if (!readyToStop) {
 				try {
 					closeAll();
 				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 				
 				server.clientException(this, exception);
