@@ -3,9 +3,9 @@ Two-Player Tetris
 
 The Game of Tetris coded in JAVA as a real-time multiplayer game.
 
-Uses the Object Client-Server Framework (OCSF) provided in SEG2105 at uOttawa for some of its networking core.
+Uses the Object Client-Server Framework (OCSF) provided in the uOttawa course of SEG2105 for most of its networking core.
 
-Has a chatroom area made by adapting our SimpleChat IM program.
+Includes a built-in a chatroom made by adapting our SimpleChat IM program using the OCSF.
 
 Media
 -------
@@ -18,12 +18,16 @@ Soundtrack Source:
 
 	![Tetris singleplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/singlePlayer.png?raw=true)
 
-	A singleplayer game of Tetris.	
+	A singleplayer game of Tetris in-progress.	
+
+	![Tetris multiplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/multiPlayer.png?raw=true)
+
+	A new multiplayer game of Tetris.	
 
 BSD License
 -------
 
-Copyright (c) 2012, Andréas K.LeF., Dmitry Anglinov,
+Copyright (c) 2012-2013, Andréas K.LeF., Dmitry Anglinov,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
