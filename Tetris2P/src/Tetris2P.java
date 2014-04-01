@@ -71,14 +71,13 @@ import java.util.Queue;
 import java.util.Stack;
 
 /**
- * This class represents one complete instance of a game of  multiplayer tetris played by a single user.
- * Contains two instances of a {@code Tetris} game. One is fo rthe current user and the other is for the opponent.
+ * This class represents one complete instance of a game of multiplayer tetris played by a single user.
+ * Contains two instances of a {@code Tetris} game. One is for the current user and the other is for the opponent.
  * 
  * 
  * @author Andréas K.LeF.
  * @author Dmitry Anglinov
  */
-@SuppressWarnings("unused")
 public class Tetris2P extends JFrame implements Runnable, Serializable
 {
     /**
@@ -156,7 +155,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
      */
     public Tetris2P()
     {
-        // Must create OutputBox before setting L&F to nimbus or bad things happen.
+    	// Must create OutputBox before setting L&F to nimbus or BAD THINGS happen.
         outputBox	 = new OutputBox();
         toolBar		 = new ToolBar();
         
@@ -299,12 +298,17 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
         run();
     }
 
-    //*************************************THREAD-LOGIC*************************************//
+    //************************************THREAD-LOGIC************************************//
     
     /**
      * Main method of the multiplayer Tetris game.
      */
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
+    	// System settings
+        System.setProperty("sun.java2d.opengl","True");
+    	System.setProperty("sun.java2d.noddraw", Boolean.TRUE.toString());
+    	
     	Tetris2P Game = new Tetris2P();
     }
 
@@ -333,7 +337,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
         }
 	}
 
-    //*************************************TOGGLES*************************************//
+    //**************************************TOGGLES***************************************//
 	
     /**
      * Toggles mute on the entire game when called
@@ -346,7 +350,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 			localGame.setAudioPlayback(true);
 	}
 	
-    //*************************************SETTER/GETTER*************************************//
+    //*************************************SETTER/GETTER**********************************//
 	
 	/**
 	 * Allows the tetris client to be accessed from outside Tetris2P in order to send messages to server
@@ -532,7 +536,7 @@ public class Tetris2P extends JFrame implements Runnable, Serializable
 	    } 
 	}
 	
-	//**************************************TOOLBAR*************************************//
+	//**************************************TOOLBAR**************************************//
 	
 	/**
 	 * This is a nested class in Tetris2P.java that is a JPanel.

@@ -106,7 +106,7 @@ public class Shape implements Serializable{
     	return coords[index][1];
     }
     /**
-     * Returns the shape
+     * Returns the {@code enum Tetromino} this {@code Shape} has.
      */
     public Tetromino getShape()
     {
