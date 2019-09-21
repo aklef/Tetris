@@ -3,9 +3,9 @@ Two-Player Tetris
 
 The Game of Tetris coded in JAVA as a real-time multiplayer game.
 
-Uses the Object Client-Server Framework (OCSF) provided in SEG2105 at uOttawa for some of its networking core.
+Uses the Object Client-Server Framework (OCSF) provided in the uOttawa course of SEG2105 for most of its networking core.
 
-Has a chatroom area made by adapting our SimpleChat IM program.
+Includes a built-in a chatroom made by adapting our SimpleChat IM program using the OCSF.
 
 Media
 -------
@@ -16,14 +16,18 @@ Soundtrack Source:
 * A great guy called Neogrit made it. Check him out at http://soundcloud.com/neogrit/
 * "A (NES/GB)" by neogrit is licensed under a Creative Commons License (http://creativecommons.org/licenses/by/3.0/)
 
-	![Tetris singleplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/singlePlayer.png?raw=true)
+	![Tetris singleplayer.](https://raw.githubusercontent.com/aklef/Tetris/master/Tetris2P/media/singlePlayer.png)
 
-	A singleplayer game of Tetris.	
+	A singleplayer game of Tetris in-progress.	
+
+	![Tetris multiplayer.](https://raw.githubusercontent.com/aklef/Tetris/master/Tetris2P/media/multiPlayer.png)
+
+	A new multiplayer game of Tetris.	
 
 BSD License
 -------
 
-Copyright (c) 2012, Andréas K.LeF., Dmitry Anglinov,
+Copyright (c) 2012-2013, Andréas K.LeF., Dmitry Anglinov,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
