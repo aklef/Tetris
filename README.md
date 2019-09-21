@@ -16,11 +16,11 @@ Soundtrack Source:
 * A great guy called Neogrit made it. Check him out at http://soundcloud.com/neogrit/
 * "A (NES/GB)" by neogrit is licensed under a Creative Commons License (http://creativecommons.org/licenses/by/3.0/)
 
-	![Tetris singleplayer.](/../../Tetris2P/media/singlePlayer.png)
+	![Tetris singleplayer.](https://raw.githubusercontent.com/aklef/Tetris/master/Tetris2P/media/singlePlayer.png)
 
 	A singleplayer game of Tetris in-progress.	
 
-	![Tetris multiplayer.](https://github.com/akleff/Tetris/blob/master/Tetris2P/Media/multiPlayer.png?raw=true)
+	![Tetris multiplayer.](https://raw.githubusercontent.com/aklef/Tetris/master/Tetris2P/media/multiPlayer.png)
 
 	A new multiplayer game of Tetris.	
 
